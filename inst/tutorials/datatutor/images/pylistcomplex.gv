@@ -1,0 +1,56 @@
+
+digraph G {
+    nodesep=.1;
+    ranksep=.3;
+    rankdir=LR;
+    node [penwidth="0.5", shape=box, width=.1, height=.1];
+    
+// VERTICAL LIST or ITERATABLE
+node4761102152 [color="#444443", margin="0.02", fontcolor="#444443", fontname="Helvetica", style=filled, fillcolor="#cfe2d4", label=<<table BORDER="0" CELLPADDING="0" CELLBORDER="0" CELLSPACING="0">
+<tr><td port="0" BORDER="1" cellpadding="2" cellspacing="0" sides="b" bgcolor="#cfe2d4" align="left"><font color="#444443" point-size="9">0</font></td>
+</tr>
+<tr><td port="1" BORDER="1" cellpadding="2" cellspacing="0" sides="b" bgcolor="#cfe2d4" align="left"><font color="#444443" point-size="9">1</font></td>
+</tr>
+<tr><td port="2" BORDER="1" cellpadding="2" cellspacing="0" sides="b" bgcolor="#cfe2d4" align="left"><font color="#444443" point-size="9">2</font></td>
+</tr>
+<tr><td port="3" BORDER="1" cellpadding="2" cellspacing="0" sides="b" bgcolor="#cfe2d4" align="left"><font color="#444443" point-size="9">3</font></td>
+</tr>
+<tr><td port="4" BORDER="1" cellpadding="2" cellspacing="0" sides="b" bgcolor="#cfe2d4" align="left"><font color="#444443" point-size="9">4</font></td>
+</tr>
+<tr><td port="5" BORDER="0" cellpadding="3" cellspacing="0" bgcolor="#cfe2d4" align="left"><font color="#444443" point-size="9">5</font></td>
+</tr>
+</table>
+>];
+// LIST or ITERATABLE of atoms
+node4726322632 [shape="box", space="0.0", margin="0.01", fontcolor="#444443", fontname="Helvetica", label=<<table BORDER="0" CELLBORDER="0" CELLSPACING="0">
+<tr>
+<td cellspacing="0" cellpadding="0" bgcolor="#fefecd" border="1" sides="br" valign="top"><font color="#444443" point-size="9">0</font></td>
+<td cellspacing="0" cellpadding="0" bgcolor="#fefecd" border="1" sides="br" valign="top"><font color="#444443" point-size="9">1</font></td>
+<td cellspacing="0" cellpadding="0" bgcolor="#fefecd" border="1" sides="b" valign="top"><font color="#444443" point-size="9">2</font></td>
+</tr>
+<tr>
+<td port="0" bgcolor="#fefecd" border="1" sides="r" align="center"><font point-size="11">1</font></td>
+<td port="1" bgcolor="#fefecd" border="1" sides="r" align="center"><font point-size="11">2</font></td>
+<td port="2" bgcolor="#fefecd" border="0" align="center"><font point-size="11">3</font></td>
+</tr></table>
+>];
+// LIST or ITERATABLE of atoms
+node4726322568 [shape="box", space="0.0", margin="0.01", fontcolor="#444443", fontname="Helvetica", label=<<table BORDER="0" CELLBORDER="0" CELLSPACING="0">
+<tr>
+<td cellspacing="0" cellpadding="0" bgcolor="#fefecd" border="1" sides="br" valign="top"><font color="#444443" point-size="9">0</font></td>
+<td cellspacing="0" cellpadding="0" bgcolor="#fefecd" border="1" sides="br" valign="top"><font color="#444443" point-size="9">1</font></td>
+<td cellspacing="0" cellpadding="0" bgcolor="#fefecd" border="1" sides="b" valign="top"><font color="#444443" point-size="9">2</font></td>
+</tr>
+<tr>
+<td port="0" bgcolor="#fefecd" border="1" sides="r" align="center"><font point-size="11">4</font></td>
+<td port="1" bgcolor="#fefecd" border="1" sides="r" align="center"><font point-size="11">5</font></td>
+<td port="2" bgcolor="#fefecd" border="0" align="center"><font point-size="11">6</font></td>
+</tr></table>
+>];
+node4761102152:0 -> node4726322632:w [arrowtail=dot, penwidth="0.5", color="#444443", arrowsize=.4, weight=100]
+node4761102152:1 -> node4726322568:w [arrowtail=dot, penwidth="0.5", color="#444443", arrowsize=.4, weight=100]
+node4761102152:2 -> node4726322632:w [arrowtail=dot, penwidth="0.5", color="#444443", arrowsize=.4, weight=100]
+node4761102152:3 -> node4726322568:w [arrowtail=dot, penwidth="0.5", color="#444443", arrowsize=.4, weight=100]
+node4761102152:4 -> node4726322632:w [arrowtail=dot, penwidth="0.5", color="#444443", arrowsize=.4, weight=100]
+node4761102152:5 -> node4726322568:w [arrowtail=dot, penwidth="0.5", color="#444443", arrowsize=.4, weight=100]
+}
