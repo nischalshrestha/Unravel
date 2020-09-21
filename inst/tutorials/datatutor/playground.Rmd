@@ -53,15 +53,15 @@ knitr::opts_chunk$set(echo = FALSE)
 pd.DataFrame({'a':[1,2,3], 'b':[4,5,6]})
 ```
 
-## Embeding `html_widget`
+<!-- ## Embeding `html_widget` -->
 
 <!-- ## What does a pandas.DataFrame look like structurally? -->
 
-This is an example of a Shiny app that visualizes Python data structures. Try entering "[1, 2, 3]" below:
+<!-- This is an example of a Shiny app that visualizes Python data structures. Try entering "[1, 2, 3]" below: -->
 
-```{r, child=get_webapp("lolviz")}
+<!-- ```{r, child=get_webapp("lolviz")} -->
 
-```
+<!-- ``` -->
 
 
 <!-- ## Custom div elements -->
@@ -76,11 +76,11 @@ This is an example of a Shiny app that visualizes Python data structures. Try en
 
 <!-- --- -->
 
-## Data Diffing Tools
+<!-- ## Data Diffing Tools -->
 
-Diffing objects seems to be of general interest for data scientists. Data diffs tackles the data bit, and it can be nice to show when it's hard to tell the differences btw two tables.
+<!-- Diffing objects seems to be of general interest for data scientists. Data diffs tackles the data bit, and it can be nice to show when it's hard to tell the differences btw two tables. -->
 
-One tool we can reuse is [`daff`](https://github.com/edwindj/daff), which visualizes data diffs.
+<!-- One tool we can reuse is [`daff`](https://github.com/edwindj/daff), which visualizes data diffs. -->
 
 <!-- ```{r echo=TRUE, context="server"} -->
 <!-- y <- mtcars[1:3, ] -->

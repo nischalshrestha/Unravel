@@ -1,0 +1,137 @@
+---
+title: "Tidy Data"
+output:
+  learnr::tutorial:
+    progressive: true
+runtime: shiny_prerendered
+---
+
+```{r setup, include=FALSE}
+library(reticulate)
+library(learnr)
+library(daff)
+# install knitr hooks
+source(here::here("R", "knitr-hooks.R"))
+install_knitr_hooks()
+# webapps dir
+get_webapp <- function(name) here::here("shinyapps", paste0(name, ".Rmd"))
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Introduction
+
+In this tutorial, we will go over a framework called "Tidy Data" by Hadley Wickham introduced in his tidy data [paper](http://vita.had.co.nz/papers/tidy-data.pdf) in the *Journal of Statistical Software*. What is *tidy data*? Tidy data is a framework that helps structure and shape your data to make it easier to analyze and visualize.
+
+Tables or dataframes that are "tidy" meets the following criteria:
+
+- Each row is an observation
+- Each column is a variable
+- Each type of observational unit forms a table
+
+All data that don't meet the criteria are considered "messy". In the following lessons, we will go over how to tidy data using this framework in both Python and R.
+
+Pre-requisite knowledge:
+
+a. function and method calls
+b. subsetting data
+c. loops
+d. list comprehensions
+
+By the end of the tutorial, you will know how to reshape your data into a tidy format using the following data shaping operations:
+
+1. Unpivot/melt/gather columns into rows
+2. Pivot/cast/spread rows into columns
+3. Normalize data by separating a dataframe into multiple tables
+4. Assemble data from multiple parts
+
+## unpivot
+
+In this lesson, we will use data on income and religion in the United States from the Pew Research Center to illustrate how to work with columns that contain values, rather than variables.
+
+```{python pysetup}
+import pandas as pd
+import os
+# this line works in regular rmd context
+# pew = pd.read_csv(f"{os.getcwd()}/inst/tutorials/tidydata/data/pew.csv")
+pew = pd.read_csv(f"{os.getcwd()}/data/pew.csv")
+```
+
+Run the exercise below to take a peek at the data:
+
+```{python read_pew, exercise=TRUE}
+pew
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
