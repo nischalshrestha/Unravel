@@ -10,12 +10,19 @@ runtime: shiny_prerendered
 library(reticulate)
 library(learnr)
 library(daff)
+library(magrittr)
+library(dplyr)
+library(readr)
 # install knitr hooks
 source(here::here("R", "knitr-hooks.R"))
 install_knitr_hooks()
 # webapps dir
 get_webapp <- function(name) here::here("shinyapps", paste0(name, ".Rmd"))
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+# colors for data diffing
+modified <- "#a0a0ff"
+green <- "#74ff74"
+red <- "#ff7374"
 ```
 
 ## Introduction
@@ -44,28 +51,134 @@ By the end of the tutorial, you will know how to reshape your data into a tidy f
 3. Normalize data by separating a dataframe into multiple tables
 4. Assemble data from multiple parts
 
-## unpivot
+## Columns contain values, not variables.
 
 In this lesson, we will use data on income and religion in the United States from the Pew Research Center to illustrate how to work with columns that contain values, rather than variables.
 
 ```{python pysetup}
 import pandas as pd
 import os
+# pew = pd.read_csv(f"{os.getcwd()}/data/pew.csv")
 # this line works in regular rmd context
-# pew = pd.read_csv(f"{os.getcwd()}/inst/tutorials/tidydata/data/pew.csv")
-pew = pd.read_csv(f"{os.getcwd()}/data/pew.csv")
+pew = pd.read_csv(f"{os.getcwd()}/inst/tutorials/tidydata/data/pew.csv")
 ```
 
-Run the exercise below to take a peek at the data:
+I have already loaded up the data for you to a variable called `pew`. Run the exercise below to take a peek at the data:
 
-```{python read_pew, exercise=TRUE}
+```{python ex-read_pew, exercise=TRUE, opts.label="pprint"}
 pew
 ```
 
+<br>
 
+Notice how the income variable is spread across columns. In other words, the  data is in "wide" form. It's not that this format is inherently bad. But, it makes analysis a bit more difficult. So, we're going to reshape the data into a "long" form such that we work with 3 variables instead:
 
+- religion
+- income
+- count
 
+### Enter melt
 
+In pandas, there is a function that will help us reshape `pew` into a tidy data format. It takes a few parameters we care about:
+
+- `id_vars` is either a list, tuple, or a numpy.ndarray that represents the variable that will remain as is.
+- `value_vars` identifies columns you wish to "melt down" (or unpivot). By default, it will melt all the columns not specified by `id_vars`.
+- `var_name` is a string for the new column name when the `value_vars` is melted down. By default, it will be named `variable`.
+- `value_name` is a string for the new column name that represents the values for the `var_name`. By default, it will be named `value`.
+
+Since we want to only retain `religion` column as is, it will serve as the only item for `id_vars`. Go ahead and run this code and examine the output:
+
+```{python ex-melt_pew, exercise=TRUE, opts.label="pprint"}
+pew_long = pd.melt(pew, id_vars='religion')
+pew_long
+
+```
+
+<br>
+
+You'll notice that we have melted the income columns into one single `variable` column, where the values now reside in the `value` column. This might be hard to see, so here's a visual summary of what has changed:
+
+```{r }
+old_pew <- py$pew
+# print(old_pew)
+new_pew <- py$pew_long
+# print(new_pew)
+diff <- daff::differs_from(new_pew, old_pew)
+s <- daff:::summary.data_diff(diff)
+summary_tbl <- tibble::tribble(
+  ~ "", ~ "#", ~Modified, ~Reordered, ~Deleted, ~Added,
+  "Rows", s$row_count_change_text, s$row_updates, s$row_reorders, s$row_deletes, s$row_inserts,
+  "Cols", s$col_count_change_text, s$col_updates, s$col_reorders, s$col_deletes, s$col_inserts,
+)
+
+# summary table
+kableExtra::kbl(summary_tbl) %>%
+  kableExtra::kable_styling(full_width = FALSE, bootstrap_options = c("condensed", "responsive")) %>%
+  kableExtra::column_spec(3:4, background = modified) %>%
+  kableExtra::column_spec(5, background = green) %>%
+  kableExtra::column_spec(6, background = red)
+```
+
+```{r}
+old_pew <- py$pew
+# print(old_pew)
+new_pew <- py$pew_long
+# print(new_pew)
+
+# calculate diff
+patch <- daff::diff_data(old_pew, new_pew)
+# write patch to csv
+daff::write_diff(patch, "patch.csv")
+diff_data <- read_csv("patch.csv")
+
+diff_data <- as.data.frame(diff_data)
+
+# TODO: incorporate modified as well
+
+# get inserted rows
+row_vectors <- 1:length(rownames(diff_data))
+inserted_rows <- row_vectors[diff_data$`!` == "+++"]
+
+# get deleted cols
+deleted_col_names <- diff_data %>%
+  select(starts_with("---")) %>%
+  colnames()
+col_vectors <- 1:length(colnames(diff_data))
+deleted_cols <- col_vectors[colnames(diff_data) %in% deleted_col_names]
+
+# get inserted cols
+inserted_col_names <- diff_data %>%
+  select(starts_with("+++")) %>%
+  colnames()
+inserted_cols <- col_vectors[colnames(diff_data) %in% inserted_col_names]
+
+# get rid of daff-related schema row
+cols_to_add <- diff_data[1, 2:length(colnames(diff_data))]
+colnames(diff_data) <- diff_data[1, ]
+# get rid of daff-related ! column
+diff_data$`@@` <- NULL
+diff_data <- diff_data[-1, ]
+# wizard of oz python indexing
+rownames(diff_data) <- vapply(
+  rownames(diff_data), 
+  function(x) as.character(as.numeric(x) - 2), 
+  character(1)
+)
+
+# TODO: see if you can also highlight column parts
+
+# TODO: instead of NULL for the columns that are deleted while overlapped with inserted rows, 
+# maybe we could replace with empty string
+# render a pretty printed table with highlighted modified, inserted, deleted rows/columns
+kableExtra::kbl(diff_data) %>%
+  kableExtra::kable_styling(bootstrap_options = c("condensed", "responsive")) %>%
+  kableExtra::row_spec(inserted_rows - 1, background = green) %>%
+  kableExtra::column_spec(inserted_cols, background = green) %>%
+  kableExtra::column_spec(deleted_cols, background = red) %>%
+  kableExtra::scroll_box(width = "100%", height = "400px")
+```
+
+<!-- ![]("./diff.html") -->
 
 
 

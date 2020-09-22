@@ -74,6 +74,9 @@ install_knitr_hooks <- function() {
         if (length(options$code) > 0) {
           last_line <- get_last_line(options)
           if (length(last_line) > 0) {
+            # first run the entire code to introduce variables to environment
+            reticulate::py_run_string(paste0(options$code, collapse="\n"))
+            # then, evaluate last line to detect whether it's a dataframe
             raw_result <-  reticulate::py_eval(last_line, convert = FALSE)
             converted_result <- reticulate::py_to_r(raw_result)
             # for data.frame, pretty print the output
@@ -85,7 +88,7 @@ install_knitr_hooks <- function() {
               # kableExtra for now
               out <- kableExtra::kbl(converted_result) %>%
                 kableExtra::kable_styling(bootstrap_options = c("condensed", "responsive")) %>%
-                kableExtra::scroll_box(width = "100%", height = "300px")
+                kableExtra::scroll_box(width = "100%", height = "250px")
               return(knitr::engine_output(options, "", out))
             } else {
               # for everything else, use python engine as expected
