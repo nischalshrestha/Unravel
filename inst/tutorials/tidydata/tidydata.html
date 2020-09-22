@@ -145,7 +145,7 @@ $(document).ready(function () {
 <h2>Columns contain values, not variables.</h2>
 <p>In this lesson, we will use data on income and religion in the United States from the Pew Research Center to illustrate how to work with columns that contain values, rather than variables.</p>
 <p>I have already loaded up the data for you to a variable called <code>pew</code>. Run the exercise below to take a peek at the data:</p>
-<div class="tutorial-exercise" data-label="ex-read_pew" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<div class="tutorial-exercise" data-label="ex-read_pew" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
 
 <pre class="text"><code>pew</code></pre>
 <pre class="text"><code></code></pre>
@@ -878,7 +878,7 @@ Unaffiliated
 </tbody>
 </table>
 </div>
-<script type="application/json" data-ui-opts="1">{"engine":"python","has_checker":false}</script>
+<script type="application/json" data-ui-opts="1">{"engine":"python","has_checker":false,"caption":"<div class=\"tutorial_engine_icon\"><svg viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\" role=\"img\"><title>Python icon<\/title><path d=\"M14.31.18l.9.2.73.26.59.3.45.32.34.34.25.34.16.33.1.3.04.26.02.2-.01.13V8.5l-.05.63-.13.55-.21.46-.26.38-.3.31-.33.25-.35.19-.35.14-.33.1-.3.07-.26.04-.21.02H8.83l-.69.05-.59.14-.5.22-.41.27-.33.32-.27.35-.2.36-.15.37-.1.35-.07.32-.04.27-.02.21v3.06H3.23l-.21-.03-.28-.07-.32-.12-.35-.18-.36-.26-.36-.36-.35-.46-.32-.59-.28-.73-.21-.88-.14-1.05L0 11.97l.06-1.22.16-1.04.24-.87.32-.71.36-.57.4-.44.42-.33.42-.24.4-.16.36-.1.32-.05.24-.01h.16l.06.01h8.16v-.83H6.24l-.01-2.75-.02-.37.05-.34.11-.31.17-.28.25-.26.31-.23.38-.2.44-.18.51-.15.58-.12.64-.1.71-.06.77-.04.84-.02 1.27.05 1.07.13zm-6.3 1.98l-.23.33-.08.41.08.41.23.34.33.22.41.09.41-.09.33-.22.23-.34.08-.41-.08-.41-.23-.33-.33-.22-.41-.09-.41.09-.33.22zM21.1 6.11l.28.06.32.12.35.18.36.27.36.35.35.47.32.59.28.73.21.88.14 1.04.05 1.23-.06 1.23-.16 1.04-.24.86-.32.71-.36.57-.4.45-.42.33-.42.24-.4.16-.36.09-.32.05-.24.02-.16-.01h-8.22v.82h5.84l.01 2.76.02.36-.05.34-.11.31-.17.29-.25.25-.31.24-.38.2-.44.17-.51.15-.58.13-.64.09-.71.07-.77.04-.84.01-1.27-.04-1.07-.14-.9-.2-.73-.25-.59-.3-.45-.33-.34-.34-.25-.34-.16-.33-.1-.3-.04-.25-.02-.2.01-.13v-5.34l.05-.64.13-.54.21-.46.26-.38.3-.32.33-.24.35-.2.35-.14.33-.1.3-.06.26-.04.21-.02.13-.01h5.84l.69-.05.59-.14.5-.21.41-.28.33-.32.27-.35.2-.36.15-.36.1-.35.07-.32.04-.28.02-.21V6.07h2.09l.14.01.21.03zm-6.47 14.25l-.23.33-.08.41.08.41.23.33.33.23.41.08.41-.08.33-.23.23-.33.08-.41-.08-.41-.23-.33-.33-.23-.41-.08-.41.08-.33.23z\"/><\/svg><\/div>"}</script>
 </div>
 <p><br></p>
 <p>Notice how the income variable is spread across columns. In other words, the data is in “wide” form. It’s not that this format is inherently bad. But, it makes analysis a bit more difficult. So, we’re going to reshape the data into a “long” form such that we work with 3 variables instead:</p>
@@ -897,7 +897,7 @@ Unaffiliated
 <li><code>value_name</code> is a string for the new column name that represents the values for the <code>var_name</code>. By default, it will be named <code>value</code>.</li>
 </ul>
 <p>Since we want to only retain <code>religion</code> column as is, it will serve as the only item for <code>id_vars</code>. Go ahead and run this code and examine the output:</p>
-<div class="tutorial-exercise" data-label="ex-melt_pew" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<div class="tutorial-exercise" data-label="ex-melt_pew" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
 
 <pre class="text"><code>pew_long = pd.melt(pew, id_vars=&#39;religion&#39;)
 pew_long</code></pre>
@@ -3443,7 +3443,7 @@ Don’t know/refused
 </tbody>
 </table>
 </div>
-<script type="application/json" data-ui-opts="1">{"engine":"python","has_checker":false}</script>
+<script type="application/json" data-ui-opts="1">{"engine":"python","has_checker":false,"caption":"<div class=\"tutorial_engine_icon\"><svg viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\" role=\"img\"><title>Python icon<\/title><path d=\"M14.31.18l.9.2.73.26.59.3.45.32.34.34.25.34.16.33.1.3.04.26.02.2-.01.13V8.5l-.05.63-.13.55-.21.46-.26.38-.3.31-.33.25-.35.19-.35.14-.33.1-.3.07-.26.04-.21.02H8.83l-.69.05-.59.14-.5.22-.41.27-.33.32-.27.35-.2.36-.15.37-.1.35-.07.32-.04.27-.02.21v3.06H3.23l-.21-.03-.28-.07-.32-.12-.35-.18-.36-.26-.36-.36-.35-.46-.32-.59-.28-.73-.21-.88-.14-1.05L0 11.97l.06-1.22.16-1.04.24-.87.32-.71.36-.57.4-.44.42-.33.42-.24.4-.16.36-.1.32-.05.24-.01h.16l.06.01h8.16v-.83H6.24l-.01-2.75-.02-.37.05-.34.11-.31.17-.28.25-.26.31-.23.38-.2.44-.18.51-.15.58-.12.64-.1.71-.06.77-.04.84-.02 1.27.05 1.07.13zm-6.3 1.98l-.23.33-.08.41.08.41.23.34.33.22.41.09.41-.09.33-.22.23-.34.08-.41-.08-.41-.23-.33-.33-.22-.41-.09-.41.09-.33.22zM21.1 6.11l.28.06.32.12.35.18.36.27.36.35.35.47.32.59.28.73.21.88.14 1.04.05 1.23-.06 1.23-.16 1.04-.24.86-.32.71-.36.57-.4.45-.42.33-.42.24-.4.16-.36.09-.32.05-.24.02-.16-.01h-8.22v.82h5.84l.01 2.76.02.36-.05.34-.11.31-.17.29-.25.25-.31.24-.38.2-.44.17-.51.15-.58.13-.64.09-.71.07-.77.04-.84.01-1.27-.04-1.07-.14-.9-.2-.73-.25-.59-.3-.45-.33-.34-.34-.25-.34-.16-.33-.1-.3-.04-.25-.02-.2.01-.13v-5.34l.05-.64.13-.54.21-.46.26-.38.3-.32.33-.24.35-.2.35-.14.33-.1.3-.06.26-.04.21-.02.13-.01h5.84l.69-.05.59-.14.5-.21.41-.28.33-.32.27-.35.2-.36.15-.36.1-.35.07-.32.04-.28.02-.21V6.07h2.09l.14.01.21.03zm-6.47 14.25l-.23.33-.08.41.08.41.23.33.33.23.41.08.41-.08.33-.23.23-.33.08-.41-.08-.41-.23-.33-.33-.23-.41-.08-.41.08-.33.23z\"/><\/svg><\/div>"}</script>
 </div>
 <p><br></p>
 <p>You’ll notice that we have melted the income columns into one single <code>variable</code> column, where the values now reside in the <code>value</code> column. This might be hard to see, so here’s a visual summary of what has changed:</p>
@@ -3483,10 +3483,10 @@ Rows
 <td style="text-align:right;background-color: #a0a0ff !important;">
 0
 </td>
-<td style="text-align:right;background-color: #74ff74 !important;">
+<td style="text-align:right;background-color: #ff7374 !important;">
 0
 </td>
-<td style="text-align:right;background-color: #ff7374 !important;">
+<td style="text-align:right;background-color: #74ff74 !important;">
 162
 </td>
 </tr>
@@ -3503,15 +3503,16 @@ Cols
 <td style="text-align:right;background-color: #a0a0ff !important;">
 0
 </td>
-<td style="text-align:right;background-color: #74ff74 !important;">
+<td style="text-align:right;background-color: #ff7374 !important;">
 9
 </td>
-<td style="text-align:right;background-color: #ff7374 !important;">
+<td style="text-align:right;background-color: #74ff74 !important;">
 1
 </td>
 </tr>
 </tbody>
 </table>
+<p>If you look at the below data diff visualization, you’ll notice that the the variable column has been added (green). Scrolling down the table, we see that all <strong>9</strong> income variables have been deleted (red) and are now under <code>variable</code> (green). This means we have also added many more rows due to this change. We weren’t modifying any existing values so there are no modified/reordered rows/columns.</p>
 <div style="border: 1px solid #ddd; padding: 0px; overflow-y: scroll; height:400px; overflow-x: scroll; width:100%; ">
 <table class="table table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
 <thead>
@@ -10940,7 +10941,6 @@ NULL
 </tbody>
 </table>
 </div>
-<!-- ![]("./diff.html") -->
 
 <script type="application/shiny-prerendered" data-context="server-start">
 library(reticulate)

@@ -58,9 +58,9 @@ In this lesson, we will use data on income and religion in the United States fro
 ```{python pysetup}
 import pandas as pd
 import os
-# pew = pd.read_csv(f"{os.getcwd()}/data/pew.csv")
+pew = pd.read_csv(f"{os.getcwd()}/data/pew.csv")
 # this line works in regular rmd context
-pew = pd.read_csv(f"{os.getcwd()}/inst/tutorials/tidydata/data/pew.csv")
+# pew = pd.read_csv(f"{os.getcwd()}/inst/tutorials/tidydata/data/pew.csv")
 ```
 
 I have already loaded up the data for you to a variable called `pew`. Run the exercise below to take a peek at the data:
@@ -115,15 +115,16 @@ summary_tbl <- tibble::tribble(
 kableExtra::kbl(summary_tbl) %>%
   kableExtra::kable_styling(full_width = FALSE, bootstrap_options = c("condensed", "responsive")) %>%
   kableExtra::column_spec(3:4, background = modified) %>%
-  kableExtra::column_spec(5, background = green) %>%
-  kableExtra::column_spec(6, background = red)
+  kableExtra::column_spec(5, background = red) %>%
+  kableExtra::column_spec(6, background = green)
 ```
 
+If you look at the below data diff visualization, you'll notice that the the variable column has been added (green). Scrolling down the table, we see that all **9** income variables have been deleted (red) and are now under `variable` (green). This means we have also added many more rows due to this change. We weren't modifying any existing values so there are no modified/reordered rows/columns.
+
 ```{r}
+# TODO somehow generate this AFTER exercise evaluation (consider a checker function)
 old_pew <- py$pew
-# print(old_pew)
 new_pew <- py$pew_long
-# print(new_pew)
 
 # calculate diff
 patch <- daff::diff_data(old_pew, new_pew)
@@ -178,7 +179,7 @@ kableExtra::kbl(diff_data) %>%
   kableExtra::scroll_box(width = "100%", height = "400px")
 ```
 
-<!-- ![]("./diff.html") -->
+
 
 
 
