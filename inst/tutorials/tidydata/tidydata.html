@@ -10959,6 +10959,18 @@ knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 modified <- "#a0a0ff"
 green <- "#74ff74"
 red <- "#ff7374"
+
+# TODO could we define a custom checker that defaults the gradethis in normal exercises
+# but, for exercises that should generate custom feedback we give back a div block with our html element
+# this would be nice for outputing a daff or pointblank dynamically for e.g.
+# UPDATE: the custom exercise.checker is a clunky route bc feedback is always expecting a simple message text for the output; the easier route would be to do the same knitr chunk opt hook strategy as the pretty print for a given exercise. For example:
+
+# ```{python ex-read_pew, exercise=TRUE, opts.label="pprint", table.checker=TRUE}
+# pew
+# ```
+
+# ^ would invoke our custom checker in a knitr hook in order to do our own checking for the result + provide a custom output
+
 </script>
  
 <script type="application/shiny-prerendered" data-context="server">
@@ -10982,7 +10994,13 @@ learnr:::store_exercise_setup_chunk("__setup__", c("library(reticulate)", "libra
 "# webapps dir", "get_webapp <- function(name) here::here(\"shinyapps\", paste0(name, \".Rmd\"))", 
 "knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)", 
 "# colors for data diffing", "modified <- \"#a0a0ff\"", "green <- \"#74ff74\"", 
-"red <- \"#ff7374\""), overwrite = FALSE)
+"red <- \"#ff7374\"", "", "# TODO could we define a custom checker that defaults the gradethis in normal exercises", 
+"# but, for exercises that should generate custom feedback we give back a div block with our html element", 
+"# this would be nice for outputing a daff or pointblank dynamically for e.g.", 
+"# UPDATE: the custom exercise.checker is a clunky route bc feedback is always expecting a simple message text for the output; the easier route would be to do the same knitr chunk opt hook strategy as the pretty print for a given exercise. For example:", 
+"", "# ```{python ex-read_pew, exercise=TRUE, opts.label=\"pprint\", table.checker=TRUE}", 
+"# pew", "# ```", "", "# ^ would invoke our custom checker in a knitr hook in order to do our own checking for the result + provide a custom output", 
+""), overwrite = FALSE)
 </script>
  
 <script type="application/shiny-prerendered" data-context="server">
@@ -10992,7 +11010,13 @@ learnr:::store_exercise_setup_chunk("__setup__", c("library(reticulate)", "libra
 "# webapps dir", "get_webapp <- function(name) here::here(\"shinyapps\", paste0(name, \".Rmd\"))", 
 "knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)", 
 "# colors for data diffing", "modified <- \"#a0a0ff\"", "green <- \"#74ff74\"", 
-"red <- \"#ff7374\""), overwrite = FALSE)
+"red <- \"#ff7374\"", "", "# TODO could we define a custom checker that defaults the gradethis in normal exercises", 
+"# but, for exercises that should generate custom feedback we give back a div block with our html element", 
+"# this would be nice for outputing a daff or pointblank dynamically for e.g.", 
+"# UPDATE: the custom exercise.checker is a clunky route bc feedback is always expecting a simple message text for the output; the easier route would be to do the same knitr chunk opt hook strategy as the pretty print for a given exercise. For example:", 
+"", "# ```{python ex-read_pew, exercise=TRUE, opts.label=\"pprint\", table.checker=TRUE}", 
+"# pew", "# ```", "", "# ^ would invoke our custom checker in a knitr hook in order to do our own checking for the result + provide a custom output", 
+""), overwrite = FALSE)
 </script>
  
 <script type="application/shiny-prerendered" data-context="server">
@@ -11002,7 +11026,13 @@ learnr:::store_exercise_setup_chunk("__setup__", c("library(reticulate)", "libra
 "# webapps dir", "get_webapp <- function(name) here::here(\"shinyapps\", paste0(name, \".Rmd\"))", 
 "knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)", 
 "# colors for data diffing", "modified <- \"#a0a0ff\"", "green <- \"#74ff74\"", 
-"red <- \"#ff7374\""), overwrite = FALSE)
+"red <- \"#ff7374\"", "", "# TODO could we define a custom checker that defaults the gradethis in normal exercises", 
+"# but, for exercises that should generate custom feedback we give back a div block with our html element", 
+"# this would be nice for outputing a daff or pointblank dynamically for e.g.", 
+"# UPDATE: the custom exercise.checker is a clunky route bc feedback is always expecting a simple message text for the output; the easier route would be to do the same knitr chunk opt hook strategy as the pretty print for a given exercise. For example:", 
+"", "# ```{python ex-read_pew, exercise=TRUE, opts.label=\"pprint\", table.checker=TRUE}", 
+"# pew", "# ```", "", "# ^ would invoke our custom checker in a knitr hook in order to do our own checking for the result + provide a custom output", 
+""), overwrite = FALSE)
 </script>
  
 <script type="application/shiny-prerendered" data-context="server">

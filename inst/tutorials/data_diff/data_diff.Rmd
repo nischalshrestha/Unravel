@@ -1,0 +1,85 @@
+---
+title: "Table + Data Diff Summary"
+output: learnr::tutorial
+runtime: shiny_prerendered
+---
+
+```{r setup, include=FALSE}
+library(learnr)
+library(gradethis)
+library(kableExtra)
+library(tibble)
+library(reticulate)
+
+library(shiny)
+library(daff)
+knitr::opts_chunk$set(echo = FALSE)
+# install knitr hooks
+source(here::here("R", "knitr-hooks.R"))
+install_knitr_hooks()
+pew_data <- here::here("inst/tutorials/data_diff/data/pew.csv")
+```
+
+## `pd.melt`
+
+### Exercise 
+
+Execute the following `melt` operation:
+
+```{python pew_setup}
+import pandas as pd
+import os
+pew = pd.read_csv(r.pew_data)
+```
+
+```{python pew_long_setup, exercise.setup="pew_setup"}
+pew_long = pd.melt(pew, id_vars='religion')
+```
+
+```{python ex-read_pew, exercise=TRUE, exercise.setup="pew_long_setup", opts.label="pprint", data_diff=TRUE}
+pew_long
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

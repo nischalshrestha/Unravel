@@ -23,6 +23,19 @@ knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 modified <- "#a0a0ff"
 green <- "#74ff74"
 red <- "#ff7374"
+
+
+# TODO could we define a custom checker that defaults the gradethis in normal exercises
+# but, for exercises that should generate custom feedback we give back a div block with our html element
+# this would be nice for outputing a daff or pointblank dynamically for e.g.
+# UPDATE: the custom exercise.checker is a clunky route bc feedback is always expecting a simple message text for the output; the easier route would be to do the same knitr chunk opt hook strategy as the pretty print for a given exercise. For example:
+
+# ```{python ex-read_pew, exercise=TRUE, opts.label="pprint", table.checker=TRUE}
+# pew
+# ```
+
+# ^ would invoke our custom checker in a knitr hook in order to do our own checking for the result + provide a custom output
+
 ```
 
 ## Introduction
@@ -94,6 +107,7 @@ pew_long
 
 ```
 
+
 <br>
 
 You'll notice that we have melted the income columns into one single `variable` column, where the values now reside in the `value` column. This might be hard to see, so here's a visual summary of what has changed:
@@ -105,11 +119,22 @@ new_pew <- py$pew_long
 # print(new_pew)
 diff <- daff::differs_from(new_pew, old_pew)
 s <- daff:::summary.data_diff(diff)
+# Note: there are all the summaries that are available to us:
+# > ls(s)
+#  [1] "col_count_change_text"         "col_count_final"               "col_count_initial"          
+#  [4] "col_deletes"                   "col_inserts"                   "col_renames"                
+#  [7] "col_reorders"                  "col_updates"                   "data"                       
+# [10] "row_count_change_text"         "row_count_final"               "row_count_final_with_header"
+# [13] "row_count_initial"             "row_count_initial_with_header" "row_deletes"                
+# [16] "row_inserts"                   "row_reorders"                  "row_updates"                
+# [19] "source_name"                   "target_name"  
+# These are the main ones we care about
 summary_tbl <- tibble::tribble(
   ~ "", ~ "#", ~Modified, ~Reordered, ~Deleted, ~Added,
   "Rows", s$row_count_change_text, s$row_updates, s$row_reorders, s$row_deletes, s$row_inserts,
   "Cols", s$col_count_change_text, s$col_updates, s$col_reorders, s$col_deletes, s$col_inserts,
 )
+# summary_tbl
 
 # summary table
 kableExtra::kbl(summary_tbl) %>%
@@ -117,7 +142,43 @@ kableExtra::kbl(summary_tbl) %>%
   kableExtra::column_spec(3:4, background = modified) %>%
   kableExtra::column_spec(5, background = red) %>%
   kableExtra::column_spec(6, background = green)
+# as.character(out)
+
+# this is the output for the kableExtra table
+# <table class="table table-condensed table-responsive" style="width: auto !important; margin-left: auto; margin-right: auto;">
+#  <thead>
+#   <tr>
+#    <th style="text-align:left;">  </th>
+#    <th style="text-align:left;"> # </th>
+#    <th style="text-align:right;"> Modified </th>
+#    <th style="text-align:right;"> Reordered </th>
+#    <th style="text-align:right;"> Deleted </th>
+#    <th style="text-align:right;"> Added </th>
+#   </tr>
+#  </thead>
+# <tbody>
+#   <tr>
+#    <td style="text-align:left;"> Rows </td>
+#    <td style="text-align:left;"> 18 --&gt; 180 </td>
+#    <td style="text-align:right;background-color: #a0a0ff !important;"> 0 </td>
+#    <td style="text-align:right;background-color: #a0a0ff !important;"> 0 </td>
+#    <td style="text-align:right;background-color: #ff7374 !important;"> 0 </td>
+#    <td style="text-align:right;background-color: #74ff74 !important;"> 162 </td>
+#   </tr>
+#   <tr>
+#    <td style="text-align:left;"> Cols </td>
+#    <td style="text-align:left;"> 11 --&gt; 3 </td>
+#    <td style="text-align:right;background-color: #a0a0ff !important;"> 0 </td>
+#    <td style="text-align:right;background-color: #a0a0ff !important;"> 0 </td>
+#    <td style="text-align:right;background-color: #ff7374 !important;"> 9 </td>
+#    <td style="text-align:right;background-color: #74ff74 !important;"> 1 </td>
+#   </tr>
+# </tbody>
+# </table>
+
 ```
+
+
 
 If you look at the below data diff visualization, you'll notice that the the variable column has been added (green). Scrolling down the table, we see that all **9** income variables have been deleted (red) and are now under `variable` (green). This means we have also added many more rows due to this change. We weren't modifying any existing values so there are no modified/reordered rows/columns.
 
@@ -155,6 +216,7 @@ inserted_cols <- col_vectors[colnames(diff_data) %in% inserted_col_names]
 
 # get rid of daff-related schema row
 cols_to_add <- diff_data[1, 2:length(colnames(diff_data))]
+
 colnames(diff_data) <- diff_data[1, ]
 # get rid of daff-related ! column
 diff_data$`@@` <- NULL
