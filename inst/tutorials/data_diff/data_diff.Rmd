@@ -16,11 +16,13 @@ library(daff)
 knitr::opts_chunk$set(echo = FALSE)
 # custom scripts
 source(here::here("R", "utils.R"))
+source(here::here("R", "setup-cache.R"))
 source(here::here("R", "diffing.R"))
 source(here::here("R", "knitr-hooks.R"))
 # install knitr hooks
 install_knitr_hooks()
 pew_data <- here::here("inst/tutorials/data_diff/data/pew.csv")
+tutorial_options(exercise.timelimit = 120)
 ```
 
 ## `pd.melt`
@@ -35,14 +37,38 @@ import os
 pew = pd.read_csv(r.pew_data)
 ```
 
-```{python pew_long_setup, exercise.setup="pew_setup"}
+```{python ex-read_pew, exercise=TRUE, exercise.setup="pew_setup", opts.label="pprint", data_diff=FALSE}
 pew_long = pd.melt(pew, id_vars='religion')
-```
-
-```{python ex-read_pew, exercise=TRUE, exercise.setup="pew_long_setup", opts.label="pprint", data_diff=TRUE}
 pew_long
 
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

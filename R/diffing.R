@@ -2,7 +2,7 @@
 #' Takes in knitr chunk options and uses the previous dataframe and the
 #' current one to generate a data diff.
 #'
-#' @param options 
+#' @param code 
 #' @param include_summary 
 #' @param include_diff_table 
 #'
@@ -10,7 +10,8 @@
 #' @export
 #'
 #' @examples
-data_diff <- function(options, include_summary = FALSE, include_diff_table = TRUE) {
+data_diff <- function(code, include_summary = FALSE, include_diff_table = TRUE) {
+
   # colors for data diffing
   modified <- "#a0a0ff"
   green <- "#74ff74"
@@ -57,7 +58,8 @@ data_diff <- function(options, include_summary = FALSE, include_diff_table = TRU
     #### Now render the data diff table
     library(dplyr)
     
-    # TODO: change the file location (rn it's under project dir)
+    # Note: this file will only be used in the temporary dir for the
+    # learnr evaluation stage
     daff::write_diff(diff, "patch.csv")
     diff_data <- readr::read_csv("patch.csv")
     diff_data <- as.data.frame(diff_data)
@@ -94,8 +96,6 @@ data_diff <- function(options, include_summary = FALSE, include_diff_table = TRU
       function(x) as.character(as.numeric(x) - 2), 
       character(1)
     )
-    # TODO: wizard of oz the cell values to look like Python
-    
     
     # TODO: see if you can also highlight column parts
     
