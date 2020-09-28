@@ -12,6 +12,7 @@ library(tibble)
 library(reticulate)
 library(shiny)
 library(daff)
+library(crosstalk)
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 # custom scripts
 source(here::here("R", "utils.R"))
@@ -21,97 +22,39 @@ source(here::here("R", "diffing.R"))
 # install knitr hooks
 install_knitr_hooks()
 pew_data <- here::here("inst/tutorials/data_diff/data/pew.csv")
+rpew <- read.csv(pew_data)
 tutorial_options(exercise.timelimit = 120)
 ```
 
 ## `pd.melt`
 
-### Exercise 
+### Data 
 
-Execute the following `melt` operation:
+I have already loaded up the data for you to a variable called `pew`. Run the exercise below to take a peek at the data:
 
 ```{python pew_setup}
 import pandas as pd
 import os
-
 pew = pd.read_csv(r.pew_data)
 ```
 
 ```{python ex-read_pew, exercise=TRUE, exercise.setup="pew_setup", opts.label="pprinter"}
+pew
+```
+
+### Melt
+
+Execute the following `melt` operation:
+
+
+<!-- This commented line is necessary for reactable to render the pew dfs -->
+<!-- `r htmltools::knit_print.shiny.tag.list(reactable::reactable(rpew))` -->
+
+```{python ex-pew_long, debug=FALSE, exercise=TRUE, exercise.setup="pew_setup", opts.label="difftable"}
 pew_long = pd.melt(pew, id_vars='religion')
 pew_long
 
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

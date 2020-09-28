@@ -23,6 +23,7 @@ install_knitr_hooks <- function() {
   # templates for various daff presentations
   knitr::opts_template$set(daffbasic = append(pprintopts, list(data_diff = TRUE, summary = TRUE, diff_table = FALSE)))
   knitr::opts_template$set(daffadvanced = append(pprintopts, list(data_diff = TRUE, summary = TRUE, diff_table = TRUE)))
+  knitr::opts_template$set(difftable = append(pprintopts, list(data_diff = TRUE, summary = FALSE, diff_table = TRUE)))
 
   # custom engine that takes python code and outputs data structure viz via `lolviz`
   knitr::knit_engines$set(dsviz = function(options) {
@@ -89,20 +90,27 @@ install_knitr_hooks <- function() {
             if(identical("data.frame", class(converted_result))) {
               debug_print(options, 'prepping a dataframe')
               options$results <- "asis"
-              options$code <- ""
+              # options$code <- ""
               # wizard of oz pandas dataframe by changing index as well
               converted_result <- python_df(raw_result)
-              # kableExtra for now
-              out <- kableExtra::kbl(converted_result) %>%
-                kableExtra::kable_styling(bootstrap_options = c("condensed", "responsive")) %>%
-                kableExtra::scroll_box(width = "100%", height = "250px")
+              out <- htmltools::knit_print.shiny.tag.list(
+                reactable::reactable(
+                  converted_result,
+                  pagination = FALSE,
+                  height = 300,
+                  bordered = TRUE,
+                  # rownames = TRUE,
+                  resizable = TRUE
+                )
+              )
               # if data_diff is requested, append the output with it
               if (length(options$data_diff)) {
                 out <- c(out, get_daff_output(options))
               }
               # print('returning dataframe')
+              debug_print(options, out)
               store_delta_cache(paste0(oldcode, collapse="\n"), out)
-              return(knitr::engine_output(options, "", out))
+              return(out)
             } else {
               debug_print(options, 'returning a non-dataframe will not need be pretty printed')
               # for everything else, use python engine as expected
