@@ -121,9 +121,6 @@ $(document).ready(function () {
 <div id="section-exercise" class="section level3">
 <h3>Exercise</h3>
 <p>Execute the following <code>melt</code> operation:</p>
-<!-- ```{python pew_long_setup, exercise.setup="pew_setup"} -->
-<!-- pew_long = pd.melt(pew, id_vars='religion') -->
-<!-- ``` -->
 <div class="tutorial-exercise" data-label="ex-read_pew" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
 <pre class="text"><code>pew_long = pd.melt(pew, id_vars=&#39;religion&#39;)
 pew_long</code></pre>
@@ -136,15 +133,14 @@ library(gradethis)
 library(kableExtra)
 library(tibble)
 library(reticulate)
-
 library(shiny)
 library(daff)
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 # custom scripts
 source(here::here("R", "utils.R"))
 source(here::here("R", "setup-cache.R"))
-source(here::here("R", "diffing.R"))
 source(here::here("R", "knitr-hooks.R"))
+source(here::here("R", "diffing.R"))
 # install knitr hooks
 install_knitr_hooks()
 pew_data <- here::here("inst/tutorials/data_diff/data/pew.csv")
@@ -167,31 +163,34 @@ session$onSessionEnded(function() {
  
 <script type="application/shiny-prerendered" data-context="server">
 learnr:::store_exercise_setup_chunk("__setup__", c("library(learnr)", "library(gradethis)", "library(kableExtra)", 
-"library(tibble)", "library(reticulate)", "", "library(shiny)", 
-"library(daff)", "knitr::opts_chunk$set(echo = FALSE)", "# custom scripts", 
-"source(here::here(\"R\", \"utils.R\"))", "source(here::here(\"R\", \"setup-cache.R\"))", 
-"source(here::here(\"R\", \"diffing.R\"))", "source(here::here(\"R\", \"knitr-hooks.R\"))", 
-"# install knitr hooks", "install_knitr_hooks()", "pew_data <- here::here(\"inst/tutorials/data_diff/data/pew.csv\")", 
+"library(tibble)", "library(reticulate)", "library(shiny)", "library(daff)", 
+"knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)", 
+"# custom scripts", "source(here::here(\"R\", \"utils.R\"))", 
+"source(here::here(\"R\", \"setup-cache.R\"))", "source(here::here(\"R\", \"knitr-hooks.R\"))", 
+"source(here::here(\"R\", \"diffing.R\"))", "# install knitr hooks", 
+"install_knitr_hooks()", "pew_data <- here::here(\"inst/tutorials/data_diff/data/pew.csv\")", 
 "tutorial_options(exercise.timelimit = 120)"), overwrite = FALSE)
 </script>
  
 <script type="application/shiny-prerendered" data-context="server">
 learnr:::store_exercise_setup_chunk("__setup__", c("library(learnr)", "library(gradethis)", "library(kableExtra)", 
-"library(tibble)", "library(reticulate)", "", "library(shiny)", 
-"library(daff)", "knitr::opts_chunk$set(echo = FALSE)", "# custom scripts", 
-"source(here::here(\"R\", \"utils.R\"))", "source(here::here(\"R\", \"setup-cache.R\"))", 
-"source(here::here(\"R\", \"diffing.R\"))", "source(here::here(\"R\", \"knitr-hooks.R\"))", 
-"# install knitr hooks", "install_knitr_hooks()", "pew_data <- here::here(\"inst/tutorials/data_diff/data/pew.csv\")", 
+"library(tibble)", "library(reticulate)", "library(shiny)", "library(daff)", 
+"knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)", 
+"# custom scripts", "source(here::here(\"R\", \"utils.R\"))", 
+"source(here::here(\"R\", \"setup-cache.R\"))", "source(here::here(\"R\", \"knitr-hooks.R\"))", 
+"source(here::here(\"R\", \"diffing.R\"))", "# install knitr hooks", 
+"install_knitr_hooks()", "pew_data <- here::here(\"inst/tutorials/data_diff/data/pew.csv\")", 
 "tutorial_options(exercise.timelimit = 120)"), overwrite = FALSE)
 </script>
  
 <script type="application/shiny-prerendered" data-context="server">
 learnr:::store_exercise_setup_chunk("__setup__", c("library(learnr)", "library(gradethis)", "library(kableExtra)", 
-"library(tibble)", "library(reticulate)", "", "library(shiny)", 
-"library(daff)", "knitr::opts_chunk$set(echo = FALSE)", "# custom scripts", 
-"source(here::here(\"R\", \"utils.R\"))", "source(here::here(\"R\", \"setup-cache.R\"))", 
-"source(here::here(\"R\", \"diffing.R\"))", "source(here::here(\"R\", \"knitr-hooks.R\"))", 
-"# install knitr hooks", "install_knitr_hooks()", "pew_data <- here::here(\"inst/tutorials/data_diff/data/pew.csv\")", 
+"library(tibble)", "library(reticulate)", "library(shiny)", "library(daff)", 
+"knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)", 
+"# custom scripts", "source(here::here(\"R\", \"utils.R\"))", 
+"source(here::here(\"R\", \"setup-cache.R\"))", "source(here::here(\"R\", \"knitr-hooks.R\"))", 
+"source(here::here(\"R\", \"diffing.R\"))", "# install knitr hooks", 
+"install_knitr_hooks()", "pew_data <- here::here(\"inst/tutorials/data_diff/data/pew.csv\")", 
 "tutorial_options(exercise.timelimit = 120)"), overwrite = FALSE)
 </script>
  
@@ -203,36 +202,35 @@ output$`tutorial-exercise-ex-read_pew-output` <- renderUI({
 </script>
  
 <script type="application/shiny-prerendered" data-context="server">
-learnr:::store_exercise_cache("ex-read_pew", list(setup = "import pandas as pd\nimport os\npew = pd.read_csv(r.pew_data)", 
-    chunks = list(list(label = "pew_setup", code = "import pandas as pd\nimport os\npew = pd.read_csv(r.pew_data)", 
+learnr:::store_exercise_cache("ex-read_pew", list(setup = "import pandas as pd\nimport os\n\npew = pd.read_csv(r.pew_data)", 
+    chunks = list(list(label = "pew_setup", code = "import pandas as pd\nimport os\n\npew = pd.read_csv(r.pew_data)", 
         opts = list(label = "\"pew_setup\"", engine = "\"python\""), 
         engine = "python"), list(label = "ex-read_pew", code = "pew_long = pd.melt(pew, id_vars='religion')\npew_long\n", 
         opts = list(label = "\"ex-read_pew\"", exercise = "TRUE", 
-            exercise.setup = "\"pew_setup\"", opts.label = "\"pprint\"", 
-            data_diff = "FALSE", engine = "\"python\""), engine = "python")), 
-    code_check = NULL, error_check = NULL, check = NULL, solution = NULL, 
-    options = list(eval = FALSE, echo = TRUE, results = "hide", 
-        tidy = FALSE, tidy.opts = NULL, collapse = FALSE, prompt = FALSE, 
-        comment = NA, highlight = FALSE, strip.white = TRUE, 
-        size = "normalsize", background = "#F7F7F7", cache = 0, 
-        cache.path = "data_diff_cache/html/", cache.vars = NULL, 
-        cache.lazy = TRUE, dependson = NULL, autodep = FALSE, 
-        cache.rebuild = FALSE, fig.keep = "high", fig.show = "asis", 
-        fig.align = "default", fig.path = "data_diff_files/figure-html/", 
+            exercise.setup = "\"pew_setup\"", opts.label = "\"pprinter\"", 
+            engine = "\"python\""), engine = "python")), code_check = NULL, 
+    error_check = NULL, check = NULL, solution = NULL, options = list(
+        eval = FALSE, echo = TRUE, results = "hide", tidy = FALSE, 
+        tidy.opts = NULL, collapse = FALSE, prompt = FALSE, comment = NA, 
+        highlight = FALSE, strip.white = TRUE, size = "normalsize", 
+        background = "#F7F7F7", cache = 0, cache.path = "data_diff_cache/html/", 
+        cache.vars = NULL, cache.lazy = TRUE, dependson = NULL, 
+        autodep = FALSE, cache.rebuild = FALSE, fig.keep = "high", 
+        fig.show = "asis", fig.align = "default", fig.path = "data_diff_files/figure-html/", 
         dev = "png", dev.args = NULL, dpi = 192, fig.ext = NULL, 
         fig.width = 6.5, fig.height = 4, fig.env = "figure", 
         fig.cap = NULL, fig.scap = NULL, fig.lp = "fig:", fig.subcap = NULL, 
         fig.pos = "", out.width = 624, out.height = NULL, out.extra = NULL, 
         fig.retina = 2, external = TRUE, sanitize = FALSE, interval = 1, 
-        aniopts = "controls,loop", warning = TRUE, error = FALSE, 
-        message = TRUE, render = NULL, ref.label = NULL, child = NULL, 
+        aniopts = "controls,loop", warning = FALSE, error = FALSE, 
+        message = FALSE, render = NULL, ref.label = NULL, child = NULL, 
         engine = "python", split = FALSE, include = TRUE, purl = TRUE, 
         max.print = 1000, tutorial = TRUE, exercise.timelimit = 120, 
         pprint = TRUE, label = "ex-read_pew", exercise = TRUE, 
-        exercise.setup = "pew_setup", opts.label = "pprint", 
-        data_diff = FALSE, code = c("pew_long = pd.melt(pew, id_vars='religion')", 
+        exercise.setup = "pew_setup", opts.label = "pprinter", 
+        code = c("pew_long = pd.melt(pew, id_vars='religion')", 
         "pew_long", ""), out.width.px = 624, out.height.px = 384, 
-        params.src = "ex-read_pew, exercise=TRUE, exercise.setup=\"pew_setup\", opts.label=\"pprint\", data_diff=FALSE, engine=\"python\"", 
+        params.src = "ex-read_pew, exercise=TRUE, exercise.setup=\"pew_setup\", opts.label=\"pprinter\", engine=\"python\"", 
         exercise.df_print = "paged", exercise.checker = "NULL"), 
     engine = "python"))
 </script>

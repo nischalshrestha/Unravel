@@ -1,32 +1,57 @@
 
+#' Given knitr chunk options for exercise, return the daff output.
+#'
+#' @param options
+#'
+#' @return
+#' @export
+#'
+#' @examples
+get_daff_output <- function(options) {
+  include_summary <- ifelse(is.null(options$summary), FALSE, options$summary)
+  include_diff_table <- ifelse(is.null(options$diff_table), FALSE, options$diff_table)
+  diff_out <- data_diff(include_summary = include_summary, include_diff_table = include_diff_table)
+  # TODO to build this summary programmatically
+  # - it's possible to list out column variables that were pivoted
+  # - it's possible to insert summary numbers of added, deleted, modified, reordered rows/cols/cells
+  # - it's possible to make a statement about how there were no changes in any change category
+  summary_statement <-
+    "All **9** `income` variables (`<$10K-20K, ... , 150K, Don't Know/refused`) have been deleted (red) and
+    have been \"molten\" into column `variable` (green), which added **162** rows. In other words,
+    we changed the data from a wide format to a long format. We weren't modifying any
+    existing values so there are no modified/reordered rows/columns or cells."
+  return(c("<br>", "**Data Diff Summary:**\n", summary_statement, "<br>", diff_out))
+}
+
 #' Takes in knitr chunk options and uses the previous dataframe and the
 #' current one to generate a data diff.
 #'
-#' @param code 
-#' @param include_summary 
-#' @param include_diff_table 
+#' @param code
+#' @param include_summary
+#' @param include_diff_table
 #'
 #' @return
 #' @export
 #'
 #' @examples
 data_diff <- function(code, include_summary = FALSE, include_diff_table = TRUE) {
+  # TODO: figure out the bottle neck of performance
 
   # colors for data diffing
   modified <- "#a0a0ff"
   green <- "#74ff74"
   red <- "#ff7374"
-  
+
   old_pew <- as.data.frame(py$pew)
   new_pew <- as.data.frame(py$pew_long)
   diff <- daff::diff_data(old_pew, new_pew)
-  
+
   summary_table_html <- ""
-  
+
   if (include_summary) {
     #### Render the data diff summary table
     s <- daff:::summary.data_diff(diff)
-    
+
     # Note: there are all the summaries that are available to us:
     # > ls(s)
     #  [1] "col_count_change_text"         "col_count_final"               "col_count_initial"
@@ -42,7 +67,7 @@ data_diff <- function(code, include_summary = FALSE, include_diff_table = TRUE) 
       "Rows", s$row_count_change_text, s$row_updates, s$row_reorders, s$row_deletes, s$row_inserts,
       "Cols", s$col_count_change_text, s$col_updates, s$col_reorders, s$col_deletes, s$col_inserts,
     )
-    
+
     # summary table
     summary_table_html <-
       kableExtra::kbl(summary_tbl) %>%
@@ -51,55 +76,56 @@ data_diff <- function(code, include_summary = FALSE, include_diff_table = TRUE) 
       kableExtra::column_spec(5, background = red) %>%
       kableExtra::column_spec(6, background = green)
   }
-  
+
   diff_table_html <- ""
   if (include_diff_table) {
-    
+
     #### Now render the data diff table
     library(dplyr)
-    
+
     # Note: this file will only be used in the temporary dir for the
     # learnr evaluation stage
     daff::write_diff(diff, "patch.csv")
     diff_data <- readr::read_csv("patch.csv")
     diff_data <- as.data.frame(diff_data)
-    
+
     # TODO: incorporate modified as well
-    
+
     # get inserted rows
     row_vectors <- 1:length(rownames(diff_data))
     inserted_rows <- row_vectors[diff_data$`!` == "+++"]
-    
+
     # get deleted cols
     deleted_col_names <- diff_data %>%
       select(starts_with("---")) %>%
       colnames()
     col_vectors <- 1:length(colnames(diff_data))
     deleted_cols <- col_vectors[colnames(diff_data) %in% deleted_col_names]
-    
+
     # get inserted cols
     inserted_col_names <- diff_data %>%
       select(starts_with("+++")) %>%
       colnames()
     inserted_cols <- col_vectors[colnames(diff_data) %in% inserted_col_names]
-    
+
     # get rid of daff-related schema row
     cols_to_add <- diff_data[1, 2:length(colnames(diff_data))]
-    
+
     colnames(diff_data) <- diff_data[1, ]
     # get rid of daff-related ! column
     diff_data$`@@` <- NULL
     diff_data <- diff_data[-1, ]
     # wizard of oz python indexing
     rownames(diff_data) <- vapply(
-      rownames(diff_data), 
-      function(x) as.character(as.numeric(x) - 2), 
+      rownames(diff_data),
+      function(x) as.character(as.numeric(x) - 2),
       character(1)
     )
-    
+
     # TODO: see if you can also highlight column parts
-    
-    # TODO: instead of NULL for the columns that are deleted while overlapped with inserted rows, 
+    # TODO: try reactable
+
+    # TODO: instead of NULL for the columns that are deleted while overlapped with inserted rows,
     # maybe we could replace with empty string
     # render a pretty printed table with highlighted modified, inserted, deleted rows/columns
     diff_table_html <- kableExtra::kbl(diff_data) %>%
@@ -109,6 +135,6 @@ data_diff <- function(code, include_summary = FALSE, include_diff_table = TRUE) 
       kableExtra::column_spec(deleted_cols, background = red) %>%
       kableExtra::scroll_box(width = "100%", height = "400px")
   }
-  
+
   return(c(summary_table_html, diff_table_html))
 }

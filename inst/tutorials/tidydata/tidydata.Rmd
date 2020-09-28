@@ -13,42 +13,37 @@ library(daff)
 library(magrittr)
 library(dplyr)
 library(readr)
-# install knitr hooks
-source(here::here("R", "knitr-hooks.R"))
-install_knitr_hooks()
-# webapps dir
-get_webapp <- function(name) here::here("shinyapps", paste0(name, ".Rmd"))
-knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
-# colors for data diffing
-modified <- "#a0a0ff"
-green <- "#74ff74"
-red <- "#ff7374"
-
-library(reactable)
+# webapps dir (experimental)
+# get_webapp <- function(name) here::here("shinyapps", paste0(name, ".Rmd"))
 
 # TODO could we define a custom checker that defaults the gradethis in normal exercises
 # but, for exercises that should generate custom feedback we give back a div block with our html element
 # this would be nice for outputing a daff or pointblank dynamically for e.g.
 # UPDATE: the custom exercise.checker is a clunky route bc feedback is always expecting a simple message text for the output; the easier route would be to do the same knitr chunk opt hook strategy as the pretty print for a given exercise. For example:
-
 # ```{python ex-read_pew, exercise=TRUE, opts.label="pprint", table.checker=TRUE}
 # pew
 # ```
-
 # ^ would invoke our custom checker in a knitr hook in order to do our own checking for the result + provide a custom output
 
+knitr::opts_chunk$set(echo = FALSE)
+
+# custom scripts
+source(here::here("R", "utils.R"))
+source(here::here("R", "setup-cache.R"))
+source(here::here("R", "diffing.R"))
+source(here::here("R", "knitr-hooks.R"))
+# install knitr hooks
+install_knitr_hooks()
+tutorial_options(exercise.timelimit = 120)
+#experimental
+# library(reactable)
+# data
+pew_data_path <- here::here("inst/tutorials/tidydata/data/pew.csv")
 ```
 
 ## Introduction
 
-```{r}
-# file.exists(here::here("inst/tutorials/data_diff/data/pew.csv"))
-pew <- readr::read_csv(here::here("inst/tutorials/data_diff/data/pew.csv"))
-reactable(pew, bordered = TRUE, showPageSizeOptions = TRUE)
-```
-
-
-In this tutorial, we will go over a framework called "Tidy Data" by Hadley Wickham introduced in his tidy data [paper](http://vita.had.co.nz/papers/tidy-data.pdf) in the *Journal of Statistical Software*. What is *tidy data*? Tidy data is a framework that helps structure and shape your data to make it easier to analyze and visualize.
+In this tutorial, we will go over an extremely useful framework for data wrangling "Tidy Data" by Hadley Wickham ([paper](http://vita.had.co.nz/papers/tidy-data.pdf)). What is *tidy data*? Tidy data is a framework that helps structure and shape your data to make it easier to analyze and visualize.
 
 Tables or dataframes that are "tidy" meets the following criteria:
 
@@ -56,9 +51,9 @@ Tables or dataframes that are "tidy" meets the following criteria:
 - Each column is a variable
 - Each type of observational unit forms a table
 
-All data that don't meet the criteria are considered "messy". In the following lessons, we will go over how to tidy data using this framework in both Python and R.
+All data that don't meet the criteria are considered "messy". In the following lessons, we will go over how to tidy data using this framework in Python. 
 
-Pre-requisite knowledge:
+I will assume you have the following Python knowledge.:
 
 a. function and method calls
 b. subsetting data
@@ -72,32 +67,45 @@ By the end of the tutorial, you will know how to reshape your data into a tidy f
 3. Normalize data by separating a dataframe into multiple tables
 4. Assemble data from multiple parts
 
+### Tutorial format
+
+Before we begin I'd like to point out the tutorial format. We will mix narrative, code exercises, and visuals to teach you the various operations to tidy data. For code exercises, you will see:
+
+A Python code exercise:
+
+```{python pyexample, exercise=TRUE}
+# type in Python code and execute
+2 + 2
+
+```
+
+Sometimes we will include visuals to help you grok the various tidy data operations that are often difficult to mentally visualize such the one below on subsetting a dataframe:
+
+![](images/subsetting.png)
+
+Now, we will go over the most common types of messy data and learn how to tidy them using Python's `pandas` [library](https://pandas.pydata.org).
+
 ## Columns contain values, not variables.
 
-In this lesson, we will use data on income and religion in the United States from the Pew Research Center to illustrate how to work with columns that contain values, rather than variables.
+It is common to find real world datasets in which variables do not reside in a single column, but are spread across columns. The primary reason for this is the ease of data entry as you don't have to repeat other variables. But, this form can make it difficult to analyze and feed into statistical models and data visualization libraries which usually expect a tidy input: rows are observations, columns are variables. 
 
-```{python pysetup}
+We will use data on income and religion in the United States from the Pew Research Center to illustrate how to work with columns that contain values, rather than variables.
+
+```{python pew_setup}
 import pandas as pd
 import os
-pew = pd.read_csv(f"{os.getcwd()}/data/pew.csv")
-pew_long = pd.melt(pew, id_vars='religion')
-# this line works in regular rmd context
-# pew = pd.read_csv(f"{os.getcwd()}/inst/tutorials/tidydata/data/pew.csv")
+pew = pd.read_csv(r.pew_data_path)
 ```
 
 I have already loaded up the data for you to a variable called `pew`. Run the exercise below to take a peek at the data:
 
-```{python ex-read_pew, exercise=TRUE, opts.label="pprint"}
+```{python ex-read_pew, exercise=TRUE, exercise.setup="pew_setup", opts.label="pprinter"}
 pew
 ```
 
 <br>
 
-Notice how the income variable is spread across columns. In other words, the  data is in "wide" form. It's not that this format is inherently bad. But, it makes analysis a bit more difficult. So, we're going to reshape the data into a "long" form such that we work with 3 variables instead:
-
-- religion
-- income
-- count
+Notice how the income variables `<$10K-20K, ... , 150K, Don't Know/refused` is spread across columns. This is what's known as a "wide" format This format is not inherently bad, but since functions expect a tidy input, a variable spread across columns makes it difficult to extract frequency for each value of the income. So, we're going to reshape the data into a "long" format by "melting" the income columns into a single `income` variable instead.
 
 ### Enter melt
 
@@ -108,15 +116,35 @@ In pandas, there is a function that will help us reshape `pew` into a tidy data 
 - `var_name` is a string for the new column name when the `value_vars` is melted down. By default, it will be named `variable`.
 - `value_name` is a string for the new column name that represents the values for the `var_name`. By default, it will be named `value`.
 
-Since we want to only retain `religion` column as is, it will serve as the only item for `id_vars`. Go ahead and run this code and examine the output:
 
-```{python ex-melt_pew, exercise=TRUE, opts.label="pprint"}
+Since we want to only retain `religion` column as is, it will serve as the only item for `id_vars`. We want as output 3 columns in total:
+
+- religion
+- income
+- count
+
+Let's run this code using `melt` to demonstrate moving from a wide data to long data format:
+
+<!-- TODO: do a custom exercise check (you can easily find the -check chunk but we may need our own custom one that does not go through learnr route) -->
+
+```{python ex-melt_pew, exercise=TRUE, exercise.setup="ex-read_pew", opts.label="daffadvanced", debug=TRUE}
 pew_long = pd.melt(pew, id_vars='religion')
 pew_long
 
 ```
 
+
+
+
 <br>
+
+
+
+
+
+
+
+
 
 
 

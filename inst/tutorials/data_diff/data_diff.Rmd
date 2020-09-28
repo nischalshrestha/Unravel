@@ -10,15 +10,14 @@ library(gradethis)
 library(kableExtra)
 library(tibble)
 library(reticulate)
-
 library(shiny)
 library(daff)
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 # custom scripts
 source(here::here("R", "utils.R"))
 source(here::here("R", "setup-cache.R"))
-source(here::here("R", "diffing.R"))
 source(here::here("R", "knitr-hooks.R"))
+source(here::here("R", "diffing.R"))
 # install knitr hooks
 install_knitr_hooks()
 pew_data <- here::here("inst/tutorials/data_diff/data/pew.csv")
@@ -34,14 +33,31 @@ Execute the following `melt` operation:
 ```{python pew_setup}
 import pandas as pd
 import os
+
 pew = pd.read_csv(r.pew_data)
 ```
 
-```{python ex-read_pew, exercise=TRUE, exercise.setup="pew_setup", opts.label="pprint", data_diff=FALSE}
+```{python ex-read_pew, exercise=TRUE, exercise.setup="pew_setup", opts.label="pprinter"}
 pew_long = pd.melt(pew, id_vars='religion')
 pew_long
 
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
