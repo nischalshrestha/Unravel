@@ -10,7 +10,7 @@
 get_daff_output <- function(options) {
   include_summary <- ifelse(is.null(options$summary), FALSE, options$summary)
   include_diff_table <- ifelse(is.null(options$diff_table), FALSE, options$diff_table)
-  diff_out <- data_diff(include_summary = include_summary, include_diff_table = include_diff_table)
+  diff_out <- daff_html(options, include_summary = include_summary, include_diff_table = include_diff_table)
   # TODO to build this summary programmatically
   # - it's possible to list out column variables that were pivoted
   # - it's possible to insert summary numbers of added, deleted, modified_color, reordered rows/cols/cells
@@ -34,7 +34,7 @@ get_daff_output <- function(options) {
 #' @export
 #'
 #' @examples
-data_diff <- function(code, include_summary = FALSE, include_diff_table = TRUE) {
+daff_html <- function(options, include_summary = FALSE, include_diff_table = FALSE) {
   # colors for data diffing
   modified_color <- "#a0a0ff"
   inserted_color <- "#74ff74"
@@ -43,13 +43,14 @@ data_diff <- function(code, include_summary = FALSE, include_diff_table = TRUE) 
   # TODO: programmatically get the old and new data set to compare
   old_pew <- as.data.frame(py$pew)
   new_pew <- as.data.frame(py$pew_long)
+
+  # new_pew <- as.data.frame(py$pew_long)
   diff <- daff::diff_data(old_pew, new_pew)
+  s <- attr(diff, "summary")
 
   summary_table_html <- ""
-
   if (include_summary) {
     #### Render the data diff summary table
-    s <- daff:::summary.data_diff(diff)
     # Note: there are all the summaries that are available to us:
     # > ls(s)
     #  [1] "col_count_change_text"         "col_count_final"               "col_count_initial"
@@ -93,6 +94,7 @@ data_diff <- function(code, include_summary = FALSE, include_diff_table = TRUE) 
     summary_table_html <- htmltools::knit_print.shiny.tag.list(reactable_table)
   }
 
+
   diff_table_html <- ""
   if (include_diff_table) {
 
@@ -103,53 +105,76 @@ data_diff <- function(code, include_summary = FALSE, include_diff_table = TRUE) 
     # learnr evaluation stage
     path <- "patch.csv"
     daff::write_diff(diff, path)
-    path <- here::here("inst/tutorials/data_diff/patch.csv")
-    diff_data <- readr::read_csv(path)
-    diff_data <- as.data.frame(diff_data)
+    # path <- here::here("inst/tutorials/data_diff/patch.csv")
+    diff_data <- as.data.frame(readr::read_csv(path))
 
-    # TODO: modified rows/columns
+    # note if we changed the header's schema
+    has_schema_change <- !is.null(diff_data$`!`)
 
-    # 1) get all rows that have been inserted
+    # 1) get all rows that have been inserted / modified
     row_vectors <- 1:length(rownames(diff_data))
-    inserted_rows <- row_vectors[diff_data$`!` == "+++"]
+    inserted_rows <-
+      if (has_schema_change) {
+        row_vectors[diff_data$`!` == "+++"]
+      } else {
+        rows = row_vectors[diff_data$`@@` == "+++"]
+        rows[!is.na(rows)]
+      }
 
-    # TODO: inserted rows
+    modified_rows <-
+      if (has_schema_change) {
+        # print('woa')
+        row_vectors[diff_data$`!` == "->"]
+      } else {
+        rows = row_vectors[diff_data$`@@` == "->"]
+        rows[!is.na(rows)]
+      }
+    # TODO: deleted rows
 
-    # 2) get all cols that have been deleted
+    # 2) get all cols that have been deleted / inserted
     col_vectors <- 1:length(colnames(diff_data))
 
+    # deleted
     deleted_col_names <- diff_data %>%
       select(starts_with("---")) %>%
       colnames()
     deleted_cols <- col_vectors[colnames(diff_data) %in% deleted_col_names]
 
-
-    # 3) get inserted cols
+    # inserted cols
     inserted_col_names <- diff_data %>%
       select(starts_with("+++")) %>%
       colnames()
     inserted_cols <- col_vectors[colnames(diff_data) %in% inserted_col_names]
 
-    # 4) get rid of daff-related schema row / cols
+    # Note: we won't do modify until we get to cell-level when detecting ->
+
+    # 3) get rid of daff-related schema row / cols
 
     # get rid of top daff row
-    colnames(diff_data) <- diff_data[1, ]
-    inserted_rows <- inserted_rows - 1
+
+    colnames(diff_data) <-
+      if (has_schema_change) {
+        inserted_rows <- inserted_rows - 1
+        diff_data[1, ]
+      } else {
+        colnames(diff_data)
+      }
 
     # get rid of @@ column
     diff_data$`@@` <- NULL
-    # get rid of daff-related ! column
-    diff_data <- diff_data[-1, ]
-    inserted_cols <- inserted_cols - 1
-    deleted_cols <- deleted_cols - 1
+    col_vectors <- col_vectors[-length(col_vectors)]
+    # get rid of daff-related ! column (if any)
+    diff_data <-
+      if (has_schema_change) {
+        inserted_cols <- inserted_cols - 1
+        deleted_cols <- deleted_cols - 1
+        diff_data[-1, ]
+      } else {
+        diff_data
+      }
 
     # wizard of oz python indexing
-    rownames(diff_data) <- vapply(
-      rownames(diff_data),
-      # 2 since we deleted a row (schema row)
-      function(x) as.character(as.numeric(x) - 2),
-      character(1)
-    )
+    rownames(diff_data) <- 1:nrow(diff_data) - 1
 
     format_columns <- function(columns, change_type) {
       col_color <- switch(
@@ -162,17 +187,34 @@ data_diff <- function(code, include_summary = FALSE, include_diff_table = TRUE) 
       column_names <- names(columns)
       range <- 1:length(columns)
       for(i in seq_along(range)) {
-        rtn[[column_names[i]]] <- reactable::colDef(
-          headerStyle = list(background = col_color),
-          style = function(value) {
-            list(background = col_color)
-          }
-        )
+        if (identical(change_type, "modified")) {
+          rtn[[column_names[i]]] <- reactable::colDef(
+            headerStyle = list(background = col_color),
+            style = function(value) {
+              # we will need to use something like this to color cell for rows
+              if (grepl("->", value))
+                return(list(background = col_color))
+            }
+          )
+        } else {
+          rtn[[column_names[i]]] <- reactable::colDef(
+            headerStyle = list(background = col_color),
+            style = function(value) {
+              if (identical(value, "NULL")) {
+                print(value)
+                return(list(background = col_color, color = col_color))
+              }
+              return(list(background = col_color))
+            }
+          )
+        }
       }
       return(rtn)
     }
-    # diff_data[, inserted_cols, drop=FALSE]
-    # TODO add other defs
+
+    # collect column definitions for reactable for styling
+    modified_cols <- col_vectors[!(col_vectors %in% c(inserted_cols, deleted_cols))]
+    modified_column_defs <- format_columns(diff_data[, modified_cols, drop=FALSE], "modified")
     inserted_column_defs <- format_columns(diff_data[, inserted_cols, drop=FALSE], "inserted")
     deleted_column_defs <- format_columns(diff_data[, deleted_cols, drop=FALSE], "deleted")
 
@@ -186,7 +228,10 @@ data_diff <- function(code, include_summary = FALSE, include_diff_table = TRUE) 
             list(background = inserted_color)
           }
         },
-        columns = append(inserted_column_defs, deleted_column_defs),
+        defaultColDef = reactable::colDef(
+          headerStyle = list(background = modified_color)
+        ),
+        columns = append(append(modified_column_defs, inserted_column_defs), deleted_column_defs),
         rownames = TRUE,
         bordered = TRUE,
         resizable = TRUE

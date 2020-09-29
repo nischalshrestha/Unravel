@@ -21,9 +21,9 @@ install_knitr_hooks <- function() {
   # helper template for pprint knitr option
   knitr::opts_template$set(pprinter = pprintopts)
   # templates for various daff presentations
-  knitr::opts_template$set(daffbasic = append(pprintopts, list(data_diff = TRUE, summary = TRUE, diff_table = FALSE)))
-  knitr::opts_template$set(daffadvanced = append(pprintopts, list(data_diff = TRUE, summary = TRUE, diff_table = TRUE)))
+  knitr::opts_template$set(diffbasic = append(pprintopts, list(data_diff = TRUE, summary = TRUE, diff_table = FALSE)))
   knitr::opts_template$set(difftable = append(pprintopts, list(data_diff = TRUE, summary = FALSE, diff_table = TRUE)))
+  knitr::opts_template$set(diffadvanced = append(pprintopts, list(data_diff = TRUE, summary = TRUE, diff_table = TRUE)))
 
   # custom engine that takes python code and outputs data structure viz via `lolviz`
   knitr::knit_engines$set(dsviz = function(options) {
@@ -69,9 +69,9 @@ install_knitr_hooks <- function() {
     if (!before) {
       oldcode <- options$code
       last_line <- get_last_line(options)
-      cached_diff <- get_delta_cache(paste0(oldcode, collapse="\n"))
+      # cached_diff <- get_delta_cache(paste0(oldcode, collapse="\n"))
       # that would require checking the engine and handling R more directly with kableExtra
-      if (options$pprint && is.null(cached_diff)) {
+      if (options$pprint) {
         library(magrittr)
         if (length(options$code) > 0 && length(last_line) > 0) {
           # get all of the setup code and the code itself
@@ -103,13 +103,15 @@ install_knitr_hooks <- function() {
                   resizable = TRUE
                 )
               )
+              debug_print(options, 'got the reactable')
               # if data_diff is requested, append the output with it
               if (length(options$data_diff)) {
+                # debug_print(options, 'got the reactable')
                 out <- c(out, get_daff_output(options))
               }
               # print('returning dataframe')
               debug_print(options, out)
-              store_delta_cache(paste0(oldcode, collapse="\n"), out)
+              # store_delta_cache(paste0(oldcode, collapse="\n"), out)
               return(out)
             } else {
               debug_print(options, 'returning a non-dataframe will not need be pretty printed')
@@ -120,9 +122,6 @@ install_knitr_hooks <- function() {
             }
           }
         }
-      } else if(options$pprint && !is.null(cached_diff)) {
-        debug_print(options, 'returning something that was cached')
-        return(cached_diff)
       } else if(!options$pprint) {
         debug_print(options, 'returning something that does not need pretty printing')
         # for everything else, use python engine as expected

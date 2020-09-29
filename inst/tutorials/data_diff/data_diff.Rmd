@@ -12,7 +12,7 @@ library(tibble)
 library(reticulate)
 library(shiny)
 library(daff)
-library(crosstalk)
+
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 # custom scripts
 source(here::here("R", "utils.R"))
@@ -38,9 +38,11 @@ import os
 pew = pd.read_csv(r.pew_data)
 ```
 
+
 ```{python ex-read_pew, exercise=TRUE, exercise.setup="pew_setup", opts.label="pprinter"}
 pew
 ```
+
 
 ### Melt
 
@@ -50,14 +52,12 @@ Execute the following `melt` operation:
 <!-- This commented line is necessary for reactable to render the pew dfs -->
 <!-- `r htmltools::knit_print.shiny.tag.list(reactable::reactable(rpew))` -->
 
-```{python ex-pew_long, debug=FALSE, exercise=TRUE, exercise.setup="pew_setup", opts.label="difftable"}
+```{python ex-pew_long, debug=TRUE, exercise=TRUE, exercise.setup="pew_setup", opts.label="diffadvanced"}
 pew_long = pd.melt(pew, id_vars='religion')
 pew_long
 
+
 ```
-
-
-
 
 
 
