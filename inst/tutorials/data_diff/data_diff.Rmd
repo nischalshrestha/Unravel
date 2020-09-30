@@ -21,8 +21,11 @@ source(here::here("R", "knitr-hooks.R"))
 source(here::here("R", "diffing.R"))
 # install knitr hooks
 install_knitr_hooks()
-pew_data <- here::here("inst/tutorials/data_diff/data/pew.csv")
-rpew <- read.csv(pew_data)
+home_path <- here::here("inst/tutorials/data_diff/data/")
+pew_data_path <- paste0(home_path, "pew.csv")
+nba_data_path <- paste0(home_path, "nba.csv")
+rpew <- read.csv(pew_data_path)
+rnba <- read.csv(nba_data_path)
 # rpew <- crosstalk::SharedData$new(read.csv(pew_data))
 tutorial_options(exercise.timelimit = 120)
 ```
@@ -36,7 +39,8 @@ I have already loaded up the data for you to a variable called `pew`. Run the ex
 ```{python pew_setup}
 import pandas as pd
 import os
-pew = pd.read_csv(r.pew_data)
+pew = pd.read_csv(r.pew_data_path)
+nba = pd.read_csv(r.nba_data_path)
 ```
 
 ```{python ex-read_pew, exercise=TRUE, exercise.setup="pew_setup", opts.label="pprinter"}
@@ -51,12 +55,23 @@ Execute the following `melt` operation:
 <!-- This commented line is necessary for reactable to render the pew dfs -->
 <!-- `r htmltools::knit_print.shiny.tag.list(reactable::reactable(rpew))` -->
 
-
 ```{python ex-pew_long, debug=TRUE, exercise=TRUE, exercise.setup="pew_setup", opts.label="difftable"}
 pew_long = pd.melt(pew, id_vars='religion')
 pew_long
 
 ```
+
+<!-- TODO: try out the modern pandas tidy data series: https://tomaugspurger.github.io/modern-5-tidy -->
+
+```{python ex-nba-load, exercise=TRUE, exercise.setup="pew_setup", opts.label="pprinter"}
+nba
+
+```
+
+
+
+
+
 
 
 

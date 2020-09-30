@@ -105,6 +105,15 @@ install_knitr_hooks <- function() {
                   theme = reactable::reactableTheme(
                     borderWidth = "2px"
                   ),
+                  defaultColDef = reactable::colDef(
+                    cell = function(value, index) {
+                      # turn NULL into NaN
+                      if (is.na(value) || is.null(value) || value == "") {
+                        return(as.character("NaN"))
+                      }
+                      return(value)
+                    }
+                  ),
                   columns = list(
                     .rownames = reactable::colDef(
                       style = list(

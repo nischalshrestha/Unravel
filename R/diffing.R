@@ -78,7 +78,7 @@ diff_summary_html <- function(s) {
       ),
       bordered = TRUE
     )
-
+  # return knit_print for rendering
   htmltools::knit_print.shiny.tag.list(reactable_table)
 }
 
@@ -238,7 +238,8 @@ format_columns <- function(columns, change_type) {
 #'
 #' @examples
 format_table <- function(diff_data) {
-
+  # TODO: you might consider a more general function that would take
+  # user supplied styling per columns (for e.g. when you want to do callouts)
   # unpack data about diff
   inserted_rows <- diff_data$inserted_rows
   inserted_cols <- diff_data$inserted_cols
@@ -303,21 +304,20 @@ daff_html <- function(options, include_summary = FALSE, include_diff_table = FAL
   diff <- daff::diff_data(old_pew, new_pew)
   s <- attr(diff, "summary")
 
-  #### Render the data diff summary table
+  # Render the data diff summary table
   summary_table_html <- ""
   if (include_summary) {
     summary_table_html <- diff_summary_html(s)
   }
 
-  #### Now render the data diff table
+  # Now render the data diff table
   diff_table_html <- ""
   if (include_diff_table) {
 
-    #### Constructing diff information for rows/columns
+    # Construct diff information for rows/columns
     diff_data <- construct_diff_data(diff)
 
-    #### Formatting table
-    # knit_print for rendering
+    # Format table
     diff_table_html <- format_table(diff_data)
   }
 

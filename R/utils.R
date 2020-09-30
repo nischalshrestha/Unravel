@@ -15,7 +15,9 @@ debug_print <- function(options, msg) {
 
 # helper function to get the last line of the code in an exercise
 get_last_line <- function(options) {
-  non_empty <- options$code[options$code != ""]
+  # TODO: strip comment string characters, only return last viable line
+  code <- c(options$code)
+  non_empty <- code[code != "" & !startsWith(code, "#")]
   tail(non_empty, n = 1)
 }
 
@@ -42,20 +44,16 @@ get_exercise_code <- function(exercise_cache, setup = FALSE) {
 python_df <- function(pydf) {
   # TODO: hanlde repr for dfs that already have rownames not numeric
   # TODO: handle repr for GroupBy dataframe
+  # TODO: write some tests for this
   # First handle rownames
   original_rownames <- rownames(reticulate::py_to_r(pydf))
   original_colnames <- colnames(reticulate::py_to_r(pydf))
   # 0) You need to check if rownames are already numeric or not
   is_numeric_index <- all(!is.na(as.numeric(original_rownames)))
-  # !is.na(as.numeric(rownames(reticulate::py_to_r(pydf))))
   if (is_numeric_index) {
     # cat("is numeric\n")
     # 1) First, read it as csv to preserve types (except for NaNs)
     rdf <- read.csv(text = as.character(pydf$to_csv()))
-    #     a      b
-    # 0  1.0   True
-    # 1  NaN  False
-    # 2  3.0   True
     # 2) make X the rownames and delete it
     original_rownames <- rdf$X
     rownames(rdf) <- rdf$X
@@ -67,14 +65,9 @@ python_df <- function(pydf) {
     rdf <- reticulate::py_to_r(pydf)
     # print(rdf)
   }
-  #    a     b
-  # 0  1  True
-  # 1 NA False
-  # 2  3  True
-  # NA to NaN
   # 3) Turn data types back to Python representation
   # - for each column:
-  #   - check type of data
+  #   - check type of data and convert appropriately
   convert_na <- function(x) {
     prev_class <- class(x)
     if (any(is.na(x))) {
