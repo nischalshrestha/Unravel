@@ -16,11 +16,16 @@ deleted_color <- "#ff7374"
 get_daff_output <- function(options) {
   include_summary <- ifelse(is.null(options$summary), FALSE, options$summary)
   include_diff_table <- ifelse(is.null(options$diff_table), FALSE, options$diff_table)
-  diff_out <- daff_html(options, include_summary = include_summary, include_diff_table = include_diff_table)
+  diff_out <- daff_html(
+    options,
+    include_summary = include_summary,
+    include_diff_table = include_diff_table
+  )
   # TODO to build this summary programmatically
   # - it's possible to list out column variables that were pivoted
   # - it's possible to insert summary numbers of added, deleted, modified_color, reordered rows/cols/cells
   # - it's possible to make a statement about how there were no changes in any change category
+  # - what else could we automate?!
   summary_statement <-
     "All **9** `income` variables (`<$10K-20K, ... , 150K, Don't Know/refused`) have been deleted (red) and
     have been \"molten\" into column `variable` (green), which added **162** rows. In other words,

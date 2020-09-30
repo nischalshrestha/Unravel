@@ -42,43 +42,24 @@ get_exercise_code <- function(exercise_cache, setup = FALSE) {
 #'
 #' @examples
 python_df <- function(pydf) {
-  # TODO: hanlde repr for dfs that already have rownames not numeric
   # TODO: handle repr for GroupBy dataframe
   # TODO: write some tests for this
   # First handle rownames
   original_rownames <- rownames(reticulate::py_to_r(pydf))
-  original_colnames <- colnames(reticulate::py_to_r(pydf))
   # 0) You need to check if rownames are already numeric or not
   is_numeric_index <- all(!is.na(as.numeric(original_rownames)))
   if (is_numeric_index) {
-    # cat("is numeric\n")
     # 1) First, read it as csv to preserve types (except for NaNs)
-    rdf <- read.csv(text = as.character(pydf$to_csv()))
-    # 2) make X the rownames and delete it
-    original_rownames <- rdf$X
-    rownames(rdf) <- rdf$X
-    rdf <- rdf[-1]
-    colnames(rdf) <- original_colnames
-    # print(rdf)
+    rdf <- as.data.frame(readr::read_csv(pydf$to_csv(index=FALSE)))
   } else {
-    # cat("is not numeric\n")
     rdf <- reticulate::py_to_r(pydf)
-    # print(rdf)
   }
-  # 3) Turn data types back to Python representation
-  # - for each column:
-  #   - check type of data and convert appropriately
-  convert_na <- function(x) {
-    prev_class <- class(x)
-    if (any(is.na(x))) {
-      x[is.na(x)] <- "NaN"
-    }
-    class(x) <- prev_class
-    x
-  }
-  rdf <- as.data.frame(lapply(rdf, convert_na))
-  rownames(rdf) <- original_rownames
-  colnames(rdf) <- original_colnames
+  # 2) Turn some data types back to Python representation
+  rdf <- rdf %>%
+    purrr::map_df(function(x) ifelse(is.na(x), "NaN", x)) %>%
+    as.data.frame
+  # 3) change to 0-indexing for row index
+  rownames(rdf) <- as.numeric(rownames(rdf)) - 1
   rdf
 }
 
