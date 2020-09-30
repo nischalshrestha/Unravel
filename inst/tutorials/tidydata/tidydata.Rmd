@@ -39,7 +39,10 @@ tutorial_options(exercise.timelimit = 120)
 # library(reactable)
 # data
 pew_data_path <- here::here("inst/tutorials/tidydata/data/pew.csv")
+rpew <- read.csv(pew_data_path)
 ```
+
+<!-- `r htmltools::knit_print.shiny.tag.list(reactable::reactable(rpew))` -->
 
 ## Introduction
 
@@ -127,7 +130,7 @@ Let's run this code using `melt` to demonstrate moving from a wide data to long 
 
 <!-- TODO: do a custom exercise check (you can easily find the -check chunk but we may need our own custom one that does not go through learnr route) -->
 
-```{python ex-melt_pew, exercise=TRUE, exercise.setup="ex-read_pew", opts.label="daffadvanced", debug=TRUE}
+```{python ex-melt_pew, exercise=TRUE, exercise.setup="ex-read_pew", opts.label="diffadvanced", debug=TRUE}
 pew_long = pd.melt(pew, id_vars='religion')
 pew_long
 

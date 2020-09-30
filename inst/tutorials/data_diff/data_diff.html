@@ -121,21 +121,21 @@ $(document).ready(function () {
 <div id="section-data" class="section level3">
 <h3>Data</h3>
 <p>I have already loaded up the data for you to a variable called <code>pew</code>. Run the exercise below to take a peek at the data:</p>
-<div class="tutorial-exercise" data-label="ex-read_pew" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<div class="tutorial-exercise" data-label="ex-read_pew" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
 <pre class="text"><code>pew</code></pre>
-<script type="application/json" data-ui-opts="1">{"engine":"python","has_checker":false}</script>
+<script type="application/json" data-ui-opts="1">{"engine":"python","has_checker":false,"caption":"Python code"}</script>
 </div>
 </div>
 <div id="section-melt" class="section level3">
 <h3>Melt</h3>
 <p>Execute the following <code>melt</code> operation:</p>
 <!-- This commented line is necessary for reactable to render the pew dfs -->
-<!-- <div id="htmlwidget-3d348944ecfd709b5f93" class="reactable html-widget" style="width:auto;height:auto;"></div>
-<script type="application/json" data-for="htmlwidget-3d348944ecfd709b5f93">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"religion":["Agnostic","Atheist","Buddhist","Catholic","Don’t know/refused","Evangelical Prot","Hindu","Historically Black Prot","Jehovah's Witness","Jewish","Mainline Prot","Mormon","Muslim","Orthodox","Other Christian","Other Faiths","Other World Religions","Unaffiliated"],"X..10k":[27,12,27,418,15,575,1,228,20,19,289,29,6,13,9,20,5,217],"X.10.20k":[34,27,21,617,14,869,9,244,27,19,495,40,7,17,7,33,2,299],"X.20.30k":[60,37,30,732,15,1064,7,236,24,25,619,48,9,23,11,40,3,374],"X.30.40k":[81,52,34,670,11,982,9,238,24,25,655,51,10,32,13,46,4,365],"X.40.50k":[76,35,33,638,10,881,11,197,21,30,651,56,9,32,13,49,2,341],"X.50.75k":[137,70,58,1116,35,1486,34,223,30,95,1107,112,23,47,14,63,7,528],"X.75.100k":[122,73,62,949,21,949,47,131,15,69,939,85,16,38,18,46,3,407],"X.100.150k":[109,59,39,792,17,723,48,81,11,87,753,49,8,42,14,40,4,321],"X.150k":[84,74,53,633,18,414,54,78,6,151,634,42,6,46,12,41,4,258],"Don.t.know.refused":[96,76,54,1489,116,1529,37,339,37,162,1328,69,22,73,18,71,8,597]},"columns":[{"accessor":"religion","name":"religion","type":"factor"},{"accessor":"X..10k","name":"X..10k","type":"numeric"},{"accessor":"X.10.20k","name":"X.10.20k","type":"numeric"},{"accessor":"X.20.30k","name":"X.20.30k","type":"numeric"},{"accessor":"X.30.40k","name":"X.30.40k","type":"numeric"},{"accessor":"X.40.50k","name":"X.40.50k","type":"numeric"},{"accessor":"X.50.75k","name":"X.50.75k","type":"numeric"},{"accessor":"X.75.100k","name":"X.75.100k","type":"numeric"},{"accessor":"X.100.150k","name":"X.100.150k","type":"numeric"},{"accessor":"X.150k","name":"X.150k","type":"numeric"},{"accessor":"Don.t.know.refused","name":"Don.t.know.refused","type":"numeric"}],"defaultPageSize":10,"paginationType":"numbers","showPageInfo":true,"minRows":1,"dataKey":"984904cf8377bb4e4b551b63730a918f","key":"984904cf8377bb4e4b551b63730a918f"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script> -->
-<div class="tutorial-exercise" data-label="ex-pew_long" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<!-- <div id="htmlwidget-c716d2b2553972cec28e" class="reactable html-widget" style="width:auto;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-c716d2b2553972cec28e">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"religion":["Agnostic","Atheist","Buddhist","Catholic","Don’t know/refused","Evangelical Prot","Hindu","Historically Black Prot","Jehovah's Witness","Jewish","Mainline Prot","Mormon","Muslim","Orthodox","Other Christian","Other Faiths","Other World Religions","Unaffiliated"],"X..10k":[27,12,27,418,15,575,1,228,20,19,289,29,6,13,9,20,5,217],"X.10.20k":[34,27,21,617,14,869,9,244,27,19,495,40,7,17,7,33,2,299],"X.20.30k":[60,37,30,732,15,1064,7,236,24,25,619,48,9,23,11,40,3,374],"X.30.40k":[81,52,34,670,11,982,9,238,24,25,655,51,10,32,13,46,4,365],"X.40.50k":[76,35,33,638,10,881,11,197,21,30,651,56,9,32,13,49,2,341],"X.50.75k":[137,70,58,1116,35,1486,34,223,30,95,1107,112,23,47,14,63,7,528],"X.75.100k":[122,73,62,949,21,949,47,131,15,69,939,85,16,38,18,46,3,407],"X.100.150k":[109,59,39,792,17,723,48,81,11,87,753,49,8,42,14,40,4,321],"X.150k":[84,74,53,633,18,414,54,78,6,151,634,42,6,46,12,41,4,258],"Don.t.know.refused":[96,76,54,1489,116,1529,37,339,37,162,1328,69,22,73,18,71,8,597]},"columns":[{"accessor":"religion","name":"religion","type":"factor"},{"accessor":"X..10k","name":"X..10k","type":"numeric"},{"accessor":"X.10.20k","name":"X.10.20k","type":"numeric"},{"accessor":"X.20.30k","name":"X.20.30k","type":"numeric"},{"accessor":"X.30.40k","name":"X.30.40k","type":"numeric"},{"accessor":"X.40.50k","name":"X.40.50k","type":"numeric"},{"accessor":"X.50.75k","name":"X.50.75k","type":"numeric"},{"accessor":"X.75.100k","name":"X.75.100k","type":"numeric"},{"accessor":"X.100.150k","name":"X.100.150k","type":"numeric"},{"accessor":"X.150k","name":"X.150k","type":"numeric"},{"accessor":"Don.t.know.refused","name":"Don.t.know.refused","type":"numeric"}],"defaultPageSize":10,"paginationType":"numbers","showPageInfo":true,"minRows":1,"dataKey":"984904cf8377bb4e4b551b63730a918f","key":"984904cf8377bb4e4b551b63730a918f"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script> -->
+<div class="tutorial-exercise" data-label="ex-pew_long" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
 <pre class="text"><code>pew_long = pd.melt(pew, id_vars=&#39;religion&#39;)
 pew_long</code></pre>
-<script type="application/json" data-ui-opts="1">{"engine":"python","has_checker":false}</script>
+<script type="application/json" data-ui-opts="1">{"engine":"python","has_checker":false,"caption":"Python code"}</script>
 </div>
 
 <script type="application/shiny-prerendered" data-context="server-start">
@@ -157,6 +157,7 @@ source(here::here("R", "diffing.R"))
 install_knitr_hooks()
 pew_data <- here::here("inst/tutorials/data_diff/data/pew.csv")
 rpew <- read.csv(pew_data)
+# rpew <- crosstalk::SharedData$new(read.csv(pew_data))
 tutorial_options(exercise.timelimit = 120)
 </script>
  
@@ -182,8 +183,8 @@ learnr:::store_exercise_setup_chunk("__setup__", c("library(learnr)", "library(g
 "source(here::here(\"R\", \"setup-cache.R\"))", "source(here::here(\"R\", \"knitr-hooks.R\"))", 
 "source(here::here(\"R\", \"diffing.R\"))", "# install knitr hooks", 
 "install_knitr_hooks()", "pew_data <- here::here(\"inst/tutorials/data_diff/data/pew.csv\")", 
-"rpew <- read.csv(pew_data)", "tutorial_options(exercise.timelimit = 120)"
-), overwrite = FALSE)
+"rpew <- read.csv(pew_data)", "# rpew <- crosstalk::SharedData$new(read.csv(pew_data))", 
+"tutorial_options(exercise.timelimit = 120)"), overwrite = FALSE)
 </script>
  
 <script type="application/shiny-prerendered" data-context="server">
@@ -194,8 +195,8 @@ learnr:::store_exercise_setup_chunk("__setup__", c("library(learnr)", "library(g
 "source(here::here(\"R\", \"setup-cache.R\"))", "source(here::here(\"R\", \"knitr-hooks.R\"))", 
 "source(here::here(\"R\", \"diffing.R\"))", "# install knitr hooks", 
 "install_knitr_hooks()", "pew_data <- here::here(\"inst/tutorials/data_diff/data/pew.csv\")", 
-"rpew <- read.csv(pew_data)", "tutorial_options(exercise.timelimit = 120)"
-), overwrite = FALSE)
+"rpew <- read.csv(pew_data)", "# rpew <- crosstalk::SharedData$new(read.csv(pew_data))", 
+"tutorial_options(exercise.timelimit = 120)"), overwrite = FALSE)
 </script>
  
 <script type="application/shiny-prerendered" data-context="server">
@@ -206,8 +207,8 @@ learnr:::store_exercise_setup_chunk("__setup__", c("library(learnr)", "library(g
 "source(here::here(\"R\", \"setup-cache.R\"))", "source(here::here(\"R\", \"knitr-hooks.R\"))", 
 "source(here::here(\"R\", \"diffing.R\"))", "# install knitr hooks", 
 "install_knitr_hooks()", "pew_data <- here::here(\"inst/tutorials/data_diff/data/pew.csv\")", 
-"rpew <- read.csv(pew_data)", "tutorial_options(exercise.timelimit = 120)"
-), overwrite = FALSE)
+"rpew <- read.csv(pew_data)", "# rpew <- crosstalk::SharedData$new(read.csv(pew_data))", 
+"tutorial_options(exercise.timelimit = 120)"), overwrite = FALSE)
 </script>
  
 <script type="application/shiny-prerendered" data-context="server">
@@ -221,7 +222,7 @@ output$`tutorial-exercise-ex-read_pew-output` <- renderUI({
 learnr:::store_exercise_cache("ex-read_pew", list(setup = "import pandas as pd\nimport os\npew = pd.read_csv(r.pew_data)", 
     chunks = list(list(label = "pew_setup", code = "import pandas as pd\nimport os\npew = pd.read_csv(r.pew_data)", 
         opts = list(label = "\"pew_setup\"", engine = "\"python\""), 
-        engine = "python"), list(label = "ex-read_pew", code = "pew", 
+        engine = "python"), list(label = "ex-read_pew", code = "pew\n", 
         opts = list(label = "\"ex-read_pew\"", exercise = "TRUE", 
             exercise.setup = "\"pew_setup\"", opts.label = "\"pprinter\"", 
             engine = "\"python\""), engine = "python")), code_check = NULL, 
@@ -244,7 +245,7 @@ learnr:::store_exercise_cache("ex-read_pew", list(setup = "import pandas as pd\n
         max.print = 1000, tutorial = TRUE, exercise.timelimit = 120, 
         pprint = TRUE, label = "ex-read_pew", exercise = TRUE, 
         exercise.setup = "pew_setup", opts.label = "pprinter", 
-        code = "pew", out.width.px = 624, out.height.px = 384, 
+        code = c("pew", ""), out.width.px = 624, out.height.px = 384, 
         params.src = "ex-read_pew, exercise=TRUE, exercise.setup=\"pew_setup\", opts.label=\"pprinter\", engine=\"python\"", 
         exercise.df_print = "paged", exercise.checker = "NULL"), 
     engine = "python"))
@@ -261,10 +262,10 @@ output$`tutorial-exercise-ex-pew_long-output` <- renderUI({
 learnr:::store_exercise_cache("ex-pew_long", list(setup = "import pandas as pd\nimport os\npew = pd.read_csv(r.pew_data)", 
     chunks = list(list(label = "pew_setup", code = "import pandas as pd\nimport os\npew = pd.read_csv(r.pew_data)", 
         opts = list(label = "\"pew_setup\"", engine = "\"python\""), 
-        engine = "python"), list(label = "ex-pew_long", code = "pew_long = pd.melt(pew, id_vars='religion')\npew_long\n\n", 
+        engine = "python"), list(label = "ex-pew_long", code = "pew_long = pd.melt(pew, id_vars='religion')\npew_long\n", 
         opts = list(label = "\"ex-pew_long\"", debug = "TRUE", 
             exercise = "TRUE", exercise.setup = "\"pew_setup\"", 
-            opts.label = "\"diffadvanced\"", engine = "\"python\""), 
+            opts.label = "\"difftable\"", engine = "\"python\""), 
         engine = "python")), code_check = NULL, error_check = NULL, 
     check = NULL, solution = NULL, options = list(eval = FALSE, 
         echo = TRUE, results = "hide", tidy = FALSE, tidy.opts = NULL, 
@@ -283,12 +284,12 @@ learnr:::store_exercise_cache("ex-pew_long", list(setup = "import pandas as pd\n
         message = FALSE, render = NULL, ref.label = NULL, child = NULL, 
         engine = "python", split = FALSE, include = TRUE, purl = TRUE, 
         max.print = 1000, tutorial = TRUE, exercise.timelimit = 120, 
-        pprint = TRUE, data_diff = TRUE, summary = TRUE, diff_table = TRUE, 
+        pprint = TRUE, data_diff = TRUE, summary = FALSE, diff_table = TRUE, 
         label = "ex-pew_long", debug = TRUE, exercise = TRUE, 
-        exercise.setup = "pew_setup", opts.label = "diffadvanced", 
+        exercise.setup = "pew_setup", opts.label = "difftable", 
         code = c("pew_long = pd.melt(pew, id_vars='religion')", 
-        "pew_long", "", ""), out.width.px = 624, out.height.px = 384, 
-        params.src = "ex-pew_long, debug=TRUE, exercise=TRUE, exercise.setup=\"pew_setup\", opts.label=\"diffadvanced\", engine=\"python\"", 
+        "pew_long", ""), out.width.px = 624, out.height.px = 384, 
+        params.src = "ex-pew_long, debug=TRUE, exercise=TRUE, exercise.setup=\"pew_setup\", opts.label=\"difftable\", engine=\"python\"", 
         exercise.df_print = "paged", exercise.checker = "NULL"), 
     engine = "python"))
 </script>

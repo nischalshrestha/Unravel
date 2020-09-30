@@ -8,8 +8,9 @@
 #'
 #' @examples
 debug_print <- function(options, msg) {
-  if (length(options$debug) && isTRUE(options$debug))
+  if (length(options$debug) && isTRUE(options$debug)) {
     message(msg)
+  }
 }
 
 # helper function to get the last line of the code in an exercise
@@ -18,10 +19,11 @@ get_last_line <- function(options) {
   tail(non_empty, n = 1)
 }
 
-get_exercise_code <- function(exercise_cache, setup=FALSE) {
+get_exercise_code <- function(exercise_cache, setup = FALSE) {
   all_chunks <- exercise_cache$chunks
-  if (setup)
-    all_chunks = all_chunks[-length(all_chunks)]
+  if (setup) {
+    all_chunks <- all_chunks[-length(all_chunks)]
+  }
   code <- paste0(
     vapply(all_chunks, function(x) x$code, character(1)),
     collapse = "\n"
@@ -49,7 +51,7 @@ python_df <- function(pydf) {
   if (is_numeric_index) {
     # cat("is numeric\n")
     # 1) First, read it as csv to preserve types (except for NaNs)
-    rdf <- read.csv(text=as.character(pydf$to_csv()))
+    rdf <- read.csv(text = as.character(pydf$to_csv()))
     #     a      b
     # 0  1.0   True
     # 1  NaN  False
@@ -85,4 +87,24 @@ python_df <- function(pydf) {
   rownames(rdf) <- original_rownames
   colnames(rdf) <- original_colnames
   rdf
+}
+
+#' Takes a number of lists and appends them into a single list.
+#' Instead of doing nested append calls, this will automate that
+#' by doing the series of append calls for you.
+#'
+#' @param ...
+#'
+#' @return named list
+#'
+#' @examples
+reappend <- function(...) {
+  myList <- list()
+  items <- list(...)
+  range <- 1:length(items)
+  # # Now the new experiments
+  for (i in seq_along(range)) {
+    myList <- append(myList, items[[i]])
+  }
+  myList
 }

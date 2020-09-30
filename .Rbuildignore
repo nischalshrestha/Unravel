@@ -1,1 +1,3 @@
 ^inst/tutorials/tidydata-polyglot\.Rmd$
+^.*\.Rproj$
+^\.Rproj\.user$
