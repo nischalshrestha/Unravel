@@ -89,7 +89,7 @@ pd.DataFrame({'a':[1,2,3], 'b':[4,5,6]})
 <!-- x <- head(x, 2) # remove a row -->
 <!-- x[1, 1] <- 10 # change a value -->
 <!-- x$hello <- "world"  # add a column -->
-<!-- x$dist <- NULL # remove a column -->
+<!-- x$disp <- NULL # remove a column -->
 
 <!-- patch <- diff_data(y, x) -->
 <!-- # can write patch to csv -->

@@ -74,6 +74,7 @@ install_knitr_hooks <- function() {
       if (options$pprint && is.null(cached_diff)) {
         library(magrittr)
         if (length(options$code) > 0 && length(last_line) > 0) {
+          # TODO make sure we don't NEED an exercise to pprint
           # get all of the setup code and the code itself
           exercise_cache <- learnr:::get_exercise_cache(options$label)
           all_code <- get_exercise_code(exercise_cache)
@@ -93,12 +94,15 @@ install_knitr_hooks <- function() {
               # options$code <- ""
               # wizard of oz pandas dataframe by changing index as well
               converted_result <- python_df(raw_result)
+              debug_print(options, "prepped a dataframe")
               out <- htmltools::knit_print.shiny.tag.list(
                 reactable::reactable(
                   converted_result,
-                  pagination = FALSE,
+                  pagination = TRUE,
+                  minRows = 10,
                   compact = TRUE,
-                  height = 300,
+                  # height = 300,
+                  highlight = TRUE,
                   bordered = TRUE,
                   rownames = TRUE,
                   resizable = TRUE,

@@ -16,6 +16,7 @@ deleted_color <- "#ff7374"
 get_daff_output <- function(options) {
   include_summary <- ifelse(is.null(options$summary), FALSE, options$summary)
   include_diff_table <- ifelse(is.null(options$diff_table), FALSE, options$diff_table)
+  # TODO need to rethink how to get the data_ref and data to compare for daff so we can pass them
   diff_out <- daff_html(
     options,
     include_summary = include_summary,
@@ -42,7 +43,7 @@ get_daff_output <- function(options) {
 #' @return knit_print
 #'
 #' @examples
-diff_summary_html <- function(s) {
+diff_summary_html <- function(s, reactable_output = FALSE) {
   # Note: there are all the summaries that are available to us:
   # > ls(s)
   #  [1] "col_count_change_text"         "col_count_final"               "col_count_initial"
@@ -52,6 +53,7 @@ diff_summary_html <- function(s) {
   # [13] "row_count_initial"             "row_count_initial_with_header" "row_deletes"
   # [16] "row_inserts"                   "row_reorders"                  "row_updates"
   # [19] "source_name"                   "target_name"
+  s <- purrr::map_df(s, ~ as.character(.))
   # These are the main ones we care about
   summary_tbl <- tibble::tribble(
     ~" ", ~"#", ~Modified, ~Reordered, ~Deleted, ~Added,
@@ -83,6 +85,9 @@ diff_summary_html <- function(s) {
       ),
       bordered = TRUE
     )
+  if (reactable_output) {
+    return(reactable_table)
+  }
   # return knit_print for rendering
   htmltools::knit_print.shiny.tag.list(reactable_table)
 }
@@ -103,7 +108,7 @@ diff_summary_html <- function(s) {
 #' @examples
 construct_diff_data <- function(diff) {
   library(dplyr)
-
+  # TODO reordered rows/columns
   # 0) get a dataframe form of diff
   # Note: this file will only be used in the temporary dir for the
   # learnr evaluation stage
@@ -111,10 +116,12 @@ construct_diff_data <- function(diff) {
   daff::write_diff(diff, path)
   # path <- here::here("inst/tutorials/data_diff/patch.csv") # for testing within function
   diff_data <- as.data.frame(readr::read_csv(path))
+  # cat("diff_data:\n")
+  # print(diff_data)
   # note if we changed the header's schema
   has_schema_change <- !is.null(diff_data$`!`)
 
-  # 1) get all rows that have been inserted / modified
+  # 1) get all rows that have been inserted / deleted / modified
   row_vectors <- 1:length(rownames(diff_data))
   inserted_rows <-
     if (has_schema_change) {
@@ -124,15 +131,21 @@ construct_diff_data <- function(diff) {
       rows[!is.na(rows)]
     }
 
+  deleted_rows <-
+    if (has_schema_change) {
+      row_vectors[diff_data$`!` == "---"]
+    } else {
+      rows <- row_vectors[diff_data$`@@` == "---"]
+      rows[!is.na(rows)]
+    }
+
   modified_rows <-
     if (has_schema_change) {
-      # print('woa')
       row_vectors[diff_data$`!` == "->"]
     } else {
       rows <- row_vectors[diff_data$`@@` == "->"]
       rows[!is.na(rows)]
     }
-  # TODO: deleted rows
 
   # 2) get all cols that have been deleted / inserted
   col_vectors <- 1:length(colnames(diff_data))
@@ -157,6 +170,7 @@ construct_diff_data <- function(diff) {
   colnames(diff_data) <-
     if (has_schema_change) {
       inserted_rows <- inserted_rows - 1
+      deleted_rows <- deleted_rows - 1
       diff_data[1, ]
     } else {
       colnames(diff_data)
@@ -181,6 +195,7 @@ construct_diff_data <- function(diff) {
     inserted_rows = inserted_rows,
     inserted_cols = inserted_cols,
     modified_rows = modified_rows,
+    deleted_rows = deleted_rows,
     deleted_cols = deleted_cols
   )
 }
@@ -195,6 +210,7 @@ construct_diff_data <- function(diff) {
 #'
 #' @examples
 format_columns <- function(columns, change_type) {
+  # TODO reordered rows/columns
   col_color <- switch(
     change_type,
     inserted = inserted_color,
@@ -242,12 +258,13 @@ format_columns <- function(columns, change_type) {
 #' @export
 #'
 #' @examples
-format_table <- function(diff_data) {
+format_table <- function(diff_data, reactable_output = FALSE) {
   # TODO: you might consider a more general function that would take
   # user supplied styling per columns (for e.g. when you want to do callouts)
   # unpack data about diff
   inserted_rows <- diff_data$inserted_rows
   inserted_cols <- diff_data$inserted_cols
+  deleted_rows <- diff_data$deleted_rows
   deleted_cols <- diff_data$deleted_cols
   modified_rows <- diff_data$modified_rows
   data <- diff_data$data
@@ -265,11 +282,17 @@ format_table <- function(diff_data) {
       theme = reactable::reactableTheme(
         borderWidth = "2px",
       ),
-      pagination = FALSE,
       height = 300,
+      compact = TRUE,
+      pagination = FALSE,
+      rownames = TRUE,
+      bordered = TRUE,
+      resizable = TRUE,
       rowStyle = function(index) {
         if (index %in% inserted_rows) {
           list(background = inserted_color)
+        } else if (index %in% deleted_rows) {
+          list(background = deleted_color)
         }
       },
       defaultColDef = reactable::colDef(
@@ -280,11 +303,11 @@ format_table <- function(diff_data) {
         modified_column_defs,
         inserted_column_defs,
         deleted_column_defs
-      ),
-      rownames = TRUE,
-      bordered = TRUE,
-      resizable = TRUE
+      )
     )
+  if (reactable_output) {
+    return(reactable_table)
+  }
   # return knit_print for rendering
   htmltools::knit_print.shiny.tag.list(reactable_table)
 }
@@ -300,13 +323,9 @@ format_table <- function(diff_data) {
 #' @export
 #'
 #' @examples
-daff_html <- function(options, include_summary = FALSE, include_diff_table = FALSE) {
+daff_html <- function(data_ref, data, include_summary = FALSE, include_diff_table = FALSE, reactable_output = FALSE) {
 
-  # TODO: programmatically get the old and new data set to compare
-  old_pew <- as.data.frame(py$pew)
-  new_pew <- as.data.frame(py$pew_long)
-  # new_pew <- as.data.frame(py$pew_long)
-  diff <- daff::diff_data(old_pew, new_pew)
+  diff <- daff::diff_data(data_ref = data_ref, data = data)
   s <- attr(diff, "summary")
 
   # Render the data diff summary table
@@ -323,8 +342,10 @@ daff_html <- function(options, include_summary = FALSE, include_diff_table = FAL
     diff_data <- construct_diff_data(diff)
 
     # Format table
-    diff_table_html <- format_table(diff_data)
+    diff_table_html <- format_table(diff_data, reactable_output)
   }
-
+  if (reactable_output) {
+    return(diff_table_html)
+  }
   return(c(summary_table_html, "<br>", diff_table_html))
 }

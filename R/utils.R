@@ -50,13 +50,13 @@ python_df <- function(pydf) {
   is_numeric_index <- all(!is.na(as.numeric(original_rownames)))
   if (is_numeric_index) {
     # 1) First, read it as csv to preserve types (except for NaNs)
-    rdf <- as.data.frame(readr::read_csv(pydf$to_csv(index=FALSE)))
+    rdf <- as.data.frame(readr::read_csv(as.character(pydf$to_csv(index=FALSE))))
   } else {
     rdf <- reticulate::py_to_r(pydf)
   }
   # 2) Turn some data types back to Python representation
   rdf <- rdf %>%
-    purrr::map_df(function(x) ifelse(is.na(x), "NaN", x)) %>%
+    purrr::map_df(~ ifelse(is.na(.), "NaN", .)) %>%
     as.data.frame
   # 3) change to 0-indexing for row index
   rownames(rdf) <- as.numeric(rownames(rdf)) - 1
