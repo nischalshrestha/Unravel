@@ -1,0 +1,128 @@
+---
+title: "lolviz"
+output: html_document
+runtime: shiny
+---
+
+```{r setup}
+library(dplyr)
+library(flair)
+library(reticulate)
+library(shinyAce)
+home_path <- here::here("inst/tutorials/data_diff/data/")
+nba_data_path <- paste0(home_path, "nba.csv")
+rnba <- read.csv(nba_data_path)
+```
+
+<!-- ```{python nba_setup} -->
+<!-- import pandas as pd -->
+<!-- nba = pd.read_csv(r.nba_data_path) -->
+<!-- ``` -->
+
+```{python example, echo = FALSE}
+import pandas as pd
+nba = pd.read_csv(r.nba_data_path)
+column_names = {'Date': 'date', 'Start (ET)': 'start',
+  'Unamed: 2': 'box', 'Visitor/Neutral': 'away_team',
+  'PTS': 'away_points', 'Home/Neutral': 'home_team',
+  'PTS.1': 'home_points', 'Unamed: 7': 'n_ot'}
+nba = (
+  nba.rename(columns=column_names)
+  .dropna(thresh=4)
+  [['date', 'away_team', 'away_points', 'home_team', 'home_points']]
+  .assign(date=lambda x: pd.to_datetime(x['date'], format='%a, %b %d, %Y'))
+  .set_index('date', append=True)
+  .rename_axis(["game_id", "date"])
+  .sort_index()
+)
+```
+
+```{r, echo = FALSE}
+code <- decorate("example") %>%
+  flair(".assign(date=lambda x: pd.to_datetime(x['date'], format='%a, %b %d, %Y'))")
+```
+
+```{r echo=FALSE}
+shiny::fluidPage(
+  # shiny::renderText("hello"),
+  shiny::htmlOutput("text"),
+  shiny::br(),
+  shiny::verbatimTextOutput("value"),
+  shiny::column(12, align = "center",
+      shiny::fluidRow(
+        shiny::actionButton("firstLine", label="First", icon = shiny::icon("fast-backward")),
+        shiny::actionButton("previousLine", label="Previous", icon = shiny::icon("arrow-left")),
+        shiny::actionButton("nextLine", label="Next", icon = shiny::icon("arrow-right")),
+        shiny::actionButton("lastLine", label="Last", icon = shiny::icon("fast-forward"))
+      )
+  )
+)
+```
+
+
+```{r echo=FALSE, context="server"}
+# code_text <- ""
+# python_code <- shiny::renderText({ output$text })
+# TODO accept the text from either an existing knitr chunk, or dynamically from user
+output$text <- shiny::renderUI({
+  header <- "```python"
+  footer <- "```"
+  # e.g. highlight: <span style=\"background-color:#ffff7f\">.set_index('date', append=True)</span>
+  code <- "
+  nba = (
+    nba.rename(columns=column_names)
+      .dropna(thresh=4)
+      [['date', 'away_team', 'away_points', 'home_team', 'home_points']]
+      .assign(date=lambda x: pd.to_datetime(x['date'], format='%a, %b %d, %Y'))
+      <span style=\"background-color:#ffff7f\">.set_index('date', append=True)</span>
+      .rename_axis([\"game_id\", \"date\"])
+      .sort_index()
+  )"
+
+  # hardcoded example for now
+  # TODO: build this programmatically
+  shiny::HTML(
+    paste0(
+      "<pre>",
+      paste0(code),
+      "</pre>",
+      sep="\n"
+    )
+  )
+
+})
+
+# current index of code lines
+current <- 0
+# last line (the last index: TODO do it programmatically)
+lastLine <- 3
+# handlers for each button
+shiny::observeEvent(input$firstLine, {
+  if (current > 0) {
+    current <<- 0
+  }
+  message("clicked First button: ", current)
+})
+
+shiny::observeEvent(input$previousLine, {
+  if (current > 0) {
+    current <<- current - 1
+  }
+  message("clicked Previous button: ", current)
+})
+
+shiny::observeEvent(input$nextLine, {
+  if (current < lastLine) {
+    current <<- current + 1
+  }
+  message("clicked Next button: ", current)
+})
+
+shiny::observeEvent(input$lastLine, {
+  if (current < lastLine) {
+    current <<- lastLine
+  }
+  message("clicked Last button: ", current)
+})
+
+```
