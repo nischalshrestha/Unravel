@@ -79,6 +79,7 @@ install_knitr_hooks <- function() {
           exercise_cache <- learnr:::get_exercise_cache(options$label)
           all_code <- get_exercise_code(exercise_cache)
           all_setup_code <- get_exercise_code(exercise_cache, setup = TRUE)
+          browser()
           # execute code if not empty
           if (!identical(all_code, "")) {
             debug_print(options, "running python code")
@@ -130,10 +131,9 @@ install_knitr_hooks <- function() {
               debug_print(options, "got the reactable")
               # if data_diff is requested, append the output with it
               if (length(options$data_diff)) {
-                # debug_print(options, 'got the reactable')
+                debug_print(options, 'got the reactable')
                 out <- c(out, get_daff_output(options))
               }
-              # print('returning dataframe')
               debug_print(options, out)
               store_delta_cache(paste0(oldcode, collapse = "\n"), out)
               return(out)
