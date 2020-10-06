@@ -56,7 +56,7 @@ python_df <- function(pydf) {
   }
   # 2) Turn some data types back to Python representation
   rdf <- rdf %>%
-    purrr::map_df(~ ifelse(is.na(.), "NaN", .)) %>%
+    purrr::map_df(~ ifelse(is.na(.), "NaN", as.character(.))) %>%
     as.data.frame
   # 3) change to 0-indexing for row index
   rownames(rdf) <- as.numeric(rownames(rdf)) - 1

@@ -43,28 +43,26 @@ nba = pd.read_csv(r.nba_data_path)
 
 <!-- ## Tidy data -->
 
-```{python example, exercise.setup="nba_setup"}
-column_names = {'Date': 'date', 'Start (ET)': 'start',
-  'Unamed: 2': 'box', 'Visitor/Neutral': 'away_team',
-  'PTS': 'away_points', 'Home/Neutral': 'home_team',
-  'PTS.1': 'home_points', 'Unamed: 7': 'n_ot'}
-nba = (nba
-  .rename(columns=column_names)
-  .dropna(thresh=4)
-  [['date', 'away_team', 'away_points', 'home_team', 'home_points']]
-  .assign(date=lambda x: pd.to_datetime(x['date'], format='%a, %b %d, %Y'))
-  .set_index('date', append=True)
-  .rename_axis(["game_id", "date"])
-  .sort_index()
-)
-nba
+<!-- ```{python example, exercise.setup="nba_setup"} -->
+<!-- column_names = {'Date': 'date', 'Start (ET)': 'start', -->
+<!--   'Unamed: 2': 'box', 'Visitor/Neutral': 'away_team', -->
+<!--   'PTS': 'away_points', 'Home/Neutral': 'home_team', -->
+<!--   'PTS.1': 'home_points', 'Unamed: 7': 'n_ot'} -->
+<!-- nba = (nba.rename(columns=column_names).dropna(thresh=4)[['date', 'away_team', 'away_points', 'home_team', 'home_points']].assign(date=lambda x: pd.to_datetime(x['date'], format='%a, %b %d, %Y')).set_index('date', append=True).rename_axis(["game_id", "date"]).sort_index() -->
+<!-- ) -->
+<!-- nba -->
 
-```
+<!-- ``` -->
 
 
 ```{r echo=FALSE}
 shiny::fluidPage(
   # shiny::renderText("hello"),
+  shiny::column(12, align = "center",
+    shiny::fluidRow(
+      reactable::reactableOutput("base_table")
+    )
+  ),
   shiny::htmlOutput("text"),
   shiny::br(),
   shiny::verbatimTextOutput("value"),
@@ -75,17 +73,21 @@ shiny::fluidPage(
         shiny::actionButton("nextLine", label="Next", icon = shiny::icon("arrow-right")),
         shiny::actionButton("lastLine", label="Last", icon = shiny::icon("fast-forward"))
       )
+  ),
+  shiny::column(12, align = "center",
+    shiny::fluidRow(shiny::br()),
+    shiny::fluidRow(
+      reactable::reactableOutput("line_table")
+    )
   )
 )
+
 ```
 
 
 ```{r echo=FALSE, context="server", results="asis"}
 
-"column_names = {'Date': 'date', 'Start (ET)': 'start',
-  'Unamed: 2': 'box', 'Visitor/Neutral': 'away_team',
-  'PTS': 'away_points', 'Home/Neutral': 'home_team',
-  'PTS.1': 'home_points', 'Unamed: 7': 'n_ot'}"
+
 # code_text <- ""
 # python_code <- shiny::renderText({ output$text })
 # current index of code lines
@@ -103,12 +105,60 @@ lastLine <- 1
     .rename_axis([\"game_id\", \"date\"])
     .sort_index()
   )" -> code
+"column_names = {'Date': 'date', 'Start (ET)': 'start',
+  'Unamed: 2': 'box', 'Visitor/Neutral': 'away_team',
+  'PTS': 'away_points', 'Home/Neutral': 'home_team',
+  'PTS.1': 'home_points', 'Unamed: 7': 'n_ot'}" -> setup_code
 
 # TODO: 
 # for each relevant line(s):
 # - index/indices
 # - summary of the action
 # - output of the expression so far
+
+base_expr <- "nba"
+start_expr <- "nba.rename(columns=column_names)"
+
+generate_df_outputs <- function(code, setup_code = NULL, base_expr = "", start_expr = "") {
+  if (!is.null(setup_code)) {
+    reticulate::py_run_string(setup_code)
+  }
+  code_vec <- unlist(strsplit(code, split="\n"))
+  code_vec <- purrr::map_chr(code_vec, stringr::str_trim)
+  last_index <- length(code_vec) - 1
+  range <- 2:last_index
+  outputs <- list(reticulate::py_eval(start_expr))
+  for (i in range) {
+    start_expr <- paste0(start_expr, code_vec[[i]])
+    df <- reticulate::py_eval(start_expr, convert=FALSE)
+    outputs <- append(outputs, df)
+  }
+  outputs
+  # handle custom indices
+  # TODO hold off on the index and explanation bit for now 
+  # but revisit when the output stuff can be generated
+}
+
+df_outputs <- generate_df_outputs(code, setup_code, start_expr = start_expr)
+
+df_reactable <- function() {
+  out <- NULL
+  if (current == lastLine) {
+    out <- python_df(df_outputs[[current - 1]])
+  } else {
+    out <- python_df(df_outputs[[current]])
+  }
+  reactable::reactable(
+    out, 
+    compact = TRUE,
+    minRows = 8,
+    defaultPageSize = 8,
+    showPagination = TRUE,
+    # height = 300,
+    highlight = TRUE,
+    bordered = TRUE,
+  )
+}
 
 flair_line <- function() {
   # look for the pattern of the current line in code
@@ -136,6 +186,24 @@ output$text <- shiny::renderUI({
   flair_line()
 })
 
+output$base_table <- renderReactable({
+  out <- python_df(reticulate::py_eval(base_expr, convert=FALSE))
+  reactable::reactable(
+    out,
+    defaultPageSize = 8,
+    minRows = 8,
+    showPagination = TRUE,
+    # height = 300,
+    compact = TRUE,
+    highlight = TRUE,
+    bordered = TRUE,
+  )
+})
+
+output$line_table <- renderReactable({
+  df_reactable()
+})
+
 # handlers for each button
 shiny::observeEvent(input$firstLine, {
   if (current > 1) {
@@ -144,6 +212,9 @@ shiny::observeEvent(input$firstLine, {
   message("clicked First button: ", current)
   output$text <-  shiny::renderUI({
     flair_line()
+  })
+  output$line_table <- renderReactable({
+    df_reactable()
   })
 })
 
@@ -155,6 +226,9 @@ shiny::observeEvent(input$previousLine, {
   output$text <- shiny::renderUI({
     flair_line()
   })
+  output$line_table <- renderReactable({
+    df_reactable()
+  })
 })
 
 shiny::observeEvent(input$nextLine, {
@@ -165,6 +239,9 @@ shiny::observeEvent(input$nextLine, {
   output$text <-  shiny::renderUI({
     flair_line()
   })
+  output$line_table <- renderReactable({
+    df_reactable()
+  })
 })
 
 shiny::observeEvent(input$lastLine, {
@@ -174,6 +251,9 @@ shiny::observeEvent(input$lastLine, {
   message("clicked Last button: ", current)
   output$text <-  shiny::renderUI({
     flair_line()
+  })
+  output$line_table <- renderReactable({
+    df_reactable()
   })
 })
 
