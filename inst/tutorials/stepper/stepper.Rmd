@@ -23,10 +23,6 @@ install_knitr_hooks()
 home_path <- here::here("inst/tutorials/data_diff/data/")
 nba_data_path <- paste0(home_path, "nba.csv")
 rnba <- read.csv(nba_data_path)
-
-flair_html <- function(flair_code) {
-  paste(unlist(strsplit(flair_code[[1]]$src, split = "\n")), collapse="</br>")
-}
 ```
 
 <!-- `r reactable::reactable(matrix())` -->
@@ -47,23 +43,23 @@ nba = pd.read_csv(r.nba_data_path)
 
 <!-- ## Tidy data -->
 
-<!-- ```{python example, exercise.setup="nba_setup"} -->
-<!-- column_names = {'Date': 'date', 'Start (ET)': 'start', -->
-<!--   'Unamed: 2': 'box', 'Visitor/Neutral': 'away_team', -->
-<!--   'PTS': 'away_points', 'Home/Neutral': 'home_team', -->
-<!--   'PTS.1': 'home_points', 'Unamed: 7': 'n_ot'} -->
-<!-- nba = ( -->
-<!--   nba.rename(columns=column_names) -->
-<!--   .dropna(thresh=4) -->
-<!--   [['date', 'away_team', 'away_points', 'home_team', 'home_points']] -->
-<!--   .assign(date=lambda x: pd.to_datetime(x['date'], format='%a, %b %d, %Y')) -->
-<!--   .set_index('date', append=True) -->
-<!--   .rename_axis(["game_id", "date"]) -->
-<!--   .sort_index() -->
-<!-- ) -->
-<!-- nba -->
+```{python example, exercise.setup="nba_setup"}
+column_names = {'Date': 'date', 'Start (ET)': 'start',
+  'Unamed: 2': 'box', 'Visitor/Neutral': 'away_team',
+  'PTS': 'away_points', 'Home/Neutral': 'home_team',
+  'PTS.1': 'home_points', 'Unamed: 7': 'n_ot'}
+nba = (nba
+  .rename(columns=column_names)
+  .dropna(thresh=4)
+  [['date', 'away_team', 'away_points', 'home_team', 'home_points']]
+  .assign(date=lambda x: pd.to_datetime(x['date'], format='%a, %b %d, %Y'))
+  .set_index('date', append=True)
+  .rename_axis(["game_id", "date"])
+  .sort_index()
+)
+nba
 
-<!-- ``` -->
+```
 
 
 ```{r echo=FALSE}
@@ -85,6 +81,11 @@ shiny::fluidPage(
 
 
 ```{r echo=FALSE, context="server", results="asis"}
+
+"column_names = {'Date': 'date', 'Start (ET)': 'start',
+  'Unamed: 2': 'box', 'Visitor/Neutral': 'away_team',
+  'PTS': 'away_points', 'Home/Neutral': 'home_team',
+  'PTS.1': 'home_points', 'Unamed: 7': 'n_ot'}"
 # code_text <- ""
 # python_code <- shiny::renderText({ output$text })
 # current index of code lines
@@ -94,8 +95,7 @@ lastLine <- 1
 # hardcoded example for now
 # TODO: build this programmatically from another reference chunk
 # e.g. highlight: <span style=\"background-color:#ffff7f\">.set_index('date', append=True)</span>
-" nba = (nba
-    .rename(columns=column_names)
+" nba = (nba.rename(columns=column_names)
     .dropna(thresh=4)
     [['date', 'away_team', 'away_points', 'home_team', 'home_points']]
     .assign(date=lambda x: pd.to_datetime(x['date'], format='%a, %b %d, %Y'))
@@ -104,25 +104,11 @@ lastLine <- 1
     .sort_index()
   )" -> code
 
-# TODO accept the text from either an existing knitr chunk
-output$text <- shiny::renderUI({
-  # Note: for now, length will always just be the initial code rendered in `output$text`
-  lastLine <<- length(unlist(strsplit(code, "\n")))
-  # look for the pattern of the current line in code
-  pattern <- unlist(strsplit(code, "\n"))[[current]]
-  # and flair it
-  code <- flair::flair(code, pattern)
-
-  shiny::HTML(
-    "<br>",
-    "<pre>",
-    "<code class=\"language-python\">",
-    code,
-    "</code>",
-    "</pre>"
-  )
-
-})
+# TODO: 
+# for each relevant line(s):
+# - index/indices
+# - summary of the action
+# - output of the expression so far
 
 flair_line <- function() {
   # look for the pattern of the current line in code
@@ -132,7 +118,6 @@ flair_line <- function() {
   
   # hardcoded example for now
   # TODO: build this programmatically
-
   shiny::HTML(
     "<br>",
     "<pre>",
@@ -142,6 +127,14 @@ flair_line <- function() {
     "</pre>"
   )
 }
+
+# TODO accept the text from either an existing knitr chunk
+# first time initialization of the text area
+output$text <- shiny::renderUI({
+  # Note: for now, length will always just be the initial code rendered in `output$text`
+  lastLine <<- length(unlist(strsplit(code, "\n")))
+  flair_line()
+})
 
 # handlers for each button
 shiny::observeEvent(input$firstLine, {
