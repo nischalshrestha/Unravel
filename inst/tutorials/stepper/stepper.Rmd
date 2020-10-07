@@ -36,11 +36,6 @@ import pandas as pd
 nba = pd.read_csv(r.nba_data_path)
 ```
 
-<!-- ```{python read_data, exercise=TRUE, exercise.setup="nba_setup", opts.label="pprinter"} -->
-<!-- nba -->
-
-<!-- ``` -->
-
 <!-- ## Tidy data -->
 
 <!-- ```{python example, exercise.setup="nba_setup"} -->
@@ -48,10 +43,12 @@ nba = pd.read_csv(r.nba_data_path)
 <!--   'Unamed: 2': 'box', 'Visitor/Neutral': 'away_team', -->
 <!--   'PTS': 'away_points', 'Home/Neutral': 'home_team', -->
 <!--   'PTS.1': 'home_points', 'Unamed: 7': 'n_ot'} -->
-<!-- nba = (nba.rename(columns=column_names).dropna(thresh=4)[['date', 'away_team', 'away_points', 'home_team', 'home_points']].assign(date=lambda x: pd.to_datetime(x['date'], format='%a, %b %d, %Y')).set_index('date', append=True).rename_axis(["game_id", "date"]).sort_index() -->
-<!-- ) -->
-<!-- nba -->
 
+<!-- nba -->
+<!-- # nba = ( -->
+<!-- (nba.rename(columns=column_names).dropna(thresh=4)[['date', 'away_team', 'away_points', 'home_team', 'home_points']].assign(date=lambda x: pd.to_datetime(x['date'], format='%a, %b %d, %Y')).set_index('date', append=True).rename_axis(["game_id", "date"]).sort_index() -->
+<!-- ) -->
+<!-- # ) -->
 <!-- ``` -->
 
 
@@ -86,10 +83,6 @@ shiny::fluidPage(
 
 
 ```{r echo=FALSE, context="server", results="asis"}
-
-
-# code_text <- ""
-# python_code <- shiny::renderText({ output$text })
 # current index of code lines
 current <- 1
 # last line (the last index: TODO do it programmatically)
@@ -115,7 +108,6 @@ lastLine <- 1
 # - index/indices
 # - summary of the action
 # - output of the expression so far
-
 base_expr <- "nba"
 start_expr <- "nba.rename(columns=column_names)"
 
@@ -131,6 +123,7 @@ generate_df_outputs <- function(code, setup_code = NULL, base_expr = "", start_e
   for (i in range) {
     start_expr <- paste0(start_expr, code_vec[[i]])
     df <- reticulate::py_eval(start_expr, convert=FALSE)
+    
     outputs <- append(outputs, df)
   }
   outputs
@@ -142,14 +135,42 @@ generate_df_outputs <- function(code, setup_code = NULL, base_expr = "", start_e
 df_outputs <- generate_df_outputs(code, setup_code, start_expr = start_expr)
 
 df_reactable <- function() {
-  out <- NULL
-  if (current == lastLine) {
-    out <- python_df(df_outputs[[current - 1]])
-  } else {
-    out <- python_df(df_outputs[[current]])
+  
+  raw_df <- 
+    if (current == lastLine) {
+      df_outputs[[current - 1]]
+    } else {
+      df_outputs[[current]]
+    }
+  # check if df is a MultiIndex
+  is_multi_index <- "pandas.core.indexes.multi.MultiIndex" %in% class(raw_df$index)
+  converted_result <- python_df(raw_df)
+  if (is_multi_index) {
+    cat('multiindex\n')
+    show_index <- !identical(converted_result[[1]], rownames(converted_result))
+    grp_cols <- group_columns(
+      colnames(converted_result), 
+      start = ifelse(show_index, 1, 2)
+    )
+    return(
+      reactable::reactable(
+        converted_result,
+        rownames = show_index,
+        compact = TRUE,
+        minRows = 8,
+        defaultPageSize = 8,
+        showPagination = TRUE,
+        # height = 300,
+        highlight = TRUE,
+        bordered = TRUE,
+        columns = grp_cols[[1]],
+        columnGroups = grp_cols[[2]]
+      )
+    )
   }
+  
   reactable::reactable(
-    out, 
+    converted_result, 
     compact = TRUE,
     minRows = 8,
     defaultPageSize = 8,

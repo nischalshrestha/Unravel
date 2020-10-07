@@ -60,6 +60,7 @@ y
 <!-- x -->
 <!-- ``` -->
 
+
 <!-- These makes it so that the x and y data are SharedData so that reactable can detect it -->
 <!-- `r htmltools::knit_print.shiny.tag.list(reactable::reactable(py$x))` -->
 <!-- `r htmltools::knit_print.shiny.tag.list(reactable::reactable(py$y))` -->
@@ -75,6 +76,7 @@ shiny::fluidPage(
   )
 )
 ```
+
 
 ```{r poc_daff, context="server", results="asis"}
 # get the diff

@@ -79,7 +79,6 @@ install_knitr_hooks <- function() {
           exercise_cache <- learnr:::get_exercise_cache(options$label)
           all_code <- get_exercise_code(exercise_cache)
           all_setup_code <- get_exercise_code(exercise_cache, setup = TRUE)
-          browser()
           # execute code if not empty
           if (!identical(all_code, "")) {
             debug_print(options, "running python code")
@@ -94,44 +93,10 @@ install_knitr_hooks <- function() {
               options$results <- "asis"
               # options$code <- ""
               # wizard of oz pandas dataframe by changing index as well
-              converted_result <- python_df(raw_result)
-              debug_print(options, "prepped a dataframe")
-              out <- htmltools::knit_print.shiny.tag.list(
-                reactable::reactable(
-                  converted_result,
-                  pagination = TRUE,
-                  minRows = 10,
-                  compact = TRUE,
-                  # height = 300,
-                  highlight = TRUE,
-                  bordered = TRUE,
-                  rownames = TRUE,
-                  resizable = TRUE,
-                  theme = reactable::reactableTheme(
-                    borderWidth = "2px"
-                  ),
-                  defaultColDef = reactable::colDef(
-                    cell = function(value, index) {
-                      # turn NULL into NaN
-                      if (is.na(value) || is.null(value) || value == "") {
-                        return(as.character("NaN"))
-                      }
-                      return(value)
-                    }
-                  ),
-                  columns = list(
-                    .rownames = reactable::colDef(
-                      style = list(
-                        textAlign = "left"
-                      )
-                    )
-                  )
-                )
-              )
+              out <- format_python_df(options, raw_result)
               debug_print(options, "got the reactable")
               # if data_diff is requested, append the output with it
               if (length(options$data_diff)) {
-                debug_print(options, 'got the reactable')
                 out <- c(out, get_daff_output(options))
               }
               debug_print(options, out)
