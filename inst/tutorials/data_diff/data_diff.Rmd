@@ -120,7 +120,7 @@ Execute the following `melt` operation:
 
 This commented line is necessary for reactable to render the pew dfs
 
-```{python ex-pew_long, debug=TRUE, exercise=TRUE, exercise.setup="pew_setup", opts.label="pprinter"}
+```{python ex-pew_long, debug=FALSE, exercise=TRUE, exercise.setup="pew_setup", opts.label="pprinter"}
 pew_long = pd.melt(pew, id_vars='religion')
 pew_long
 
@@ -162,8 +162,6 @@ output$pew_datadiff <- reactable::renderReactable(
 <!-- nba -->
 
 <!-- ``` -->
-
-
 
 
 

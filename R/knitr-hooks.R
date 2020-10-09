@@ -71,7 +71,7 @@ install_knitr_hooks <- function() {
       last_line <- get_last_line(options)
       cached_diff <- get_delta_cache(paste0(oldcode, collapse = "\n"))
       # that would require checking the engine and handling R more directly with kableExtra
-      if (options$pprint && is.null(cached_diff)) {
+      if (isTRUE(options$pprint) && is.null(cached_diff)) {
         library(magrittr)
         if (length(options$code) > 0 && length(last_line) > 0) {
           # TODO make sure we don't NEED an exercise to pprint
@@ -81,7 +81,7 @@ install_knitr_hooks <- function() {
           all_setup_code <- get_exercise_code(exercise_cache, setup = TRUE)
           # execute code if not empty
           if (!identical(all_code, "")) {
-            debug_print(options, "running python code")
+            debug_print(options$debug, "running python code")
             # first run the entire code to introduce variables to environment
             reticulate::py_run_string(all_setup_code)
             # then, evaluate last line to detect whether it's a dataframe
@@ -89,21 +89,20 @@ install_knitr_hooks <- function() {
             converted_result <- reticulate::py_to_r(raw_result)
             # for data.frame, pretty print the output
             if (identical("data.frame", class(converted_result))) {
-              debug_print(options, "prepping a dataframe")
+              debug_print(options$debug, "prepping a dataframe")
               options$results <- "asis"
-              # options$code <- ""
               # wizard of oz pandas dataframe by changing index as well
               out <- format_python_df(options, raw_result)
-              debug_print(options, "got the reactable")
+              debug_print(options$debug, "got the reactable")
               # if data_diff is requested, append the output with it
-              if (length(options$data_diff)) {
+              if (isTRUE(options$data_diff)) {
                 out <- c(out, get_daff_output(options))
               }
-              debug_print(options, out)
+              debug_print(options$debug, out)
               store_delta_cache(paste0(oldcode, collapse = "\n"), out)
               return(out)
             } else {
-              debug_print(options, "returning a non-dataframe will not need be pretty printed")
+              debug_print(options$debug, "returning a non-dataframe will not need be pretty printed")
               # for everything else, use python engine as expected
               options$results <- "markdown"
               raw_result <- reticulate::py_eval(last_line, convert = FALSE)
@@ -111,10 +110,10 @@ install_knitr_hooks <- function() {
             }
           }
         }
-      } else if (options$pprint && !is.null(cached_diff)) {
+      } else if (isTRUE(options$pprint) && !is.null(cached_diff)) {
         return(cached_diff)
-      } else if (!options$pprint) {
-        debug_print(options, "returning something that does not need pretty printing")
+      } else if (!isTRUE(options$pprint)) {
+        debug_print(options$debug, "returning something that does not need pretty printing")
         # for everything else, use python engine as expected
         options$results <- "markdown"
         raw_result <- reticulate::py_eval(last_line, convert = FALSE)

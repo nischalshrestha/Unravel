@@ -7,8 +7,8 @@
 #' @return
 #'
 #' @examples
-debug_print <- function(options, msg) {
-  if (length(options$debug) && isTRUE(options$debug)) {
+debug_print <- function(debug, msg) {
+  if (isTRUE(debug)) {
     message(msg)
   }
 }
@@ -106,7 +106,7 @@ format_python_df <- function(options, raw_result) {
 
   # wizard of oz pandas dataframe by changing index as well
   converted_result <- python_df(raw_result)
-  debug_print(options, "prepped a dataframe")
+  debug_print(options$debug, "prepped a dataframe")
 
   # handle reactable for df with MultiIndex
   if (isTRUE(is_multi_index)) {
