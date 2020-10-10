@@ -51,16 +51,19 @@ nba = pd.read_csv(r.nba_data_path)
 <!-- # ) -->
 <!-- ``` -->
 
-
 ```{r echo=FALSE}
 shiny::fluidPage(
   # shiny::renderText("hello"),
   shiny::column(12, align = "center",
+    shiny::fluidRow(shiny::br()),
     shiny::fluidRow(
       reactable::reactableOutput("base_table")
     )
   ),
-  shiny::htmlOutput("text"),
+  shiny::column(12,
+    shiny::fluidRow(shiny::br()),
+    shiny::htmlOutput("text")
+  ),
   shiny::br(),
   shiny::verbatimTextOutput("value"),
   shiny::column(12, align = "center",
@@ -88,7 +91,7 @@ current <- 1
 # last line (the last index: TODO do it programmatically)
 lastLine <- 1
 # hardcoded example for now
-# TODO: build this programmatically from another reference chunk
+# TODO: build this programmatically from another reference chunk?
 # e.g. highlight: <span style=\"background-color:#ffff7f\">.set_index('date', append=True)</span>
 " nba = (nba.rename(columns=column_names)
     .dropna(thresh=4)
@@ -123,7 +126,6 @@ generate_df_outputs <- function(code, setup_code = NULL, base_expr = "", start_e
   for (i in range) {
     start_expr <- paste0(start_expr, code_vec[[i]])
     df <- reticulate::py_eval(start_expr, convert=FALSE)
-    
     outputs <- append(outputs, df)
   }
   outputs
@@ -135,7 +137,7 @@ generate_df_outputs <- function(code, setup_code = NULL, base_expr = "", start_e
 df_outputs <- generate_df_outputs(code, setup_code, start_expr = start_expr)
 
 df_reactable <- function() {
-  
+  # first get the raw pandas dataframe
   raw_df <- 
     if (current == lastLine) {
       df_outputs[[current - 1]]
@@ -146,7 +148,6 @@ df_reactable <- function() {
   is_multi_index <- "pandas.core.indexes.multi.MultiIndex" %in% class(raw_df$index)
   converted_result <- python_df(raw_df)
   if (is_multi_index) {
-    cat('multiindex\n')
     show_index <- !identical(converted_result[[1]], rownames(converted_result))
     grp_cols <- group_columns(
       colnames(converted_result), 
@@ -159,7 +160,7 @@ df_reactable <- function() {
         compact = TRUE,
         minRows = 8,
         defaultPageSize = 8,
-        showPagination = TRUE,
+        showPagination = FALSE,
         # height = 300,
         highlight = TRUE,
         bordered = TRUE,
@@ -174,7 +175,7 @@ df_reactable <- function() {
     compact = TRUE,
     minRows = 8,
     defaultPageSize = 8,
-    showPagination = TRUE,
+    showPagination = FALSE,
     # height = 300,
     highlight = TRUE,
     bordered = TRUE,
@@ -213,7 +214,7 @@ output$base_table <- renderReactable({
     out,
     defaultPageSize = 8,
     minRows = 8,
-    showPagination = TRUE,
+    showPagination = FALSE,
     # height = 300,
     compact = TRUE,
     highlight = TRUE,
