@@ -1,3 +1,4 @@
+library(magrittr)
 
 #' Debug print if options$debug flag is set to TRUE
 #'
@@ -39,6 +40,7 @@ get_exercise_code <- function(exercise_cache, setup = FALSE) {
 #' @param pydf
 #'
 #' @return
+#' @export
 #'
 #' @examples
 python_df <- function(pydf) {

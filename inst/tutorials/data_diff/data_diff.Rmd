@@ -13,13 +13,14 @@ library(reticulate)
 library(shiny)
 library(daff)
 library(reactable)
+library(DataTutor)
 
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 # custom scripts
-source(here::here("R", "utils.R"))
-source(here::here("R", "setup-cache.R"))
-source(here::here("R", "knitr-hooks.R"))
-source(here::here("R", "diffing.R"))
+# source(here::here("R", "utils.R"))
+# source(here::here("R", "setup-cache.R"))
+# source(here::here("R", "knitr-hooks.R"))
+# source(here::here("R", "diffing.R"))
 # install knitr hooks
 install_knitr_hooks()
 home_path <- here::here("inst/tutorials/data_diff/data/")

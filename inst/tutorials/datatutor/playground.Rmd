@@ -35,23 +35,31 @@ knitr::opts_chunk$set(echo = FALSE)
 
 # Interactive elements in learnr
 
-## Data structure custom chunk
+<!-- ## Data structure custom chunk -->
 
-```{dsviz pylistbasic}
-[1, 2, 3]
+<!-- ```{dsviz pylistbasic} -->
+<!-- [1, 2, 3] -->
+<!-- ``` -->
+
+<!-- ```{dsviz pylistcomplex} -->
+<!-- [[1, 2, 3], [4, 5, 6]] * 3 -->
+<!-- ``` -->
+
+<!-- ```{dsviz pydict} -->
+<!-- {'a': [1,2,3]} -->
+<!-- ``` -->
+
+<!-- ```{dsviz pydataframe} -->
+<!-- pd.DataFrame({'a':[1,2,3], 'b':[4,5,6]}) -->
+<!-- ``` -->
+
+```{python foo, echo=TRUE}
+def foo(a):
+  print(a)
+
+[i for i in range(10)]
 ```
 
-```{dsviz pylistcomplex}
-[[1, 2, 3], [4, 5, 6]] * 3
-```
-
-```{dsviz pydict}
-{'a': [1,2,3]}
-```
-
-```{dsviz pydataframe}
-pd.DataFrame({'a':[1,2,3], 'b':[4,5,6]})
-```
 
 <!-- ## Embeding `html_widget` -->
 
