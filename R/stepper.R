@@ -49,6 +49,7 @@ stepper <- function(id, explanations = list()) {
 
   # TODO: figure out the setup and code chunks and whether they exist
   chunk_label <- id
+
   # can not guarantee that `label` exists
   # label <- knitr::opts_current$get(chunk_label)
   # q_id <- label %||% random_question_id()
@@ -110,6 +111,7 @@ stepper_module_ui <- function(id) {
       12,
       shiny::fluidRow(shiny::br()),
       shiny::htmlOutput(ns("text"))
+      # shiny::htmlOutput(ns("x"))
     ),
     shiny::br(),
     shiny::verbatimTextOutput(ns("value")),
@@ -145,9 +147,9 @@ stepper_prerendered_chunk <- function(stepper, ...) {
 # like setup chunk, code chunk, explanations etc.
 stepper_module_server <- function(input, output, session, stepper) {
   # current index of code lines
-  current <- 1
-  # last line (the last index: TODO do it programmatically)
-  lastLine <- 1
+  # we make it a reactiveVal because we will update it via stepper button clicks
+  current <- shiny::reactiveVal(1)
+
   # hardcoded example for now
   # TODO: build this programmatically from another reference chunk?
   # e.g. highlight: <span style=\"background-color:#ffff7f\">.set_index('date', append=True)</span>
@@ -163,6 +165,9 @@ stepper_module_server <- function(input, output, session, stepper) {
     'Unamed: 2': 'box', 'Visitor/Neutral': 'away_team',
     'PTS': 'away_points', 'Home/Neutral': 'home_team',
     'PTS.1': 'home_points', 'Unamed: 7': 'n_ot'}" -> setup_code
+
+  # last line (the last index: TODO do it programmatically)
+  lastLine <- length(unlist(strsplit(code, "\n"))) - 1
 
   # TODO:
   # for each relevant line(s):
@@ -195,14 +200,9 @@ stepper_module_server <- function(input, output, session, stepper) {
 
   df_outputs <- generate_df_outputs(code, setup_code, start_expr = start_expr)
 
-  df_reactable <- function() {
+  df_reactable <- function(idx) {
     # first get the raw pandas dataframe
-    raw_df <-
-      if (current == lastLine) {
-        df_outputs[[current - 1]]
-      } else {
-        df_outputs[[current]]
-      }
+    raw_df <- df_outputs[[idx]]
     # check if df is a MultiIndex
     is_multi_index <- "pandas.core.indexes.multi.MultiIndex" %in% class(raw_df$index)
     converted_result <- python_df(raw_df)
@@ -241,9 +241,9 @@ stepper_module_server <- function(input, output, session, stepper) {
     )
   }
 
-  flair_line <- function() {
+  flair_line <- function(idx) {
     # look for the pattern of the current line in code
-    pattern <- unlist(strsplit(code, "\n"))[[current]]
+    pattern <- unlist(strsplit(code, "\n"))[[idx]]
     # and flair it
     code <- flair::flair(code, pattern)
 
@@ -259,14 +259,6 @@ stepper_module_server <- function(input, output, session, stepper) {
     )
   }
 
-  # TODO accept the text from either an existing knitr chunk
-  # first time initialization of the text area
-  output$text <- shiny::renderUI({
-    # Note: for now, length will always just be the initial code rendered in `output$text`
-    lastLine <<- length(unlist(strsplit(code, "\n")))
-    flair_line()
-  })
-
   output$base_table <- renderReactable({
     out <- python_df(reticulate::py_eval(base_expr, convert = FALSE))
     reactable::reactable(
@@ -281,65 +273,45 @@ stepper_module_server <- function(input, output, session, stepper) {
     )
   })
 
-  output$line_table <- renderReactable({
-    df_reactable()
-  })
-
   # handlers for each button
   shiny::observeEvent(input$firstLine, {
-    if (current > 1) {
-      current <<- 1
+    if (current() > 1) {
+      current(1)
     }
-    message("clicked First button: ", current)
+    message("clicked First button: ", current())
     learnr:::event_trigger(session = session, event = "clicked_button", data = list(btn = "first"))
-    output$text <- shiny::renderUI({
-      flair_line()
-    })
-    output$line_table <- renderReactable({
-      df_reactable()
-    })
   })
 
   shiny::observeEvent(input$previousLine, {
-    if (current > 1) {
-      current <<- current - 1
+    if (current() > 1) {
+      current(current() - 1)
     }
-    message("clicked Previous button: ", current)
+    message("clicked Previous button: ", current())
     learnr:::event_trigger(session = session, event = "clicked_button", data = list(btn = "previous"))
-    output$text <- shiny::renderUI({
-      flair_line()
-    })
-    output$line_table <- renderReactable({
-      df_reactable()
-    })
   })
 
   shiny::observeEvent(input$nextLine, {
-    if (current < lastLine) {
-      current <<- current + 1
+    if (current() < lastLine) {
+      current(current() + 1)
     }
-    message("clicked Next button: ", current)
-    # trigger an event for learnr (handled in event handler)
+    message("clicked Next button: ", current())
     learnr:::event_trigger(session = session, event = "clicked_button", data = list(btn = "next"))
-    output$text <- shiny::renderUI({
-      flair_line()
-    })
-    output$line_table <- renderReactable({
-      df_reactable()
-    })
   })
 
   shiny::observeEvent(input$lastLine, {
-    if (current < lastLine) {
-      current <<- lastLine
+    if (current() < lastLine) {
+      current(lastLine)
     }
-    message("clicked Last button: ", current)
+    message("clicked Last button: ", current())
     learnr:::event_trigger(session = session, event = "clicked_button", data = list(btn = "last"))
-    output$text <- shiny::renderUI({
-      flair_line()
-    })
-    output$line_table <- renderReactable({
-      df_reactable()
-    })
   })
+
+  output$text <- shiny::renderUI({
+    flair_line(current())
+  })
+
+  output$line_table <- renderReactable({
+    df_reactable(current())
+  })
+
 }
