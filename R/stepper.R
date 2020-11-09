@@ -43,46 +43,72 @@
 #'
 #' @param id
 #' @param explanations
-stepper <- function(id, explanations = list()) {
+stepper <- function(setup_label = NULL, code_label = NULL, explanations = list()) {
+
+  # must require setup and code label
+  if (is.null(setup_label) || is.null(code_label))
+    stop("The `setup_label` and `code_label` must be provided for the stepper to render.")
+
   # one time tutor initialization
   initialize_tutorial()
 
-  # TODO: figure out the setup and code chunks and whether they exist
-  chunk_label <- id
+  # TODO eventually be able to walk through either Python or R based on engine info
+  # grab the setup and code chunks
+  setup_chunk <- knitr::knit_code$get(setup_label)
+  code_chunk <- knitr::knit_code$get(code_label)
 
-  # can not guarantee that `label` exists
-  # label <- knitr::opts_current$get(chunk_label)
-  # q_id <- label %||% random_question_id()
+  # setup and code chunks must exist
+  if (is.null(setup_chunk))
+    stop(glue::glue(
+      "The setup chunk with label, {setup_label}, could not be found. Make sure you have included it."
+    ), call. = FALSE)
 
-  # TODO: pass that chunk info in the ret structure to be used in `stepper_module_server`
+  if (is.null(code_chunk))
+    stop(glue::glue(
+      "The code chunk with label, {code_label}, could not be found. Make sure you have included it."
+    ), call. = FALSE)
 
+  # make sure we have one string for setup code (handy when running `reticulate::py_eval_string`)
+  setup_code <- paste0(setup_chunk, collapse="\n")
+  # we will maintain the source code as it was written so we can display it verbatim
+  source_code <- paste0(code_chunk, collapse = "\n")
+  # but we will also maintain a code vector so we can step through each line
+  eval_code <- purrr::map_chr(code_chunk, stringr::str_trim)
 
-  # TODO: grab setup chunk for the id (chunk )
+  # create an id for stepper based on current chunk label
+  label <- knitr::opts_current$get('label')
+  # stepper chunk must have a label
+  if (is.null(label) || grepl("unnamed-chunk", label))
+    stop("A stepper chunk must include a label.", call. = FALSE)
+
   ret <- list(
-    id = chunk_label,
+    id = label,
+    setup_code = setup_code,
+    stepper_code = list(
+      source_code = source_code,
+      eval_code = eval_code
+    ),
     explanations = explanations
   )
   class(ret) <- "tutorial_stepper"
   ret
 }
 
-#' Title
+#' knitr print for stepper
 #'
-#' @param x
-#' @param ...
+#' @param x the stepper
+#' @param ... additional fields
 #' @inheritParams knitr::knit_print
-#' @export
 #' @importFrom knitr knit_print
 #' @method knit_print tutorial_stepper
 #' @rdname knit_print
 #' @return
 #'
-#'
-#' @examples
+#' @export
 knit_print.tutorial_stepper <- function(x, ...) {
   stepper <- x
   ui <- stepper_module_ui(stepper$id)
-
+  #
   rmarkdown::shiny_prerendered_chunk(
     "server",
     sprintf(
@@ -90,16 +116,24 @@ knit_print.tutorial_stepper <- function(x, ...) {
       learnr:::dput_to_string(stepper)
     )
   )
-
-  # regular knit print the UI
+  # knit print the UI
   knitr::knit_print(ui)
 }
 
+#' Generates the HTML for the stepper UI
+#'
+#' @param id
+#' @return list that is a shiny.tag.list containing HTML and other Shiny meta data
+#'
+#' @examples
+#' \dontrun{
+#' stepper_module_ui("hello")
+#' }
+#' @export
 stepper_module_ui <- function(id) {
-  # need to namespace for module
+  # namespace for module
   ns <- shiny::NS(id)
   shiny::fluidPage(
-    # shiny::renderText("hello"),
     shiny::column(12,
       align = "center",
       shiny::fluidRow(shiny::br()),
@@ -111,7 +145,6 @@ stepper_module_ui <- function(id) {
       12,
       shiny::fluidRow(shiny::br()),
       shiny::htmlOutput(ns("text"))
-      # shiny::htmlOutput(ns("x"))
     ),
     shiny::br(),
     shiny::verbatimTextOutput(ns("value")),
@@ -134,6 +167,14 @@ stepper_module_ui <- function(id) {
   )
 }
 
+#' Title
+#'
+#' @param stepper
+#' @param ...
+#'
+#' @return
+#' @export
+#'
 stepper_prerendered_chunk <- function(stepper, ...) {
   shiny::callModule(
     stepper_module_server,
@@ -150,45 +191,31 @@ stepper_module_server <- function(input, output, session, stepper) {
   # we make it a reactiveVal because we will update it via stepper button clicks
   current <- shiny::reactiveVal(1)
 
-  # hardcoded example for now
-  # TODO: build this programmatically from another reference chunk?
-  # e.g. highlight: <span style=\"background-color:#ffff7f\">.set_index('date', append=True)</span>
-  " nba = (nba.rename(columns=column_names)
-      .dropna(thresh=4)
-      [['date', 'away_team', 'away_points', 'home_team', 'home_points']]
-      .assign(date=lambda x: pd.to_datetime(x['date'], format='%a, %b %d, %Y'))
-      .set_index('date', append=True)
-      .rename_axis([\"game_id\", \"date\"])
-      .sort_index()
-    )" -> code
-  "column_names = {'Date': 'date', 'Start (ET)': 'start',
-    'Unamed: 2': 'box', 'Visitor/Neutral': 'away_team',
-    'PTS': 'away_points', 'Home/Neutral': 'home_team',
-    'PTS.1': 'home_points', 'Unamed: 7': 'n_ot'}" -> setup_code
+  # extract the setup, eval, and source code
+  setup_code <- stepper$setup_code
+  eval_code <- stepper$stepper_code$eval_code
+  source_code <- stepper$stepper_code$source_code
 
-  # last line (the last index: TODO do it programmatically)
-  lastLine <- length(unlist(strsplit(code, "\n"))) - 1
+  # last line
+  lastLine <- length(eval_code) - 1
 
-  # TODO:
   # for each relevant line(s):
   # - index/indices
-  # - summary of the action
   # - output of the expression so far
-  # TODO this is hacky and there's gotta be better solution to read first line (or maybe hold off until clicking the first next button)
+  # TODO:
+  # - summary of the action
   base_expr <- "nba"
   start_expr <- "nba.rename(columns=column_names)"
 
-  generate_df_outputs <- function(code, setup_code = NULL, base_expr = "", start_expr = "") {
+  generate_df_outputs <- function(eval_code, setup_code) {
     if (!is.null(setup_code)) {
       reticulate::py_run_string(setup_code)
     }
-    code_vec <- unlist(strsplit(code, split = "\n"))
-    code_vec <- purrr::map_chr(code_vec, stringr::str_trim)
-    last_index <- length(code_vec) - 1
+    last_index <- length(eval_code) - 1
     range <- 2:last_index
-    outputs <- list(reticulate::py_eval(start_expr))
+    outputs <- list(reticulate::py_eval(start_expr, convert = FALSE))
     for (i in range) {
-      start_expr <- paste0(start_expr, code_vec[[i]])
+      start_expr <- paste0(start_expr, eval_code[[i]])
       df <- reticulate::py_eval(start_expr, convert = FALSE)
       outputs <- append(outputs, df)
     }
@@ -197,8 +224,8 @@ stepper_module_server <- function(input, output, session, stepper) {
     # TODO hold off on the index and explanation bit for now
     # but revisit when the output stuff can be generated
   }
-
-  df_outputs <- generate_df_outputs(code, setup_code, start_expr = start_expr)
+  # prepopulate all df outputs
+  df_outputs <- generate_df_outputs(eval_code, setup_code)
 
   df_reactable <- function(idx) {
     # first get the raw pandas dataframe
@@ -243,19 +270,18 @@ stepper_module_server <- function(input, output, session, stepper) {
 
   flair_line <- function(idx) {
     # look for the pattern of the current line in code
-    pattern <- unlist(strsplit(code, "\n"))[[idx]]
-    # and flair it
-    code <- flair::flair(code, pattern)
-
-    # hardcoded example for now
-    # TODO: build this programmatically
+    # currently, this is just whatever line we are on
+    pattern <- eval_code[[idx]]
+    # flair the whole source code with the pattern line highlighted
+    highlighted_code <- flair::flair(source_code, pattern)
+    # TODO this does not provide syntax highlighting so maybe look into
+    # using prism programmatically
     shiny::HTML(
-      "<br>",
-      "<pre>",
-      "<code class=\"language-python\">",
-      code,
-      "</code>",
-      "</pre>"
+      paste0(
+        "<br><pre><code class=\"language-python\">",
+        highlighted_code,
+        "</code></pre>"
+      )
     )
   }
 

@@ -43,18 +43,39 @@ event_register_handler("clicked_button", function(session, event, data) {
 
 # Example demo
 
-<!-- ## Read data -->
-
-```{python nba_setup}
+```{python nba_stepper_setup, include=FALSE}
 import pandas as pd
+import numpy as np
 nba = pd.read_csv(r.nba_data_path)
+column_names = {
+  'Date': 'date',
+  'Start (ET)': 'start',
+  'Unamed: 2': 'box',
+  'Visitor/Neutral': 'away_team',
+  'PTS': 'away_points',
+  'Home/Neutral': 'home_team',
+  'PTS.1': 'home_points',
+  'Unamed: 7': 'n_ot'
+}
+```
+
+```{python nba_code, include=FALSE, eval=FALSE}
+nba = (nba.rename(columns=column_names)
+  .dropna(thresh=4)
+  [['date', 'away_team', 'away_points', 'home_team', 'home_points']]
+  .assign(date=lambda x: pd.to_datetime(x['date'], format='%a, %b %d, %Y'))
+  .set_index('date', append=True)
+  .rename_axis(["game_id", "date"])
+  .sort_index()
+)
 ```
 
 ## nba data
 
-```{r stepper-ex, echo=FALSE}
+```{r nba_stepper, echo=FALSE}
 stepper(
-  id = "stepper-ex",
+  setup_label = "nba_stepper_setup",
+  code_label = "nba_code",
   explanations = list(
     list(line = 1, text = "The first thing we want to do is groupby the CID, FE, and select the FID column."),
     list(line = 2, text = "Then we will count the numbers by the groups.")
@@ -63,4 +84,3 @@ stepper(
 ```
 
 ## another section
-
