@@ -77,10 +77,13 @@ stepper(
   setup_label = "nba_stepper_setup",
   code_label = "nba_code",
   explanations = list(
-    list(line = 1, text = "The first thing we want to do is groupby the CID, FE, and select the FID column."),
-    list(line = 2, text = "Then we will count the numbers by the groups.")
+    "The column names of `nba` are quite messy so, we first rename column names with `rename` using our earlier `column_names` dict. Note how we use a `.` to call the `rename` on the dataframe `nba`. Python is different from R in that it heavily uses the object-oriented style of programming using dot notations to access methods of classes (much like `R6` classes in R). This will take some getting used to since you are probably more familiar with R's functional style.",
+    "Then, we drop any row that does not contain at least 4 non-NAs with `dropna(thresh=4)`. In this case, nothing has changed because we never satisfied the `thresh` of 4 non-NAs for any rows."
   )
 )
 ```
 
 ## another section
+
+
+

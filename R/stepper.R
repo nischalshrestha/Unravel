@@ -38,16 +38,23 @@
 #'   explanations = list(
 #'     list(line = 1, text = "The first thing we want to do is groupby the CID, FE, and select the FID column."),
 #'     list(line = 2, text = "Then we will count the numbers by the groups.")
-#'     )
-#'  )
-#'
+#'   )
+#' )
 #' @param id
 #' @param explanations
 stepper <- function(setup_label = NULL, code_label = NULL, explanations = list()) {
 
   # must require setup and code label
-  if (is.null(setup_label) || is.null(code_label))
+  if (is.null(setup_label) || is.null(code_label)) {
     stop("The `setup_label` and `code_label` must be provided for the stepper to render.")
+  }
+
+  # must require explanations
+  if (!length(explanations)) {
+    stop("The `explanations` list must be provided for the stepper to render.")
+  }
+  # TODO also check if the length of list matches code vector length
+  # (we want 1:1 mapping of explanation to snippet line)
 
   # one time tutor initialization
   initialize_tutorial()
@@ -58,28 +65,34 @@ stepper <- function(setup_label = NULL, code_label = NULL, explanations = list()
   code_chunk <- knitr::knit_code$get(code_label)
 
   # setup and code chunks must exist
-  if (is.null(setup_chunk))
+  if (is.null(setup_chunk)) {
     stop(glue::glue(
       "The setup chunk with label, {setup_label}, could not be found. Make sure you have included it."
     ), call. = FALSE)
+  }
 
-  if (is.null(code_chunk))
+  if (is.null(code_chunk)) {
     stop(glue::glue(
       "The code chunk with label, {code_label}, could not be found. Make sure you have included it."
     ), call. = FALSE)
+  }
 
   # make sure we have one string for setup code (handy when running `reticulate::py_eval_string`)
-  setup_code <- paste0(setup_chunk, collapse="\n")
+  setup_code <- paste0(setup_chunk, collapse = "\n")
   # we will maintain the source code as it was written so we can display it verbatim
   source_code <- paste0(code_chunk, collapse = "\n")
   # but we will also maintain a code vector so we can step through each line
   eval_code <- purrr::map_chr(code_chunk, stringr::str_trim)
 
   # create an id for stepper based on current chunk label
-  label <- knitr::opts_current$get('label')
+  label <- knitr::opts_current$get("label")
   # stepper chunk must have a label
-  if (is.null(label) || grepl("unnamed-chunk", label))
+  if (is.null(label) || grepl("unnamed-chunk", label)) {
     stop("A stepper chunk must include a label.", call. = FALSE)
+  }
+
+  # turn text into markdown if needed
+  explanations = lapply(explanations, stepper_text)
 
   ret <- list(
     id = label,
@@ -92,6 +105,33 @@ stepper <- function(setup_label = NULL, code_label = NULL, explanations = list()
   )
   class(ret) <- "tutorial_stepper"
   ret
+}
+
+# render markdown (including equations) for quiz_text
+stepper_text <- function(text) {
+  if (inherits(text, "html")) {
+    return(text)
+  }
+  if (is_tags(text)) {
+    return(text)
+  }
+  if (!is.null(text)) {
+    # convert markdown
+    md <- markdown::markdownToHTML(
+      text = text,
+      options = c("use_xhtml", "fragment_only", "mathjax"),
+      extensions = markdown::markdownExtensions(),
+      fragment.only = TRUE,
+      encoding = "UTF-8"
+    )
+    # remove leading and trailing paragraph
+    md <- sub("^<p>", "", md)
+    md <- sub("</p>\n?$", "", md)
+    shiny::HTML(md)
+  }
+  else {
+    NULL
+  }
 }
 
 #' knitr print for stepper
@@ -141,12 +181,19 @@ stepper_module_ui <- function(id) {
         reactable::reactableOutput(ns("base_table"))
       )
     ),
+    shiny::br(),
     shiny::column(
       12,
-      shiny::fluidRow(shiny::br()),
       shiny::htmlOutput(ns("text"))
     ),
     shiny::br(),
+    shiny::column(
+      12,
+      shiny::div(
+        style = "height:150px;",
+        shiny::htmlOutput(ns("summary"))
+      )
+    ),
     shiny::verbatimTextOutput(ns("value")),
     shiny::column(12,
       align = "center",
@@ -191,10 +238,11 @@ stepper_module_server <- function(input, output, session, stepper) {
   # we make it a reactiveVal because we will update it via stepper button clicks
   current <- shiny::reactiveVal(1)
 
-  # extract the setup, eval, and source code
+  # extract the setup, eval + source code, and the explanation list
   setup_code <- stepper$setup_code
   eval_code <- stepper$stepper_code$eval_code
   source_code <- stepper$stepper_code$source_code
+  explanations <- stepper$explanations
 
   # last line
   lastLine <- length(eval_code) - 1
@@ -226,6 +274,11 @@ stepper_module_server <- function(input, output, session, stepper) {
   }
   # prepopulate all df outputs
   df_outputs <- generate_df_outputs(eval_code, setup_code)
+
+  # get next summary
+  get_summary <- function(idx) {
+    explanations[[idx]]
+  }
 
   df_reactable <- function(idx) {
     # first get the raw pandas dataframe
@@ -336,8 +389,11 @@ stepper_module_server <- function(input, output, session, stepper) {
     flair_line(current())
   })
 
+  output$summary <- shiny::renderUI({
+    get_summary(current())
+  })
+
   output$line_table <- renderReactable({
     df_reactable(current())
   })
-
 }

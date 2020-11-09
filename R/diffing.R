@@ -324,7 +324,6 @@ format_table <- function(diff_data, reactable_output = FALSE) {
 #'
 #' @examples
 daff_html <- function(data_ref, data, include_summary = FALSE, include_diff_table = FALSE, reactable_output = FALSE) {
-
   diff <- daff::diff_data(data_ref = data_ref, data = data)
   s <- attr(diff, "summary")
 

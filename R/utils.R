@@ -14,6 +14,11 @@ debug_print <- function(debug, msg) {
   }
 }
 
+is_tags <- function(x) {
+  inherits(x, "shiny.tag") ||
+    inherits(x, "shiny.tag.list")
+}
+
 # helper function to get the last line of the code in an exercise
 get_last_line <- function(options) {
   # TODO: strip comment string characters, only return last viable line
@@ -67,14 +72,14 @@ python_df <- function(pydf) {
     }
   } else if (is_numeric_index) {
     # 1) First, read it as csv to preserve types (except for NaNs)
-    rdf <- as.data.frame(readr::read_csv(as.character(pydf$to_csv(index=FALSE))))
+    rdf <- as.data.frame(readr::read_csv(as.character(pydf$to_csv(index = FALSE))))
   } else {
     rdf <- reticulate::py_to_r(pydf)
   }
   # 2) Turn some data types back to Python representation
   rdf <- rdf %>%
     purrr::map_df(~ ifelse(is.na(.), "NaN", as.character(.))) %>%
-    as.data.frame
+    as.data.frame()
   # 3) change to 0-indexing for row index
   rownames(rdf) <- as.numeric(rownames(rdf)) - 1
   rdf
@@ -112,7 +117,7 @@ format_python_df <- function(options, raw_result) {
 
   # handle reactable for df with MultiIndex
   if (isTRUE(is_multi_index)) {
-    cat('multiindex\n')
+    cat("multiindex\n")
     # handle the case where we might already have renamed axis for Index
     # in this case, we should not show index, and group one more
     show_index <- !identical(rdf[[1]], rownames(rdf))
