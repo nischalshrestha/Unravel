@@ -24,12 +24,28 @@
 #   .reset_index()
 #   .rename_axis(None, axis=1)
 
-#' Title
+#' This is the first stage of creating the stepper Shiny app.
+#' We return a list structure that will then be rendered with a `knitr::knit_print`
+#' on the rendering stage of the app.
 #'
-#' @param id
 #' @param explanations
 #'
-#' @return
+#' @param setup_label
+#' @param code_label
+#' @param start_expr
+#' @param explanations
+#' @return a list structure with a class of "tutorial_stepper":
+#'  list(
+#'    id,
+#'    setup_code,
+#'    start_expr,
+#'    stepper_code = list(
+#'      source_code,
+#'      eval_code
+#'    ),
+#'    explanations
+#'  )
+#'
 #' @export
 #'
 #' @examples
@@ -40,9 +56,7 @@
 #'     list(line = 2, text = "Then we will count the numbers by the groups.")
 #'   )
 #' )
-#' @param id
-#' @param explanations
-stepper <- function(setup_label = NULL, code_label = NULL, explanations = list()) {
+stepper <- function(setup_label = NULL, code_label = NULL, start_expr = "", explanations = list()) {
 
   # must require setup and code label
   if (is.null(setup_label) || is.null(code_label)) {
@@ -97,6 +111,7 @@ stepper <- function(setup_label = NULL, code_label = NULL, explanations = list()
   ret <- list(
     id = label,
     setup_code = setup_code,
+    start_expr = start_expr,
     stepper_code = list(
       source_code = source_code,
       eval_code = eval_code
@@ -174,14 +189,6 @@ stepper_module_ui <- function(id) {
   # namespace for module
   ns <- shiny::NS(id)
   shiny::fluidPage(
-    shiny::column(12,
-      align = "center",
-      shiny::fluidRow(shiny::br()),
-      shiny::fluidRow(
-        reactable::reactableOutput(ns("base_table"))
-      )
-    ),
-    shiny::br(),
     shiny::column(
       12,
       shiny::htmlOutput(ns("text"))
@@ -214,14 +221,13 @@ stepper_module_ui <- function(id) {
   )
 }
 
-#' Title
+#' This invokes the stepper Shiny module
 #'
-#' @param stepper
-#' @param ...
+#' @param stepper the list structure returned by the `stepper` function
+#' @param ... additional fields
 #'
-#' @return
+#' @return nothing
 #' @export
-#'
 stepper_prerendered_chunk <- function(stepper, ...) {
   shiny::callModule(
     stepper_module_server,
@@ -243,24 +249,21 @@ stepper_module_server <- function(input, output, session, stepper) {
   eval_code <- stepper$stepper_code$eval_code
   source_code <- stepper$stepper_code$source_code
   explanations <- stepper$explanations
+  start_expr <- stepper$start_expr
 
   # last line
   lastLine <- length(eval_code) - 1
 
-  # for each relevant line(s):
-  # - index/indices
-  # - output of the expression so far
-  # TODO:
-  # - summary of the action
-  base_expr <- "nba"
-  start_expr <- "nba.rename(columns=column_names)"
-
   generate_df_outputs <- function(eval_code, setup_code) {
+    # run the setup code first
     if (!is.null(setup_code)) {
       reticulate::py_run_string(setup_code)
     }
+    # skip the last line for parens
     last_index <- length(eval_code) - 1
+    # skip the first line so we can handle start_expr first
     range <- 2:last_index
+    # eval the starting expression, `start_expr`
     outputs <- list(reticulate::py_eval(start_expr, convert = FALSE))
     for (i in range) {
       start_expr <- paste0(start_expr, eval_code[[i]])
@@ -268,9 +271,6 @@ stepper_module_server <- function(input, output, session, stepper) {
       outputs <- append(outputs, df)
     }
     outputs
-    # handle custom indices
-    # TODO hold off on the index and explanation bit for now
-    # but revisit when the output stuff can be generated
   }
   # prepopulate all df outputs
   df_outputs <- generate_df_outputs(eval_code, setup_code)
@@ -337,20 +337,6 @@ stepper_module_server <- function(input, output, session, stepper) {
       )
     )
   }
-
-  output$base_table <- renderReactable({
-    out <- python_df(reticulate::py_eval(base_expr, convert = FALSE))
-    reactable::reactable(
-      out,
-      defaultPageSize = 8,
-      minRows = 8,
-      showPagination = FALSE,
-      # height = 300,
-      compact = TRUE,
-      highlight = TRUE,
-      bordered = TRUE,
-    )
-  })
 
   # handlers for each button
   shiny::observeEvent(input$firstLine, {
