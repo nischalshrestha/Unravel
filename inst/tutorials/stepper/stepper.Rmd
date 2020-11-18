@@ -34,13 +34,6 @@ rnba <- read.csv(nba_data_path)
 # options(tutorial.event_recorder = tutorial_event_recorder)
 ```
 
-```{r context="server-start"}
-# in order to observe our custom events, we register the event with a handler, for which we can extract data from
-event_register_handler("clicked_button", function(session, event, data) {
-  message("custom event: clicked_button ", data$btn)
-})
-```
-
 # Example demo
 
 ```{python nba_stepper_setup, include=FALSE}

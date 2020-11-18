@@ -163,7 +163,14 @@ stepper_text <- function(text) {
 knit_print.tutorial_stepper <- function(x, ...) {
   stepper <- x
   ui <- stepper_module_ui(stepper$id)
-  #
+  # in context="server-start", register the event hook
+  rmarkdown::shiny_prerendered_chunk(
+    "server-start",
+    "event_register_handler('clicked_button', function(session, event, data) {
+      message('custom event: clicked_button ', data$btn)
+    })"
+  )
+  # setup the stepper Shiny module in context="server"
   rmarkdown::shiny_prerendered_chunk(
     "server",
     sprintf(
