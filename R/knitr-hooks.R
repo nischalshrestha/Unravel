@@ -63,6 +63,7 @@ install_knitr_hooks <- function() {
     )
   })
 
+  # TODO clean this up to use reticulate::eng_python as much as possible
   # prettier printing and dataframe formatting for Python
   pprinter_func <- function(before, options, envir) {
     # TODO: handle both Python/R
@@ -74,7 +75,7 @@ install_knitr_hooks <- function() {
       if (isTRUE(options$pprint) && is.null(cached_diff)) {
         library(magrittr)
         if (length(options$code) > 0 && length(last_line) > 0) {
-          # TODO make sure we don't NEED an exercise to pprint
+          # TODO make sure we don't NEED an exercise to pprint (maybe use the parsermd function)
           # get all of the setup code and the code itself
           exercise_cache <- learnr:::get_exercise_cache(options$label)
           all_code <- get_exercise_code(exercise_cache)
@@ -121,6 +122,7 @@ install_knitr_hooks <- function() {
       }
     }
   }
+
   # this hook is to pretty print dataframes when it's the last line of python code
   knitr::knit_hooks$set(pprint = pprinter_func)
 }
