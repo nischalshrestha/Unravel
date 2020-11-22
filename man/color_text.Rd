@@ -2,16 +2,18 @@
 % Please edit documentation in R/utils.R
 \name{color_text}
 \alias{color_text}
-\title{Highlight text color or its background-color and return an HTML string}
+\title{Return HTML string(s) containing highlighted text.}
 \usage{
-color_text(x, type = NULL)
+color_text(text, type = NULL)
 }
 \arguments{
-\item{background}{}
+\item{text}{a `character` or [`character`] to highlight}
+
+\item{type}{the css class}
 }
 \value{
 
 }
 \description{
-Highlight text color or its background-color and return an HTML string
+Return HTML string(s) containing highlighted text.
 }

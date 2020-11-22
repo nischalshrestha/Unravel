@@ -4,10 +4,10 @@
 \alias{rinline_to_html}
 \title{Takes in a markdown string and renders it using `knitr::knit2html`}
 \usage{
-rinline_to_html(explanation)
+rinline_to_html(text)
 }
 \arguments{
-\item{explanation}{}
+\item{text}{}
 }
 \value{
 

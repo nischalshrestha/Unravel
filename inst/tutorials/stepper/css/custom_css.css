@@ -1,6 +1,15 @@
 
-/* pink */
+
+/* yellow */
 .highlighted {
+  color: black;
+  background-color: #fed171;
+  font-family: 'Roboto Mono', monospace;
+  /* font-size: 12px;*/
+}
+
+/* pink */
+.deleted {
   color: black;
   background-color: #ffbaaf;
   font-family: 'Roboto Mono', monospace;

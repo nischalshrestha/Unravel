@@ -19,6 +19,7 @@ is_tags <- function(x) {
     inherits(x, "shiny.tag.list")
 }
 
+# TODO delete this once we start using the custom python script
 # helper function to get the last line of the code in an exercise
 get_last_line <- function(options) {
   # TODO: strip comment string characters, only return last viable line
@@ -194,10 +195,6 @@ reappend <- function(...) {
   myList
 }
 
-#' Color for simple code text highlight.
-#' @export
-highlight_code <- "#ffbaaf"
-
 #' Return HTML string(s) containing highlighted text.
 #'
 #' @param text a `character` or [`character`] to highlight
@@ -215,30 +212,26 @@ color_text <- function(text, type = NULL) {
   return(paste0(text_list, collapse = ", "))
 }
 
-#' Takes in a markdown string and renders it using `knitr::knit2html`
+#' Takes in an RMarkdown text as `character`, renders it using `knitr::knit2html`
+#' and finally returns the `shiny::HTML` version.
 #'
-#' @param explanation
+#' @param text
 #'
-#' @return
+#' @return a `shiny::HTML`
 #' @export
 #'
 #' @examples
-rinline_to_html <- function(explanation) {
-  writeLines(explanation, "test.Rmd")
+rinline_to_html <- function(text) {
+  # first write
+  writeLines(text, "test.Rmd")
+  # upon exit delete temporarily created files
+  on.exit(unlink(c("test.Rmd", "test.html", "test.md")))
+  # knit the text so we can execute inline R code
   knitr::knit2html("test.Rmd", quiet = TRUE)
   out_text <- paste0(readLines("test.md"), collapse="\n")
   # remove html_preserve
   out_text <- gsub("<!--html_preserve-->", "", out_text)
   out_text <- gsub("<!--/html_preserve-->", "", out_text)
-
-  # print(out_text)
-  # out <- shiny::HTML(out_text)
-  unlink(c("test.Rmd", "test.html", "test.md"))
-  return(out_text)
+  return(shiny::HTML(out_text))
 }
-
-# explanation <- "Here is some code: `r DataTutor::color_text('column_names')`"
-# rinline_to_html(explanation)
-
-
 

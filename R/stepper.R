@@ -122,7 +122,7 @@ stepper <- function(setup_label = NULL, code_label = NULL, start_expr = "", expl
   ret
 }
 
-# render markdown (including equations) for quiz_text
+# render markdown (including equations) for stepper_text
 stepper_text <- function(text) {
   if (inherits(text, "html")) {
     return(text)
