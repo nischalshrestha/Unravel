@@ -1,7 +1,10 @@
 ---
 title: "Stepper"
-output: learnr::tutorial
+output:
+  learnr::tutorial:
+    css: css/custom_css.css
 runtime: shiny_prerendered
+
 ---
 
 ```{r setup, include = FALSE}
@@ -9,7 +12,7 @@ library(learnr)
 library(dplyr)
 library(flair)
 library(reticulate)
-library(shinyAce)
+library(shiny)
 library(daff)
 library(reactable)
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
@@ -71,13 +74,12 @@ stepper(
   code_label = "nba_code",
   start_expr = "nba.rename(columns=column_names)",
   explanations = list(
-    "First, let's rename column names with [`rename`](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.rename.html?highlight=rename#pandas.DataFrame.rename) using our earlier `column_names` dict for readable names. Note how we use a `.` to call the `rename` on the dataframe `nba`. Python is different from R in that it heavily uses the object-oriented style of programming using dot notations to access methods of classes (much like `R6` classes in R). This will take some getting used to since you are probably more familiar with R's functional style.",
+    "First, we renamed the old columns to `r DataTutor::color_text(c('date', 'start', 'box', 'away_team', 'away_points', 'home_team', 'home_points', 'n_ot'), 'modified')` using [`rename`](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.rename.html?highlight=rename#pandas.DataFrame.rename) and supplying our earlier `r DataTutor::color_text('column_names')` dict for readable names. Note how we use a `.` to call the `rename` on the dataframe `nba`. Python is different from R in that it heavily uses the object-oriented style of programming using dot notations to access methods of classes (much like `R6` classes in R). This will take some getting used to since you are probably more familiar with R's functional style.",
     "Then, we drop any row that does not contain at least 4 non-NAs with `dropna(thresh=4)`. In this case, nothing has changed because we never satisfied the `thresh` of 4 non-NAs for any rows."
   )
 )
 ```
 
 ## another section
-
 
 

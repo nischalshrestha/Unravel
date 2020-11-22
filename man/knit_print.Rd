@@ -2,20 +2,18 @@
 % Please edit documentation in R/stepper.R
 \name{knit_print.tutorial_stepper}
 \alias{knit_print.tutorial_stepper}
-\title{Title}
+\title{knitr print for stepper}
 \usage{
 \method{knit_print}{tutorial_stepper}(x, ...)
 }
 \arguments{
-\item{x}{An R object to be printed}
+\item{x}{the stepper}
 
-\item{...}{Additional arguments passed to the S3 method. Currently ignored,
-except two optional arguments \code{options} and \code{inline}; see
-the references below.}
+\item{...}{additional fields}
 }
 \value{
 
 }
 \description{
-Title
+knitr print for stepper
 }

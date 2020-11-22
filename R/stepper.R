@@ -131,6 +131,9 @@ stepper_text <- function(text) {
     return(text)
   }
   if (!is.null(text)) {
+    # first return the text after executing inlined code for the
+    # styled code bits
+    text <- DataTutor::rinline_to_html(text)
     # convert markdown
     md <- markdown::markdownToHTML(
       text = text,

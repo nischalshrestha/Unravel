@@ -2,18 +2,37 @@
 % Please edit documentation in R/stepper.R
 \name{stepper}
 \alias{stepper}
-\title{Title}
+\title{This is the first stage of creating the stepper Shiny app.
+We return a list structure that will then be rendered with a `knitr::knit_print`
+on the rendering stage of the app.}
 \usage{
-stepper(id, explanations = list())
+stepper(
+  setup_label = NULL,
+  code_label = NULL,
+  start_expr = "",
+  explanations = list()
+)
 }
 \arguments{
 \item{explanations}{}
 }
 \value{
-
+a list structure with a class of "tutorial_stepper":
+ list(
+   id,
+   setup_code,
+   start_expr,
+   stepper_code = list(
+     source_code,
+     eval_code
+   ),
+   explanations
+ )
 }
 \description{
-Title
+This is the first stage of creating the stepper Shiny app.
+We return a list structure that will then be rendered with a `knitr::knit_print`
+on the rendering stage of the app.
 }
 \examples{
 stepper(
@@ -21,7 +40,6 @@ stepper(
   explanations = list(
     list(line = 1, text = "The first thing we want to do is groupby the CID, FE, and select the FID column."),
     list(line = 2, text = "Then we will count the numbers by the groups.")
-    )
- )
-
+  )
+)
 }

@@ -1,0 +1,16 @@
+
+/* pink */
+.highlighted {
+  color: black;
+  background-color: #ffbaaf;
+  font-family: 'Roboto Mono', monospace;
+  /* font-size: 12px;*/
+}
+
+/* purple */
+.modified {
+  color: black;
+  background-color: #d9deff;
+  font-family: 'Roboto Mono', monospace;
+  /* font-size: 12px;*/
+}

@@ -193,3 +193,52 @@ reappend <- function(...) {
   }
   myList
 }
+
+#' Color for simple code text highlight.
+#' @export
+highlight_code <- "#ffbaaf"
+
+#' Return HTML string(s) containing highlighted text.
+#'
+#' @param text a `character` or [`character`] to highlight
+#' @param type the css class
+#'
+#' @return
+#' @export
+#'
+#' @examples
+color_text <- function(text, type = NULL) {
+  text_list <- lapply(
+    text,
+    function(x) as.character(shiny::span(shiny::code(x, class=type), .noWS = c('inside', 'outside')))
+  )
+  return(paste0(text_list, collapse = ", "))
+}
+
+#' Takes in a markdown string and renders it using `knitr::knit2html`
+#'
+#' @param explanation
+#'
+#' @return
+#' @export
+#'
+#' @examples
+rinline_to_html <- function(explanation) {
+  writeLines(explanation, "test.Rmd")
+  knitr::knit2html("test.Rmd", quiet = TRUE)
+  out_text <- paste0(readLines("test.md"), collapse="\n")
+  # remove html_preserve
+  out_text <- gsub("<!--html_preserve-->", "", out_text)
+  out_text <- gsub("<!--/html_preserve-->", "", out_text)
+
+  # print(out_text)
+  # out <- shiny::HTML(out_text)
+  unlink(c("test.Rmd", "test.html", "test.md"))
+  return(out_text)
+}
+
+# explanation <- "Here is some code: `r DataTutor::color_text('column_names')`"
+# rinline_to_html(explanation)
+
+
+
