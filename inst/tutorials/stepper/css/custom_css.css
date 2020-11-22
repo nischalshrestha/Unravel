@@ -1,25 +1,32 @@
 
 
-/* yellow */
+/* yellow (highlight) */
 .highlighted {
-  color: black;
-  background-color: #fed171;
   font-family: 'Roboto Mono', monospace;
-  /* font-size: 12px;*/
+  color: black;
+  background-color: #ffff7f;
 }
 
-/* pink */
+/* pink (deleted) */
 .deleted {
+  font-family: 'Roboto Mono', monospace;
   color: black;
   background-color: #ffbaaf;
-  font-family: 'Roboto Mono', monospace;
-  /* font-size: 12px;*/
 }
 
-/* purple */
+/* purple (modified) */
 .modified {
+  font-family: 'Roboto Mono', monospace;
   color: black;
   background-color: #d9deff;
-  font-family: 'Roboto Mono', monospace;
-  /* font-size: 12px;*/
 }
+
+/* green (inserted) */
+.inserted {
+  font-family: 'Roboto Mono', monospace;
+  color: black;
+  background-color: #2cb93e;
+}
+
+
+
