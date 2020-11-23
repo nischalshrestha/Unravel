@@ -57,8 +57,14 @@ kable_pandas <- function(df, rmd = FALSE, show_rownames = FALSE) {
       kableExtra::kable_styling(bootstrap_options = c("condensed", "hover", "responsive"), position = "center")
   }
 
+  # if MultiIndex try collapsing the rows of first column
+  if (is_multi_index) {
+    setup_kbl <- setup_kbl %>%
+      kableExtra::collapse_rows(columns = 1, valign = "top")
+  }
+
+  # add scroll box
   setup_kbl %>%
-    # kableExtra::row_spec(0, extra_css ="height: 100px; ") %>%
     kableExtra::scroll_box(width = "100%", height = "400px")
 }
 
