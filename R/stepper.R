@@ -225,10 +225,12 @@ stepper_module_ui <- function(id) {
       align = "center",
       shiny::fluidRow(shiny::br()),
       shiny::fluidRow(
-        reactable::reactableOutput(ns("line_table"))
+        shiny::htmlOutput(ns("line_table"))
+        # reactable::reactableOutput(ns("line_table"))
       )
     )
   )
+
 }
 
 #' This invokes the stepper Shiny module
@@ -288,6 +290,13 @@ stepper_module_server <- function(input, output, session, stepper) {
   # get next summary
   get_summary <- function(idx) {
     explanations[[idx]]
+  }
+
+  # TODO try out the kable way, maybe just make a fresh function so it's easier to test
+  df_kable <- function(idx) {
+    # first get the raw pandas dataframe
+    raw_df <- df_outputs[[idx]]
+    kable_pandas(raw_df, show_rownames = TRUE)
   }
 
   df_reactable <- function(idx) {
@@ -389,7 +398,14 @@ stepper_module_server <- function(input, output, session, stepper) {
     get_summary(current())
   })
 
-  output$line_table <- renderReactable({
-    df_reactable(current())
-  })
+
+  output$line_table <- function() {
+    message("rendering table: ", current())
+    df_kable(current())
+  }
+
+
+  # output$line_table <- renderReactable({
+  #   df_reactable(current())
+  # })
 }
