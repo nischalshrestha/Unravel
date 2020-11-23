@@ -135,7 +135,6 @@ stepper_text <- function(text) {
     # styled code bits
 
     text <- DataTutor::rinline_to_html(text)
-    print(text)
     # convert markdown
     md <- markdown::markdownToHTML(
       text = text,
@@ -147,7 +146,6 @@ stepper_text <- function(text) {
     # remove leading and trailing paragraph
     md <- sub("^<p>", "", md)
     md <- sub("</p>\n?$", "", md)
-    print(md)
     shiny::HTML(md)
   }
   else {
@@ -405,10 +403,10 @@ stepper_module_server <- function(input, output, session, stepper) {
         shiny::HTML(
           "$(document).ready(function(){
     $('.popover-dismiss').popover({
-      trigger: 'focus'
+      trigger: 'hover'
     })
     $('[data-toggle=\"popover\"]').popover({
-      trigger: 'focus',
+      trigger: 'hover',
       html: true
     });
 });"

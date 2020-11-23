@@ -40,7 +40,6 @@ get_exercise_code <- function(exercise_cache, setup = FALSE) {
   code
 }
 
-
 #' Takes in an unconverted pandas.DataFrame via `reticulate::py_eval` and returns
 #' an R data.frame that has the look of a pandas.DataFrame
 #'
@@ -52,7 +51,6 @@ get_exercise_code <- function(exercise_cache, setup = FALSE) {
 python_df <- function(pydf) {
   # if dataframe has a MultiIndex, reset index to turn them into regular columns
   # the first element is the Python class of the object
-  # browser()
   if (identical(class(pydf$index)[[1]], "pandas.core.indexes.multi.MultiIndex")) {
     rdf <- reticulate::py_to_r(pydf$reset_index())
   } else {
