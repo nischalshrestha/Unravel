@@ -296,7 +296,9 @@ stepper_module_server <- function(input, output, session, stepper) {
   df_kable <- function(idx) {
     # first get the raw pandas dataframe
     raw_df <- df_outputs[[idx]]
-    kable_pandas(raw_df, show_rownames = TRUE)
+    # check if df is a MultiIndex
+    is_multi_index <- "pandas.core.indexes.multi.MultiIndex" %in% class(raw_df$index)
+    kable_pandas(raw_df, show_rownames = !is_multi_index)
   }
 
   df_reactable <- function(idx) {

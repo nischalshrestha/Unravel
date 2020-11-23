@@ -1,7 +1,7 @@
 library(magrittr)
-library(tidyverse)
 library(kableExtra)
 library(reticulate)
+library(tidyverse)
 
 source(here::here("R/utils.R"))
 
@@ -35,27 +35,19 @@ kable_pandas <- function(df, rmd = FALSE, show_rownames = FALSE) {
   columns <- as.list(df$columns$values)
   # then grab the Index columns
   rdf_column_names <- colnames(rdf)
-  row_index_cols <- rdf_column_names[!(rdf_column_names %in% columns)]
+  row_index_column_names <- rdf_column_names[!(rdf_column_names %in% columns)]
 
-  # this is the amount of space for the Index columns for grouping
-  idx_column_space <- sum(!(colnames(rdf) %in% columns))
-  # this is the MultiIndex column we want to use for `kableExtra::collapse_rows`
-  # by default, it's the first, but will be the second if we want to show rownames (indices)
-  collapse_column <- 1
-  if (show_rownames) {
-    idx_column_space <- idx_column_space + 1
-    collapse_column <- collapse_column + 1
+  # if it's a MultiIndex, mock the added space underneath regular columns
+  if (is_multi_index) {
+    rdf <- dplyr::rename_with(rdf, ~ paste0(.x, "<h2></h2>"), !dplyr::any_of(row_index_column_names))
   }
-  # this is the space for the rest of columns for grouping
-  column_space <- rep(1, length(columns))
-  names(column_space) <- columns
 
   # base kbl
   setup_kbl <- rdf %>%
     # this retains color for the row Index columns
-    dplyr::rename_with(function(x) kableExtra::cell_spec(x, "html", color = "black"), dplyr::any_of(row_index_cols)) %>%
     kableExtra::kbl(format = "html", align = "l", escape = F, row.names = show_rownames)
 
+  # if in RStudio IDE using rmd interactively, use `kable_paper`
   if (rmd) {
     setup_kbl <- setup_kbl %>%
       kableExtra::kable_paper(full_width = T) %>%
@@ -65,23 +57,8 @@ kable_pandas <- function(df, rmd = FALSE, show_rownames = FALSE) {
       kableExtra::kable_styling(bootstrap_options = c("condensed", "hover", "responsive"), position = "center")
   }
 
-  final_kbl <- setup_kbl
-  # check if it is a MultiIndex, `reticulate` will list other classes but the very first
-  # one is the Python class
-  if (is_multi_index) {
-    # TODO a check to see if we have many more levels in which case we have to stack
-    # the column levels and sometimes above the row indices. In such a case, we do
-    # not "raise" the columns and can skip coloring rows white
-
-    # if so, we "raise" the regular columns by making the columns invisible
-    # and moving them to a header above
-    final_kbl <-
-      setup_kbl %>%
-      kableExtra::row_spec(0, color = "white") %>%
-      kableExtra::add_header_above(c(" " = idx_column_space, column_space), align = "c", bold = T, line = F) %>%
-      kableExtra::collapse_rows(columns = collapse_column, valign = "top")
-  }
-
-  final_kbl %>%
+  setup_kbl %>%
+    # kableExtra::row_spec(0, extra_css ="height: 100px; ") %>%
     kableExtra::scroll_box(width = "100%", height = "400px")
 }
+

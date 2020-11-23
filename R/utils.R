@@ -52,16 +52,19 @@ get_exercise_code <- function(exercise_cache, setup = FALSE) {
 python_df <- function(pydf) {
   # if dataframe has a MultiIndex, reset index to turn them into regular columns
   # the first element is the Python class of the object
+  # browser()
   if (identical(class(pydf$index)[[1]], "pandas.core.indexes.multi.MultiIndex")) {
-    rdf <- pydf$reset_index()
+    rdf <- reticulate::py_to_r(pydf$reset_index())
   } else {
     rdf <- reticulate::py_to_r(pydf)
   }
   # some formatting
+  # - remove any columns named "level_" as this results from a `pd.reset_index()`
   # - leave date as is
   # - reduce decimal places for numerics
   # - missing values -> NaN
   rdf <- rdf %>%
+    select(!starts_with("level_")) %>%
     mutate(across(where(lubridate::is.POSIXct), as.character)) %>%
     mutate(across(where(is.numeric), ~ as.numeric(formattable::digits(.x, 8)))) %>%
     mutate(across(everything(), ~ ifelse(is.na(.x), "NaN", .x)))
