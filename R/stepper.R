@@ -133,7 +133,9 @@ stepper_text <- function(text) {
   if (!is.null(text)) {
     # first return the text after executing inlined code for the
     # styled code bits
+
     text <- DataTutor::rinline_to_html(text)
+    print(text)
     # convert markdown
     md <- markdown::markdownToHTML(
       text = text,
@@ -145,6 +147,7 @@ stepper_text <- function(text) {
     # remove leading and trailing paragraph
     md <- sub("^<p>", "", md)
     md <- sub("</p>\n?$", "", md)
+    print(md)
     shiny::HTML(md)
   }
   else {
@@ -397,7 +400,22 @@ stepper_module_server <- function(input, output, session, stepper) {
   })
 
   output$summary <- shiny::renderUI({
-    get_summary(current())
+    shiny::tagList(
+      shiny::tags$script(
+        shiny::HTML(
+          "$(document).ready(function(){
+    $('.popover-dismiss').popover({
+      trigger: 'focus'
+    })
+    $('[data-toggle=\"popover\"]').popover({
+      trigger: 'focus',
+      html: true
+    });
+});"
+        )
+      ),
+      get_summary(current())
+    )
   })
 
 
@@ -405,7 +423,6 @@ stepper_module_server <- function(input, output, session, stepper) {
     message("rendering table: ", current())
     df_kable(current())
   }
-
 
   # output$line_table <- renderReactable({
   #   df_reactable(current())

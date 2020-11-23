@@ -24,6 +24,8 @@ stepper_path <- here::here("inst/tutorials/stepper/")
 nba_data_path <- paste0(home_path, "nba.csv")
 rnba <- read.csv(nba_data_path)
 
+
+codeify <- function(x) paste0("`", x, "`")
 # tutorial even recorder is able to capture our stepper button
 # Note: we use this for saving events (look up storage for better ways)
 # But, we do not require this for a custom event handler
@@ -73,17 +75,25 @@ stepper(
   code_label = "nba_code",
   start_expr = "nba.rename(columns=column_names)",
   explanations = list(
-    "Testing: Here is a `r DataTutor::color_text('highlighted element', 'highlighted')`. Here is a `r DataTutor::color_text('green element', 'inserted')`. Here is a `r DataTutor::color_text('red element', 'deleted')`. Here is a `r DataTutor::color_text('purple element', 'modified')`. Here are a bunch of words I want to highlight purple: `r DataTutor::color_text(c('date', 'start', 'box', 'away_team', 'away_points', 'home_team', 'home_points', 'n_ot'), 'modified')`.",
- "First, we renamed the old columns to `r DataTutor::color_text(c('date', 'start', 'box', 'away_team', 'away_points', 'home_team', 'home_points', 'n_ot'), 'modified')` using [`rename`](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.rename.html?highlight=rename#pandas.DataFrame.rename) and supplying our earlier `r DataTutor::color_text('column_names', 'highlighted')` dict. Now we have much more readable names. Note how we use a `.` to call the `rename` on the dataframe `nba`. Python is different from R in that it heavily uses the object-oriented style of programming using dot notations to access methods of classes (much like `R6` classes in R). This will take some getting used to since you are probably more familiar with R's functional style.",
+    "Testing: Here is a function `r kableExtra::text_spec(codeify('rename'), link='', popover = 'Alter axes labels. Function / dict values must be unique (1-to-1). Labels not contained in a dict / Series will be left as-is. Extra labels listed don’t throw an error. See the user guide for more.')` with a popover (hover over). Here is a `r color_text('highlighted element', 'highlighted')`. Here is a `r color_text('green element', 'inserted')`. Here is a `r color_text('red element', 'deleted')`. Here is a `r color_text('purple element', 'modified')`. Here are a bunch of words I want to highlight purple: `r color_text(c('date', 'start', 'box', 'away_team', 'away_points', 'home_team', 'home_points', 'n_ot'), 'modified')`.",
+ "First, we renamed the old columns to `r color_text(c('date', 'start', 'box', 'away_team', 'away_points', 'home_team', 'home_points', 'n_ot'), 'modified')` using [`rename`](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.rename.html?highlight=rename#pandas.DataFrame.rename) and supplying our earlier `r color_text('column_names', 'highlighted')` dict. Now we have much more readable names. Note how we use a `.` to call the `rename` on the dataframe `nba`. Python is different from R in that it heavily uses the object-oriented style of programming using dot notations to access methods of classes (much like `R6` classes in R). This will take some getting used to since you are probably more familiar with R's functional style.",
     "Then, we drop any row that does not contain at least 4 non-NAs with `dropna(thresh=4)`. In this case, nothing has changed because we never satisfied the `thresh` of 4 non-NAs for any rows."
   )
 )
 ```
 
+
 ## another section
 
-
-
-
-
+<script>
+$(document).ready(function(){
+    $('.popover-dismiss').popover({
+      trigger: 'hover'
+    })
+    $('[data-toggle="popover"]').popover({
+      trigger: 'hover',
+      html: true
+    }); 
+});
+</script>
 

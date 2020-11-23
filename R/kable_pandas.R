@@ -42,6 +42,9 @@ kable_pandas <- function(df, rmd = FALSE, show_rownames = FALSE) {
     rdf <- dplyr::rename_with(rdf, ~ paste0(.x, "<h2></h2>"), !dplyr::any_of(row_index_column_names))
   }
 
+  # TODO: use something like this to create cell_spec for header row when annotating it
+  # dplyr::rename_with(function(x) kableExtra::cell_spec(x, "html", color = "black"), dplyr::any_of(row_index_cols)) %>%
+
   # base kbl
   setup_kbl <- rdf %>%
     # this retains color for the row Index columns
@@ -68,3 +71,14 @@ kable_pandas <- function(df, rmd = FALSE, show_rownames = FALSE) {
     kableExtra::scroll_box(width = "100%", height = "400px")
 }
 
+
+# # example of highlighting the background color
+# # note how the order of applying spec is respected
+# kableExtra::kbl(mtcars) %>%
+#   kableExtra::kable_paper("striped", full_width = F) %>%
+#   kableExtra::row_spec(3:7, bold = T, color = "white", background = "#a0a0ff") %>%
+#   kableExtra::column_spec(5, bold = T, color = "white", background = "#ff7374", include_thead = F, image = NULL)
+#   # kableExtra::row_spec(0, extra_css = "border-top: 1px solid red;") %>%
+#   # kableExtra::column_spec(5, bold = T, border_left = T, border_right = F, extra_css = "border-left: 1px solid red;") %>%
+#   # kableExtra::column_spec(6, bold = T, border_left = F, border_right = F) %>%
+#   # kableExtra::column_spec(7, bold = T, border_left = F, border_right = T, extra_css = "border-right: 1px solid red;") %>%
