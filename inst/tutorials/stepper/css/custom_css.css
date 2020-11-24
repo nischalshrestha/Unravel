@@ -1,5 +1,4 @@
 
-
 /* yellow (highlight) */
 .highlighted {
   font-family: 'Roboto Mono', monospace;
@@ -11,22 +10,21 @@
 .deleted {
   font-family: 'Roboto Mono', monospace;
   color: black;
-  background-color: #ffbaaf;
-}
-
-/* purple (modified) */
-.modified {
-  font-family: 'Roboto Mono', monospace;
-  color: black;
-  background-color: #d9deff;
+  background-color: #fea5a3;
 }
 
 /* green (inserted) */
 .inserted {
   font-family: 'Roboto Mono', monospace;
   color: black;
-  background-color: #2cb93e;
+  background-color: #c8ff9e;
 }
 
+/* purple (modified) */
+.modified {
+  font-family: 'Roboto Mono', monospace;
+  color: black;
+  background-color: #c6c0fd;
+}
 
 

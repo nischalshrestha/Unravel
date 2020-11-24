@@ -2,7 +2,8 @@
 % Please edit documentation in R/utils.R
 \name{rinline_to_html}
 \alias{rinline_to_html}
-\title{Takes in a markdown string and renders it using `knitr::knit2html`}
+\title{Takes in an RMarkdown text as `character`, renders it using `knitr::knit2html`
+and finally returns the `shiny::HTML` version.}
 \usage{
 rinline_to_html(text)
 }
@@ -10,8 +11,9 @@ rinline_to_html(text)
 \item{text}{}
 }
 \value{
-
+a `shiny::HTML`
 }
 \description{
-Takes in a markdown string and renders it using `knitr::knit2html`
+Takes in an RMarkdown text as `character`, renders it using `knitr::knit2html`
+and finally returns the `shiny::HTML` version.
 }

@@ -105,8 +105,17 @@ stepper <- function(setup_label = NULL, code_label = NULL, start_expr = "", expl
     stop("A stepper chunk must include a label.", call. = FALSE)
   }
 
-  # turn text into markdown if needed
-  explanations = lapply(explanations, stepper_text)
+  # collect summaries, turning text into markdown if needed
+  summaries = lapply(
+    explanations,
+    function(x) stepper_text(x$summary)
+  )
+  # collect annotations, turning them into proper list structure
+  annotations = lapply(
+    explanations,
+    function(x) list(rows = x$rows, cols = x$cols, col_labels = x$col_labels)
+  )
+  # browser()
 
   ret <- list(
     id = label,
@@ -116,10 +125,32 @@ stepper <- function(setup_label = NULL, code_label = NULL, start_expr = "", expl
       source_code = source_code,
       eval_code = eval_code
     ),
-    explanations = explanations
+    summaries = summaries,
+    annotations = annotations
   )
   class(ret) <- "tutorial_stepper"
   ret
+}
+
+# constructor for an explanation of a line of code
+#' Title
+#'
+#' @param summary
+#' @param rows
+#' @param cols
+#' @param col_labels
+#'
+#' @return
+#' @export
+#'
+#' @examples
+explain <- function(summary, rows = list(), cols = list(), col_labels = list()) {
+  list(
+    summary = summary,
+    rows = rows,
+    cols = cols,
+    col_labels = col_labels
+  )
 }
 
 # render markdown (including equations) for stepper_text
@@ -133,7 +164,6 @@ stepper_text <- function(text) {
   if (!is.null(text)) {
     # first return the text after executing inlined code for the
     # styled code bits
-
     text <- DataTutor::rinline_to_html(text)
     # convert markdown
     md <- markdown::markdownToHTML(
@@ -208,7 +238,7 @@ stepper_module_ui <- function(id) {
     shiny::column(
       12,
       shiny::div(
-        style = "height:150px;",
+        style = "height:100px;",
         shiny::htmlOutput(ns("summary"))
       )
     ),
@@ -253,6 +283,7 @@ stepper_prerendered_chunk <- function(stepper, ...) {
 # TODO use stepper as a data container to pass in relevant information
 # like setup chunk, code chunk, explanations etc.
 stepper_module_server <- function(input, output, session, stepper) {
+  # browser()
   # current index of code lines
   # we make it a reactiveVal because we will update it via stepper button clicks
   current <- shiny::reactiveVal(1)
@@ -261,7 +292,10 @@ stepper_module_server <- function(input, output, session, stepper) {
   setup_code <- stepper$setup_code
   eval_code <- stepper$stepper_code$eval_code
   source_code <- stepper$stepper_code$source_code
-  explanations <- stepper$explanations
+  # summary +
+  summaries <- stepper$summaries
+  annotations <- stepper$annotations
+  # to assist with parsing
   start_expr <- stepper$start_expr
 
   # last line
@@ -290,16 +324,31 @@ stepper_module_server <- function(input, output, session, stepper) {
 
   # get next summary
   get_summary <- function(idx) {
-    explanations[[idx]]
+    summaries[[idx]]
+  }
+  # get next annotation
+  get_annotation <- function(idx) {
+    if (idx <= length(annotations)) {
+      annotations[[idx]]
+    } else {
+      list(rows = list(), cols = list(), col_labels = list())
+    }
   }
 
   # TODO try out the kable way, maybe just make a fresh function so it's easier to test
   df_kable <- function(idx) {
     # first get the raw pandas dataframe
     raw_df <- df_outputs[[idx]]
+    annotation <- get_annotation(idx)
     # check if df is a MultiIndex
     is_multi_index <- "pandas.core.indexes.multi.MultiIndex" %in% class(raw_df$index)
-    kable_pandas(raw_df, show_rownames = !is_multi_index)
+    kable_pandas(
+      raw_df,
+      show_rownames = !is_multi_index,
+      rows = annotation$rows,
+      cols = annotation$cols,
+      col_labels = annotation$col_labels
+    )
   }
 
   df_reactable <- function(idx) {

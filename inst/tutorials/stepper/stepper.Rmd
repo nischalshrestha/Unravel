@@ -23,6 +23,9 @@ stepper_path <- here::here("inst/tutorials/stepper/")
 nba_data_path <- paste0(home_path, "nba.csv")
 rnba <- read.csv(nba_data_path)
 
+modified_color <- "#c6c0fd"
+inserted_color <- "#c8ff9e"
+deleted_color <- "#fea5a3"
 codeify <- function(x) paste0("`", x, "`")
 # tutorial even recorder is able to capture our stepper button
 # Note: we use this for saving events (look up storage for better ways)
@@ -65,6 +68,8 @@ nba = (nba.rename(columns=column_names)
 )
 ```
 
+
+
 ## nba data
 
 ```{r nba_stepper, echo=FALSE}
@@ -73,9 +78,33 @@ stepper(
   code_label = "nba_code",
   start_expr = "nba.rename(columns=column_names)",
   explanations = list(
-    "Testing: Here is a function `r kableExtra::text_spec(codeify('rename'), popover = 'Alter axes labels. Function / dict values must be unique (1-to-1). Labels not contained in a dict / Series will be left as-is. Extra labels listed don’t throw an error. See the user guide for more.')` with a popover (hover over). Here is a `r color_text('highlighted element', 'highlighted')`. Here is a `r color_text('green element', 'inserted')`. Here is a `r color_text('red element', 'deleted')`. Here is a `r color_text('purple element', 'modified')`. Here are a bunch of words I want to highlight purple: `r color_text(c('date', 'start', 'box', 'away_team', 'away_points', 'home_team', 'home_points', 'n_ot'), 'modified')`.",
- "First, we renamed the old columns to `r color_text(c('date', 'start', 'box', 'away_team', 'away_points', 'home_team', 'home_points', 'n_ot'), 'modified')` using [`rename`](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.rename.html?highlight=rename#pandas.DataFrame.rename) and supplying our earlier `r color_text('column_names', 'highlighted')` dict. Now we have much more readable names. Note how we use a `.` to call the `rename` on the dataframe `nba`. Python is different from R in that it heavily uses the object-oriented style of programming using dot notations to access methods of classes (much like `R6` classes in R). This will take some getting used to since you are probably more familiar with R's functional style.",
-    "Then, we drop any row that does not contain at least 4 non-NAs with `dropna(thresh=4)`. In this case, nothing has changed because we never satisfied the `thresh` of 4 non-NAs for any rows."
+    explain(
+      summary = "First, the old columns `r color_text(c('date', 'start', 'box', 'away_team', 'away_points', 'home_team', 'home_points'), 'modified')` are renamed using `r kableExtra::text_spec(codeify('rename'), popover = 'Alter axes labels. Function / dict values must be unique (1-to-1). Labels not contained in a dict / Series will be left as-is. Extra labels listed don’t throw an error. See the user guide for more.')` and supplying our earlier `r color_text('column_names', 'highlighted')` dict. Some of these columns are now more readable.",
+      col_labels = list(
+        spec = 2:7,
+        color = "black",
+        background = modified_color
+      )
+    ),
+    explain(
+      summary = "Testing: Rows `r color_text('1 and 2', 'inserted')` are green. Columns `r color_text('date', 'deleted')` and `r color_text('start', 'deleted')` are red. Column labels `r color_text(c('away_team', 'home_team'), 'modified')` are purple.",
+      # TODO: making each rows/cols/col_lables accept a list of lists
+      rows = list(
+        spec = c(2:3),
+        color = "black",
+        background = inserted_color
+      ),
+      cols = list(
+        spec = 3:4,
+        color = "black",
+        background = deleted_color
+      ),
+      col_labels = list(
+        spec = c(4, 6),
+        color = "black",
+        background = modified_color
+      )
+    )
   )
 )
 ```
@@ -90,6 +119,6 @@ $(document).ready(function(){
     $('[data-toggle="popover"]').popover({
       trigger: 'hover',
       html: true
-    }); 
+    });
 });
 </script>

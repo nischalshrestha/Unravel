@@ -5,17 +5,35 @@ library(tidyverse)
 
 source(here::here("R/utils.R"))
 
+modified_color <- "#c6c0fd"
+inserted_color <- "#c8ff9e"
+deleted_color <- "#fea5a3"
+
 #' Takes in an unconverted Python dataframe and outputs a kableExtra table.
 #'
 #' @param df The unocvertend Python dataframe
 #' @param rmd This is a flag to render in the RStudio IDE for TRUE, FALSE in a rendered document
 #' @param show_rownames A flag to indicate whether to show the rownames for MultiIndex dataframes
+#' @param rows a list structure
+#' list(
+#         spec = 3:7,
+#         color = "black",
+#         background = inserted_color
+#       )
+#' @param cols same as `rows`
+#' @param col_labels same as `col_labels`
 #'
 #' @return A character vector of the table source code (very similar to `kable`)
 #' @export
 #'
 #' @examples
-kable_pandas <- function(df, rmd = FALSE, show_rownames = FALSE) {
+kable_pandas <- function(
+                         df,
+                         rmd = FALSE,
+                         show_rownames = FALSE,
+                         rows = list(),
+                         cols = list(),
+                         col_labels = list()) {
   is_multi_index <- class(df$index)[[1]] == "pandas.core.indexes.multi.MultiIndex"
 
   # to curb performance costs, let's slice
@@ -42,13 +60,8 @@ kable_pandas <- function(df, rmd = FALSE, show_rownames = FALSE) {
     rdf <- dplyr::rename_with(rdf, ~ paste0(.x, "<h2></h2>"), !dplyr::any_of(row_index_column_names))
   }
 
-  # TODO: use something like this to create cell_spec for header row when annotating it
-  # dplyr::rename_with(function(x) kableExtra::cell_spec(x, "html", color = "black"), dplyr::any_of(row_index_cols)) %>%
-
-  # base kbl
-  setup_kbl <- rdf %>%
-    # this retains color for the row Index columns
-    kableExtra::kbl(format = "html", align = "l", escape = F, row.names = show_rownames)
+  # apply any annotations there might be
+  setup_kbl <- annotate_dataframe(rdf, show_rownames, rows, cols, col_labels)
 
   # if in RStudio IDE using rmd interactively, use `kable_paper`
   if (rmd) {
@@ -71,14 +84,48 @@ kable_pandas <- function(df, rmd = FALSE, show_rownames = FALSE) {
     kableExtra::scroll_box(width = "100%", height = "400px")
 }
 
+#' Annotate a dataframe and return a kableExtra::kbl with any styling there might be for
+#' rows, columns, and column labels.
+#'
+#' @param df
+#' @param show_rownames
+#' @param rows
+#' @param cols
+#' @param col_labels
+#'
+#' @return
+#' @export
+#'
+#' @examples
+annotate_dataframe <- function(df, show_rownames, rows = list(), cols = list(), col_labels = list()) {
+  # TODO handle list of lists for each rows/cols/col_labels
+  # if there are any cols annotation apply those first
+  if (length(col_labels)) {
+    df <- dplyr::rename_with(
+      df,
+      ~ kableExtra::cell_spec(.x, "html", color = col_labels$color, background = col_labels$background),
+      col_labels$spec
+    )
+  }
 
-# # example of highlighting the background color
-# # note how the order of applying spec is respected
-# kableExtra::kbl(mtcars) %>%
-#   kableExtra::kable_paper("striped", full_width = F) %>%
-#   kableExtra::row_spec(3:7, bold = T, color = "white", background = "#a0a0ff") %>%
-#   kableExtra::column_spec(5, bold = T, color = "white", background = "#ff7374", include_thead = F, image = NULL)
-#   # kableExtra::row_spec(0, extra_css = "border-top: 1px solid red;") %>%
-#   # kableExtra::column_spec(5, bold = T, border_left = T, border_right = F, extra_css = "border-left: 1px solid red;") %>%
-#   # kableExtra::column_spec(6, bold = T, border_left = F, border_right = F) %>%
-#   # kableExtra::column_spec(7, bold = T, border_left = F, border_right = T, extra_css = "border-right: 1px solid red;") %>%
+  # create base kbl
+  base_kbl <- kableExtra::kbl(df, format = "html", align = "l", escape = F, row.names = show_rownames)
+
+  # then, the row specs
+  if (length(rows)) {
+    base_kbl <- kableExtra::row_spec(base_kbl, rows$spec, color = rows$color, background = rows$background)
+  }
+  # then, the column specs
+  if (length(cols)) {
+    if (!length(col_labels)) {
+      df <- dplyr::rename_with(
+        df,
+        ~ kableExtra::cell_spec(.x, "html", color = cols$color, background = cols$background),
+        cols$spec
+      )
+    }
+    base_kbl <- kableExtra::column_spec(base_kbl, cols$spec, color = cols$color, background = cols$background)
+  }
+
+  return(base_kbl)
+}

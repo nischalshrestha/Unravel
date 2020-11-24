@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{python_df}
 \alias{python_df}
-\title{Takes in an unconverted pandas.DataFrame via `reticulate` and returns
+\title{Takes in an unconverted pandas.DataFrame via `reticulate::py_eval` and returns
 an R data.frame that has the look of a pandas.DataFrame}
 \usage{
 python_df(pydf)
@@ -14,6 +14,6 @@ python_df(pydf)
 
 }
 \description{
-Takes in an unconverted pandas.DataFrame via `reticulate` and returns
+Takes in an unconverted pandas.DataFrame via `reticulate::py_eval` and returns
 an R data.frame that has the look of a pandas.DataFrame
 }
