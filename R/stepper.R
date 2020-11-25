@@ -108,14 +108,13 @@ stepper <- function(setup_label = NULL, code_label = NULL, start_expr = "", expl
   # collect summaries, turning text into markdown if needed
   summaries = lapply(
     explanations,
-    function(x) stepper_text(x$summary)
+    function(explain) stepper_text(explain$summary)
   )
-  # collect annotations, turning them into proper list structure
-  annotations = lapply(
+  # collect callouts, turning them into proper list structure
+  callouts = lapply(
     explanations,
-    function(x) list(rows = x$rows, cols = x$cols, col_labels = x$col_labels)
+    function(explain) explain$callouts
   )
-  # browser()
 
   ret <- list(
     id = label,
@@ -126,31 +125,101 @@ stepper <- function(setup_label = NULL, code_label = NULL, start_expr = "", expl
       eval_code = eval_code
     ),
     summaries = summaries,
-    annotations = annotations
+    callouts = callouts
   )
   class(ret) <- "tutorial_stepper"
   ret
 }
 
-# constructor for an explanation of a line of code
-#' Title
+
+#' Constructor for an explanation of a given line of code
 #'
-#' @param summary
-#' @param rows
-#' @param cols
-#' @param col_labels
+#' @param summary the explanation text
+#' @param ... variable number of `callout`
 #'
 #' @return
 #' @export
 #'
 #' @examples
-explain <- function(summary, rows = list(), cols = list(), col_labels = list()) {
+explain <- function(summary = "", ...) {
+  tryCatch({
+    lapply(
+      list(...),
+      function(x) checkmate::assert_true(class(x) %in% c("callout_rows", "callout_cols", "callout_col_labels"))
+    )
+    },
+    error = function(e) {
+      stop("Callouts must inherit from one of `callout_rows`, `callout_cols, `callout_col_labels`", e)
+    }
+  )
   list(
     summary = summary,
-    rows = rows,
-    cols = cols,
-    col_labels = col_labels
+    callouts = list(...)
   )
+}
+
+# callout default method
+#' Title
+#'
+#' @param spec
+#' @param color
+#' @param background
+#' @param class
+#'
+#' @return
+#' @export
+#'
+#' @examples
+callout <- function(spec = NULL, color = "black", background = "white", class = "") {
+  structure(
+    list(spec = spec, color = color, background = background),
+    class = class
+  )
+}
+
+#' Callout specification for rows
+#'
+#' @param spec
+#' @param color
+#' @param background
+#'
+#' @return
+#' @export
+#'
+#' @examples
+callout_rows <- function(spec = NULL, color = "black", background = "white") {
+  # perform any additional checks here for row styling
+  callout(spec, color, background, "callout_rows")
+}
+
+#' Callout specification for columns
+#'
+#' @param spec
+#' @param color
+#' @param background
+#'
+#' @return
+#' @export
+#'
+#' @examples
+callout_cols <- function(spec = NULL, color = "black", background = "white") {
+  # perform any additional checks here for columns styling
+  callout(spec, color, background, "callout_cols")
+}
+
+#' Callout specification for column labels
+#'
+#' @param spec
+#' @param color
+#' @param background
+#'
+#' @return
+#' @export
+#'
+#' @examples
+callout_col_labels <- function(spec = NULL, color = "black", background = "white") {
+  # perform any additional checks here for columns styling
+  callout(spec, color, background, "callout_col_labels")
 }
 
 # render markdown (including equations) for stepper_text
@@ -283,7 +352,6 @@ stepper_prerendered_chunk <- function(stepper, ...) {
 # TODO use stepper as a data container to pass in relevant information
 # like setup chunk, code chunk, explanations etc.
 stepper_module_server <- function(input, output, session, stepper) {
-  # browser()
   # current index of code lines
   # we make it a reactiveVal because we will update it via stepper button clicks
   current <- shiny::reactiveVal(1)
@@ -294,7 +362,7 @@ stepper_module_server <- function(input, output, session, stepper) {
   source_code <- stepper$stepper_code$source_code
   # summary +
   summaries <- stepper$summaries
-  annotations <- stepper$annotations
+  all_callouts <- stepper$callouts
   # to assist with parsing
   start_expr <- stepper$start_expr
 
@@ -327,11 +395,11 @@ stepper_module_server <- function(input, output, session, stepper) {
     summaries[[idx]]
   }
   # get next annotation
-  get_annotation <- function(idx) {
-    if (idx <= length(annotations)) {
-      annotations[[idx]]
+  get_callouts <- function(idx) {
+    if (idx <= length(all_callouts)) {
+      all_callouts[[idx]]
     } else {
-      list(rows = list(), cols = list(), col_labels = list())
+      list()
     }
   }
 
@@ -339,15 +407,13 @@ stepper_module_server <- function(input, output, session, stepper) {
   df_kable <- function(idx) {
     # first get the raw pandas dataframe
     raw_df <- df_outputs[[idx]]
-    annotation <- get_annotation(idx)
+    callouts <- get_callouts(idx)
     # check if df is a MultiIndex
     is_multi_index <- "pandas.core.indexes.multi.MultiIndex" %in% class(raw_df$index)
     kable_pandas(
-      raw_df,
+      df = raw_df,
       show_rownames = !is_multi_index,
-      rows = annotation$rows,
-      cols = annotation$cols,
-      col_labels = annotation$col_labels
+      callouts = callouts
     )
   }
 

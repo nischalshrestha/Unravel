@@ -2,22 +2,22 @@
 % Please edit documentation in R/kable_pandas.R
 \name{annotate_dataframe}
 \alias{annotate_dataframe}
-\title{Title}
+\title{Annotate a dataframe and return a kableExtra::kbl with any styling there might be for
+rows, columns, and column labels.}
 \usage{
-annotate_dataframe(
-  df,
-  show_rownames,
-  rows = list(),
-  cols = list(),
-  col_labels = list()
-)
+annotate_dataframe(df, show_rownames, callouts)
 }
 \arguments{
-\item{col_labels}{}
+\item{df}{The unocvertend Python dataframe}
+
+\item{show_rownames}{A flag to indicate whether to show the rownames for MultiIndex dataframes}
+
+\item{callouts}{`callout_`* list structures}
 }
 \value{
 
 }
 \description{
-Title
+Annotate a dataframe and return a kableExtra::kbl with any styling there might be for
+rows, columns, and column labels.
 }

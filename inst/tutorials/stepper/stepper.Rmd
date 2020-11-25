@@ -68,8 +68,6 @@ nba = (nba.rename(columns=column_names)
 )
 ```
 
-
-
 ## nba data
 
 ```{r nba_stepper, echo=FALSE}
@@ -79,31 +77,14 @@ stepper(
   start_expr = "nba.rename(columns=column_names)",
   explanations = list(
     explain(
-      summary = "First, the old columns `r color_text(c('date', 'start', 'box', 'away_team', 'away_points', 'home_team', 'home_points'), 'modified')` are renamed using `r kableExtra::text_spec(codeify('rename'), popover = 'Alter axes labels. Function / dict values must be unique (1-to-1). Labels not contained in a dict / Series will be left as-is. Extra labels listed don’t throw an error. See the user guide for more.')` and supplying our earlier `r color_text('column_names', 'highlighted')` dict. Some of these columns are now more readable.",
-      col_labels = list(
-        spec = 2:7,
-        color = "black",
-        background = modified_color
-      )
+      "First, the old columns `r color_text(c('date', 'start', 'box', 'away_team', 'away_points', 'home_team', 'home_points'), 'modified')` are renamed using `r kableExtra::text_spec(codeify('rename'), popover = 'Alter axes labels. Function / dict values must be unique (1-to-1). Labels not contained in a dict / Series will be left as-is. Extra labels listed don’t throw an error. See the user guide for more.')` and supplying our earlier `r color_text('column_names', 'highlighted')` dict. Some of these columns are now more readable.",
+      callout_col_labels(2:7, "black", modified_color)
     ),
     explain(
-      summary = "Testing: Rows `r color_text('1 and 2', 'inserted')` are green. Columns `r color_text('date', 'deleted')` and `r color_text('start', 'deleted')` are red. Column labels `r color_text(c('away_team', 'home_team'), 'modified')` are purple.",
-      # TODO: making each rows/cols/col_lables accept a list of lists
-      rows = list(
-        spec = c(2:3),
-        color = "black",
-        background = inserted_color
-      ),
-      cols = list(
-        spec = 3:4,
-        color = "black",
-        background = deleted_color
-      ),
-      col_labels = list(
-        spec = c(4, 6),
-        color = "black",
-        background = modified_color
-      )
+      "Testing: Rows `r color_text('1 and 2', 'inserted')` are green. Columns `r color_text('date', 'deleted')` and `r color_text('start', 'deleted')` are red. Column labels `r color_text(c('away_team', 'home_team'), 'modified')` are purple.",
+      callout_col_labels(c(4, 6), background = modified_color),
+      callout_rows(2:3, background = inserted_color),
+      callout_cols(3:4, color = "white", background = deleted_color)
     )
   )
 )

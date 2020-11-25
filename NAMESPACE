@@ -2,6 +2,10 @@
 
 S3method(knit_print,tutorial_stepper)
 export(annotate_dataframe)
+export(callout)
+export(callout_col_labels)
+export(callout_cols)
+export(callout_rows)
 export(color_text)
 export(daff_html)
 export(explain)

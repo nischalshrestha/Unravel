@@ -13,27 +13,14 @@ deleted_color <- "#fea5a3"
 #'
 #' @param df The unocvertend Python dataframe
 #' @param rmd This is a flag to render in the RStudio IDE for TRUE, FALSE in a rendered document
-#' @param show_rownames A flag to indicate whether to show the rownames for MultiIndex dataframes
-#' @param rows a list structure
-#' list(
-#         spec = 3:7,
-#         color = "black",
-#         background = inserted_color
-#       )
-#' @param cols same as `rows`
-#' @param col_labels same as `col_labels`
+#' @param show_rownames Whether to display rownames or not
+#' @param callouts  `callout_`* list structures
 #'
 #' @return A character vector of the table source code (very similar to `kable`)
 #' @export
 #'
 #' @examples
-kable_pandas <- function(
-                         df,
-                         rmd = FALSE,
-                         show_rownames = FALSE,
-                         rows = list(),
-                         cols = list(),
-                         col_labels = list()) {
+kable_pandas <- function(df, rmd = FALSE, show_rownames = FALSE, callouts) {
   is_multi_index <- class(df$index)[[1]] == "pandas.core.indexes.multi.MultiIndex"
 
   # to curb performance costs, let's slice
@@ -61,7 +48,7 @@ kable_pandas <- function(
   }
 
   # apply any annotations there might be
-  setup_kbl <- annotate_dataframe(rdf, show_rownames, rows, cols, col_labels)
+  setup_kbl <- annotate_dataframe(rdf, show_rownames, callouts)
 
   # if in RStudio IDE using rmd interactively, use `kable_paper`
   if (rmd) {
@@ -82,50 +69,73 @@ kable_pandas <- function(
   # add scroll box
   setup_kbl %>%
     kableExtra::scroll_box(width = "100%", height = "400px")
+
+}
+
+apply_col_labels_styles <- function(df, callouts) {
+  # if there are any `callout_col_lables`, apply the styles to the column labels of `df`
+  col_label_styles <- lapply(callouts, function(x) if (inherits(x, "callout_col_labels")) x)
+  col_label_styles <- col_label_styles[lengths(col_label_styles) != 0]
+  for (cl in col_label_styles) {
+    df <- dplyr::rename_with(
+      df,
+      ~ kableExtra::cell_spec(.x, "html", color = cl$color, background = cl$background),
+      cl$spec
+    )
+  }
+  df
+}
+
+apply_cols_styles <- function(df, show_rownames, callouts) {
+  # TODO apply column label styling as well
+  # col_label_styles <- lapply(callouts, function(x) if (inherits(x, "callout_col_labels")) x)
+  # col_label_styles <- col_label_styles[lengths(col_label_styles) != 0]
+  # df <- apply_col_labels_styles(df, list(callout_col_labels(cols_styles[[1]])))
+
+  # create base kbl
+  base_kbl <- kableExtra::kbl(df, format = "html", align = "l", escape = F, row.names = show_rownames)
+  # then, apply column styles
+  cols_styles <- lapply(callouts, function(x) if (inherits(x, "callout_cols")) x)
+  cols_styles <- cols_styles[lengths(cols_styles) != 0]
+  for (c in cols_styles) {
+    base_kbl <- kableExtra::column_spec(base_kbl, c$spec, color = c$color, background = c$background)
+  }
+  base_kbl
+}
+
+apply_rows_styles <- function(kbl_input, callouts) {
+  rows_styles <- lapply(callouts, function(x) if (inherits(x, "callout_rows")) x)
+  rows_styles <- rows_styles[lengths(rows_styles) != 0]
+  for (r in rows_styles) {
+    kbl_input <- kableExtra::row_spec(kbl_input, r$spec, color = r$color, background = r$background)
+  }
+  kbl_input
 }
 
 #' Annotate a dataframe and return a kableExtra::kbl with any styling there might be for
 #' rows, columns, and column labels.
 #'
-#' @param df
-#' @param show_rownames
-#' @param rows
-#' @param cols
-#' @param col_labels
+#' @param df The unocvertend Python dataframe
+#' @param show_rownames A flag to indicate whether to show the rownames for MultiIndex dataframes
+#' @param callouts `callout_`* list structures
 #'
 #' @return
 #' @export
 #'
 #' @examples
-annotate_dataframe <- function(df, show_rownames, rows = list(), cols = list(), col_labels = list()) {
-  # TODO handle list of lists for each rows/cols/col_labels
-  # if there are any cols annotation apply those first
-  if (length(col_labels)) {
-    df <- dplyr::rename_with(
-      df,
-      ~ kableExtra::cell_spec(.x, "html", color = col_labels$color, background = col_labels$background),
-      col_labels$spec
-    )
-  }
+annotate_dataframe <- function(df, show_rownames, callouts) {
+  # if there are no annotations just create base kbl and return it
+  if (length(callouts) == 0)
+    return(kableExtra::kbl(df, format = "html", align = "l", escape = F, row.names = show_rownames))
 
-  # create base kbl
-  base_kbl <- kableExtra::kbl(df, format = "html", align = "l", escape = F, row.names = show_rownames)
+  # if there are any `callout_col_lables`, apply the styles to the column labels of `df`
+  df <- apply_col_labels_styles(df, callouts)
+
+  # then, apply column specs
+  base_kbl <- apply_cols_styles(df, show_rownames, callouts)
 
   # then, the row specs
-  if (length(rows)) {
-    base_kbl <- kableExtra::row_spec(base_kbl, rows$spec, color = rows$color, background = rows$background)
-  }
-  # then, the column specs
-  if (length(cols)) {
-    if (!length(col_labels)) {
-      df <- dplyr::rename_with(
-        df,
-        ~ kableExtra::cell_spec(.x, "html", color = cols$color, background = cols$background),
-        cols$spec
-      )
-    }
-    base_kbl <- kableExtra::column_spec(base_kbl, cols$spec, color = cols$color, background = cols$background)
-  }
+  final_kbl <- apply_rows_styles(base_kbl, callouts)
 
-  return(base_kbl)
+  return(final_kbl)
 }

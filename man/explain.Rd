@@ -2,16 +2,18 @@
 % Please edit documentation in R/stepper.R
 \name{explain}
 \alias{explain}
-\title{Title}
+\title{Constructor for an explanation of a given line of code}
 \usage{
-explain(summary, rows = list(), cols = list(), col_labels = list())
+explain(summary = "", ...)
 }
 \arguments{
-\item{col_labels}{}
+\item{summary}{the explanation text}
+
+\item{...}{variable number of `callout`}
 }
 \value{
 
 }
 \description{
-Title
+Constructor for an explanation of a given line of code
 }

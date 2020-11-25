@@ -4,21 +4,16 @@
 \alias{kable_pandas}
 \title{Takes in an unconverted Python dataframe and outputs a kableExtra table.}
 \usage{
-kable_pandas(
-  df,
-  rmd = FALSE,
-  show_rownames = FALSE,
-  rows = list(),
-  cols = list(),
-  col_labels = list()
-)
+kable_pandas(df, rmd = FALSE, show_rownames = FALSE, callouts)
 }
 \arguments{
 \item{df}{The unocvertend Python dataframe}
 
 \item{rmd}{This is a flag to render in the RStudio IDE for TRUE, FALSE in a rendered document}
 
-\item{show_rownames}{A flag to indicate whether to show the rownames for MultiIndex dataframes}
+\item{show_rownames}{Whether to display rownames or not}
+
+\item{callouts}{`callout_`* list structures}
 }
 \value{
 A character vector of the table source code (very similar to `kable`)
