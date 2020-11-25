@@ -1,39 +1,13 @@
 
-
-# TODO: a main entry function for stepper functionality
-
-# TODO: a data structure that contains pairs of explanation and callouts on dataframes
-# explain_all <- list(
-#   list(line = 1, text = "The first thing we want to do is groupby the CID, FE, and select the FID column."),
-#   list(line = 2, text = "Then we will count the numbers by the groups.")
-# )
-
-# df = pd.DataFrame({'CID':[2,2,3],
-#   'FE':[5,5,6],
-#   'FID':[1,7,9]})
-#
-# print (df)
-# CID  FE  FID
-# 0    2   5    1
-# 1    2   5    7
-# 2    3   6    9
-#
-# df = df.groupby(by=['CID','FE'])['FID']
-#   .count()
-#   .unstack()
-#   .reset_index()
-#   .rename_axis(None, axis=1)
-
 #' This is the first stage of creating the stepper Shiny app.
 #' We return a list structure that will then be rendered with a `knitr::knit_print`
 #' on the rendering stage of the app.
 #'
 #' @param explanations
 #'
-#' @param setup_label
-#' @param code_label
 #' @param start_expr
 #' @param explanations
+#'
 #' @return a list structure with a class of "tutorial_stepper":
 #'  list(
 #'    id,
@@ -43,24 +17,34 @@
 #'      source_code,
 #'      eval_code
 #'    ),
-#'    explanations
+#'    summaries,
+#'    callouts
 #'  )
 #'
 #' @export
 #'
 #' @examples
-#' stepper(
-#'   id = "stepper-ex",
-#'   explanations = list(
-#'     list(line = 1, text = "The first thing we want to do is groupby the CID, FE, and select the FID column."),
-#'     list(line = 2, text = "Then we will count the numbers by the groups.")
-#'   )
-#' )
-stepper <- function(setup_label = NULL, code_label = NULL, start_expr = "", explanations = list()) {
+stepper <- function(start_expr = "", explanations = list()) {
 
-  # must require setup and code label
-  if (is.null(setup_label) || is.null(code_label)) {
-    stop("The `setup_label` and `code_label` must be provided for the stepper to render.")
+  # create an id for stepper based on current chunk label
+  label <- knitr::opts_current$get("label")
+  # stepper chunk must have a label
+  if (is.null(label) || grepl("unnamed-chunk", label)) {
+    stop("A stepper chunk must include a label.", call. = FALSE)
+  }
+
+  # TODO eventually be able to walk through either Python or R based on engine info
+  # grab the setup and code chunks
+  code_label <- paste0(label, "-code")
+  # we use -warmup so as not to conflict with learnr's -setup
+  setup_chunk <- knitr::knit_code$get(paste0(label, "-warmup"))
+  code_chunk <- knitr::knit_code$get(code_label)
+
+  # must require code
+  if (is.null(code_chunk)) {
+    stop(glue::glue(
+      "The code chunk with label, {code_label}, could not be found. Make sure you have included it."
+    ), call. = FALSE)
   }
 
   # must require explanations
@@ -73,37 +57,12 @@ stepper <- function(setup_label = NULL, code_label = NULL, start_expr = "", expl
   # one time tutor initialization
   initialize_tutorial()
 
-  # TODO eventually be able to walk through either Python or R based on engine info
-  # grab the setup and code chunks
-  setup_chunk <- knitr::knit_code$get(setup_label)
-  code_chunk <- knitr::knit_code$get(code_label)
-
-  # setup and code chunks must exist
-  if (is.null(setup_chunk)) {
-    stop(glue::glue(
-      "The setup chunk with label, {setup_label}, could not be found. Make sure you have included it."
-    ), call. = FALSE)
-  }
-
-  if (is.null(code_chunk)) {
-    stop(glue::glue(
-      "The code chunk with label, {code_label}, could not be found. Make sure you have included it."
-    ), call. = FALSE)
-  }
-
   # make sure we have one string for setup code (handy when running `reticulate::py_eval_string`)
   setup_code <- paste0(setup_chunk, collapse = "\n")
   # we will maintain the source code as it was written so we can display it verbatim
   source_code <- paste0(code_chunk, collapse = "\n")
   # but we will also maintain a code vector so we can step through each line
   eval_code <- purrr::map_chr(code_chunk, stringr::str_trim)
-
-  # create an id for stepper based on current chunk label
-  label <- knitr::opts_current$get("label")
-  # stepper chunk must have a label
-  if (is.null(label) || grepl("unnamed-chunk", label)) {
-    stop("A stepper chunk must include a label.", call. = FALSE)
-  }
 
   # collect summaries, turning text into markdown if needed
   summaries = lapply(
@@ -369,6 +328,7 @@ stepper_module_server <- function(input, output, session, stepper) {
   # last line
   lastLine <- length(eval_code) - 1
 
+  # TODO gracefully handle python errors
   generate_df_outputs <- function(eval_code, setup_code) {
     # run the setup code first
     if (!is.null(setup_code)) {

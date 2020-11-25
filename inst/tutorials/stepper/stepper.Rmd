@@ -41,7 +41,7 @@ codeify <- function(x) paste0("`", x, "`")
 
 # Example demo
 
-```{python nba_stepper_setup, include=FALSE}
+```{python nba_stepper-warmup, include=FALSE}
 import pandas as pd
 import numpy as np
 nba = pd.read_csv(r.nba_data_path)
@@ -57,7 +57,7 @@ column_names = {
 }
 ```
 
-```{python nba_code, include=FALSE, eval=FALSE}
+```{python nba_stepper-code, include=FALSE, eval=FALSE}
 nba = (nba.rename(columns=column_names)
   .dropna(thresh=4)
   [['date', 'away_team', 'away_points', 'home_team', 'home_points']]
@@ -72,8 +72,6 @@ nba = (nba.rename(columns=column_names)
 
 ```{r nba_stepper, echo=FALSE}
 stepper(
-  setup_label = "nba_stepper_setup",
-  code_label = "nba_code",
   start_expr = "nba.rename(columns=column_names)",
   explanations = list(
     explain(
