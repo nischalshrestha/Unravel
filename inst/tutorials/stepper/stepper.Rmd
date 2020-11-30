@@ -12,31 +12,38 @@ library(dplyr)
 library(flair)
 library(reticulate)
 library(shiny)
-library(daff)
 # library(reactable)
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 # this package library which should import all the custom functionality we need for doc
-library(DataTutor)
+# Note: for deploying to shinyapps.io I have to include the R scripts manually (private personal repos don't seem to work...); this also means relative paths must be for tutorial dir for shinyapps io case
+if (Sys.info()[['user']] == 'shiny'){
+  # library(DataTutor)
+  source("R/utils.R")
+  source("R/kable_pandas.R")
+  source("R/stepper.R")
+} else {
+  # for the local case we just need to import our custom package
+  library(DataTutor)
+}
 
-home_path <- here::here("inst/tutorials/data_diff/data/")
-stepper_path <- here::here("inst/tutorials/stepper/")
-nba_data_path <- paste0(home_path, "nba.csv")
-rnba <- read.csv(nba_data_path)
+nba_data_path <- "data/nba.csv"
 
 modified_color <- "#c6c0fd"
 inserted_color <- "#c8ff9e"
 deleted_color <- "#fea5a3"
 codeify <- function(x) paste0("`", x, "`")
-# tutorial even recorder is able to capture our stepper button
-# Note: we use this for saving events (look up storage for better ways)
-# But, we do not require this for a custom event handler
-# tutorial_event_recorder <- function(tutorial_id, tutorial_version, user_id,
-#                                     event, data) {
-#   cat(tutorial_id, " (", tutorial_version, "): ", user_id , "\n", sep = "")
-#   cat("event: ", event, "\n", sep = "")
-# }
+
 # must set recorder to global option
 # options(tutorial.event_recorder = tutorial_event_recorder)
+if (Sys.info()[['user']] == 'shiny'){
+  # grab system environment variables set by .Rprofile
+  virtualenv_dir = Sys.getenv('VIRTUALENV_NAME')
+  python_path = Sys.getenv('PYTHON_PATH')
+  # create a virtualenv, install dependences within it, and finally use the virtualenv
+  reticulate::virtualenv_create(envname = virtualenv_dir, python = python_path)
+  reticulate::virtualenv_install(virtualenv_dir, packages = c('numpy', 'pandas'))
+  reticulate::use_virtualenv(virtualenv_dir, required = TRUE)
+}
 ```
 
 # Example demo
