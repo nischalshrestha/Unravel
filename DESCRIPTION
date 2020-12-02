@@ -13,6 +13,7 @@ LazyData: true
 Imports: 
     rmarkdown,
     knitr,
+    xfun,
     kableExtra,
     shiny,
     reticulate,

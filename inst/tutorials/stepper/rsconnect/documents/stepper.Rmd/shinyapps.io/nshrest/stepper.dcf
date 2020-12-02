@@ -5,9 +5,9 @@ account: nshrest
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 3326435
-bundleId: 3935020
+bundleId: 3935041
 url: https://nshrest.shinyapps.io/stepper/
-when: 1606944164.14269
+when: 1606944517.48244
 asMultiple: FALSE
 asStatic: FALSE
 ignoredFiles: code_template.html|stepper.html|css/.DS_Store|data/pew.csv
