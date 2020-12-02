@@ -15,26 +15,15 @@ library(shiny)
 # library(reactable)
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 # this package library which should import all the custom functionality we need for doc
-# Note: for deploying to shinyapps.io I have to include the R scripts manually (private personal repos don't seem to work...); this also means relative paths must be for tutorial dir for shinyapps io case
-if (Sys.info()[['user']] == 'shiny'){
-  # library(DataTutor)
-  source("R/utils.R")
-  source("R/kable_pandas.R")
-  source("R/stepper.R")
-} else {
-  # for the local case we just need to import our custom package
-  library(DataTutor)
-}
+library(DataTutor)
 
 nba_data_path <- "data/nba.csv"
-
 modified_color <- "#c6c0fd"
 inserted_color <- "#c8ff9e"
 deleted_color <- "#fea5a3"
 codeify <- function(x) paste0("`", x, "`")
 
-# must set recorder to global option
-# options(tutorial.event_recorder = tutorial_event_recorder)
+# this is if publishing to shinyapps.io
 if (Sys.info()[['user']] == 'shiny'){
   # grab system environment variables set by .Rprofile
   virtualenv_dir = Sys.getenv('VIRTUALENV_NAME')
@@ -46,7 +35,7 @@ if (Sys.info()[['user']] == 'shiny'){
 }
 ```
 
-# Example demo
+# Demo
 
 ```{python nba_stepper-warmup, include=FALSE}
 import pandas as pd
@@ -75,27 +64,25 @@ nba = (nba.rename(columns=column_names)
 )
 ```
 
-## nba data
+## Stepper + textual / output annotations
 
 ```{r nba_stepper, echo=FALSE}
 stepper(
   start_expr = "nba.rename(columns=column_names)",
   explanations = list(
     explain(
-      "First, the old columns `r color_text(c('date', 'start', 'box', 'away_team', 'away_points', 'home_team', 'home_points'), 'modified')` are renamed using `r kableExtra::text_spec(codeify('rename'), popover = 'Alter axes labels. Function / dict values must be unique (1-to-1). Labels not contained in a dict / Series will be left as-is. Extra labels listed don’t throw an error. See the user guide for more.')` and supplying our earlier `r color_text('column_names', 'highlighted')` dict. Some of these columns are now more readable.",
+      "First, the old columns `r color_text(c('date', 'start', 'box', 'away_team', 'away_points', 'home_team', 'home_points'), 'modified')` are renamed using <a href='https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.rename.html' target='_blank'>`r kableExtra::text_spec(codeify('rename'), popover = 'Alter axes labels. Function / dict values must be unique (1-to-1). Labels not contained in a dict / Series will be left as-is. Extra labels listed don’t throw an error. Click for more details.')`</a> and supplying our earlier `r color_text('column_names', 'highlighted')` dict. Some of these columns are now more readable.",
       callout_col_labels(2:7, "black", modified_color)
     ),
-    explain(
-      "Testing: Rows `r color_text('1 and 2', 'inserted')` are green. Columns `r color_text('date', 'deleted')` and `r color_text('start', 'deleted')` are red. Column labels `r color_text(c('away_team', 'home_team'), 'modified')` are purple.",
-      callout_col_labels(c(4, 6), background = modified_color),
-      callout_rows(2:3, background = inserted_color),
-      callout_cols(3:4, color = "white", background = deleted_color)
-    )
+  explain(
+    "Testing: Rows `r color_text('1 and 2', 'inserted')` are green. Columns `r color_text('date', 'deleted')` and `r color_text('start', 'deleted')` are red. Column labels `r color_text(c('away_team', 'home_team'), 'modified')` are purple.",
+    callout_col_labels(c(4, 6), background = modified_color),
+    callout_rows(2:3, background = inserted_color),
+    callout_cols(3:4, color = "white", background = deleted_color)
+  )
   )
 )
 ```
-
-## another section
 
 <script>
 $(document).ready(function(){

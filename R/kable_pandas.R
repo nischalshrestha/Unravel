@@ -3,8 +3,6 @@ library(kableExtra)
 library(reticulate)
 library(tidyverse)
 
-source(here::here("R/utils.R"))
-
 modified_color <- "#c6c0fd"
 inserted_color <- "#c8ff9e"
 deleted_color <- "#fea5a3"

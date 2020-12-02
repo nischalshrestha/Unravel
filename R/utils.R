@@ -220,6 +220,4 @@ rinline_to_html <- function(text) {
   return(shiny::HTML(out_text))
 }
 
-# TODO function to create the tooltip so we dont have to do escaping madness on rmd
-code_with_tooltip <- function() {}
 
