@@ -5,9 +5,9 @@ account: nshrest
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 3326435
-bundleId: 3934904
+bundleId: 3935020
 url: https://nshrest.shinyapps.io/stepper/
-when: 1606942291.93969
+when: 1606944164.14269
 asMultiple: FALSE
 asStatic: FALSE
-ignoredFiles: code_template.html|stepper.html|css/.DS_Store|data/pew.csv|highlighter/a11y-light.css|highlighter/app.R|highlighter/highlight.pack.js|highlighter/monokai.css|js/.DS_Store|R/.DS_Store|R/kable_pandas.R|R/stepper.R|R/utils.R
+ignoredFiles: code_template.html|stepper.html|css/.DS_Store|data/pew.csv

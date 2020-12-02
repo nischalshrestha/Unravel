@@ -6,12 +6,7 @@
 We return a list structure that will then be rendered with a `knitr::knit_print`
 on the rendering stage of the app.}
 \usage{
-stepper(
-  setup_label = NULL,
-  code_label = NULL,
-  start_expr = "",
-  explanations = list()
-)
+stepper(start_expr = "", explanations = list())
 }
 \arguments{
 \item{explanations}{}
@@ -26,20 +21,12 @@ a list structure with a class of "tutorial_stepper":
      source_code,
      eval_code
    ),
-   explanations
+   summaries,
+   callouts
  )
 }
 \description{
 This is the first stage of creating the stepper Shiny app.
 We return a list structure that will then be rendered with a `knitr::knit_print`
 on the rendering stage of the app.
-}
-\examples{
-stepper(
-  id = "stepper-ex",
-  explanations = list(
-    list(line = 1, text = "The first thing we want to do is groupby the CID, FE, and select the FID column."),
-    list(line = 2, text = "Then we will count the numbers by the groups.")
-  )
-)
 }
