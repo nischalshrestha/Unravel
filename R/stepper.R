@@ -226,6 +226,7 @@ knit_print.tutorial_stepper <- function(x, ...) {
   stepper <- x
   ui <- stepper_module_ui(stepper$id)
   # in context="server-start", register the event hook
+  # TODO make this do something more useful like dump to external google sheet / server
   rmarkdown::shiny_prerendered_chunk(
     "server-start",
     "event_register_handler('clicked_button', function(session, event, data) {
@@ -258,13 +259,24 @@ stepper_module_ui <- function(id) {
   # namespace for module
   ns <- shiny::NS(id)
   shiny::fluidPage(
+    # for syntax highlighting the code text
+    shiny::tags$body(
+      shiny::includeCSS(here::here("inst/tutorials/stepper/css/prism.min.css")),
+      shiny::includeCSS(here::here("inst/tutorials/stepper/css/prism-coy-without-shadows.css")),
+      shiny::includeScript(here::here("inst/tutorials/stepper/js/prism.min.js")),
+      shiny::includeScript(here::here("inst/tutorials/stepper/js/prism-python.min.js")),
+    ),
     shiny::column(
       12,
-      shiny::htmlOutput(ns("text"))
+      shiny::htmlOutput(ns("code_text"))
     ),
     shiny::br(),
     shiny::column(
       12,
+      # TODO this is hardcoded for now, but wonder if we can figure out roughly how
+      # much size text would take up and then set size accordingly. It is rather
+      # annoying to have to figure out hardcoded size.. so maybe layout needs changing too such that
+      # the text is at bottom.
       shiny::div(
         style = "height:100px;",
         shiny::htmlOutput(ns("summary"))
@@ -285,7 +297,6 @@ stepper_module_ui <- function(id) {
       shiny::fluidRow(shiny::br()),
       shiny::fluidRow(
         shiny::htmlOutput(ns("line_table"))
-        # reactable::reactableOutput(ns("line_table"))
       )
     )
   )
@@ -421,18 +432,10 @@ stepper_module_server <- function(input, output, session, stepper) {
   flair_line <- function(idx) {
     # look for the pattern of the current line in code
     # currently, this is just whatever line we are on
-    pattern <- eval_code[[idx]]
+    # code <- eval_code[[idx]]
     # flair the whole source code with the pattern line highlighted
-    highlighted_code <- flair::flair(source_code, pattern)
-    # TODO this does not provide syntax highlighting so maybe look into
-    # using prism programmatically
-    shiny::HTML(
-      paste0(
-        "<br><pre><code class=\"language-python\">",
-        highlighted_code,
-        "</code></pre>"
-      )
-    )
+    # highlighted_code <- flair::flair(source_code, code)
+    prismCodeBlock(source_code)
   }
 
   # handlers for each button
@@ -468,7 +471,7 @@ stepper_module_server <- function(input, output, session, stepper) {
     learnr:::event_trigger(session = session, event = "clicked_button", data = list(btn = "last"))
   })
 
-  output$text <- shiny::renderUI({
+  output$code_text <- shiny::renderUI({
     flair_line(current())
   })
 
@@ -497,7 +500,4 @@ stepper_module_server <- function(input, output, session, stepper) {
     df_kable(current())
   }
 
-  # output$line_table <- renderReactable({
-  #   df_reactable(current())
-  # })
 }
