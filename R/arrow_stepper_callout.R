@@ -1,6 +1,5 @@
 library(shiny)
 
-shiny::tags$textarea(
 "nba = (nba.rename(columns = column_names)
   .dropna(thresh = 4)
   [['date', 'away_team', 'away_points', 'home_team', 'home_points']]
@@ -8,9 +7,30 @@ shiny::tags$textarea(
   .set_index('date', append = True)
   .rename_axis(['game_id', 'date'])
   .sort_index()
-)",
-  class = 'code'
-) -> arrow_html
+)" -> code_text
+
+arrow_html <-
+  shiny::tags$textarea(
+    code_text,
+    class = 'code'
+  )
+
+summary_html <-
+  shiny::div(
+    shiny::p(
+      "We create a variable ",
+      shiny::span("nba", class="callout_text", id = "A", .noWS = "outside"),
+      " to store the final DataFrame. First, we ",
+      shiny::span("rename", class="callout_text", id = "B", .noWS = "outside"),
+      " the original ",
+      shiny::span("columns", class="callout_text", id = "C", .noWS = "outside"),
+      " by supplying the ",
+      shiny::span("column_names", class="callout_text", id = "D", .noWS = "outside"),
+      " dictionary",
+      .noWS = "inside"
+    ),
+    class = "summary"
+  )
 
 # // TODO now do this programmatically such that we change the line to set gutter marker for ^
 
@@ -28,10 +48,20 @@ ui <- fluidPage(
       Shiny.addCustomMessageHandler('step', function(number) {
         set_stepper_arrow(number);
       });
-    ")
+    "),
+    shiny::includeCSS(here::here("R/css/callout.css")),
   ),
   fluidRow(shiny::htmlOutput("code")),
+  shiny::br(),
+  shiny::column(
+    12,
+    shiny::div(
+      style = "height: auto;",
+      shiny::htmlOutput("summary")
+    )
+  ),
   column(12,
+    align = "center",
     shiny::actionButton("firstBtn", label = "First", icon = shiny::icon("fast-backward")),
     shiny::actionButton("previousBtn", label = "Previous", icon = shiny::icon("arrow-left")),
     shiny::actionButton("nextBtn", label = "Next", icon = shiny::icon("arrow-right")),
@@ -40,6 +70,20 @@ ui <- fluidPage(
 )
 
 server <- function(input, output, session) {
+
+  output$code <- renderUI({
+    shiny::tagList(
+      arrow_html,
+      shiny::includeScript(here::here("R/js/stepper.js"))
+    )
+  })
+
+  output$summary <- shiny::renderUI({
+    shiny::tagList(
+      summary_html
+      # shiny::includeScript(here::here("R/js/stepper.js"))
+    )
+  })
 
   current_line <- reactiveVal(0)
 
@@ -73,13 +117,7 @@ server <- function(input, output, session) {
     current_line(7)
     session$sendCustomMessage("step", current_line())
   })
-
-  output$code <- renderUI({
-    shiny::tagList(
-      arrow_html,
-      shiny::includeScript(here::here("R/js/stepper.js"))
-    )
-  })
 }
 
 shinyApp(ui, server)
+
