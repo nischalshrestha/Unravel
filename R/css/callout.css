@@ -1,6 +1,16 @@
 
-.hover_yellow {
-  background-color: #ffff7f;
+
+.callout_code {
+  /* background-color: lightgrey; */
+  /* adds a background colour to the button */
+  color: black;
+  /* changes the text colour */
+  cursor: pointer;
+  /* changes the mouse on hover */
+  /* border-radius: 5px; */
+  /* border: 1px dotted black; */
+  padding: 1px;
+  text-decoration: underline dotted blue;
 }
 
 .callout_text {
@@ -15,13 +25,12 @@
   padding: 1px;
 }
 
-.callout_text:hover {
+p {
+  line-height:1.5em;
+}
+
+.hover_text {
   background-color: #ffff7f;
-    /* adds a background hover colour to the button */
-    color: #333;
-    border: 1px solid black;
-  /* changes the text colour on hover */
-    border-radius: 5px;
 }
 
 .summary {

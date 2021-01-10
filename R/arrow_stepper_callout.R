@@ -15,17 +15,27 @@ arrow_html <-
     class = 'code'
   )
 
+# spec for how the callouts are related:
+# class for both code / text callout has to be <span class = "initiator receiver callout_[text|code]" id = "foo"></span>
+# where callout_text is for the explanation, and
+# where callout_code is for the code (bc we underline in this case instead of bubble), and
+# the identifier that links the two for a given pair is `id`
+
+# reasoning:
+# this enables 2-way highlight on hover
+# and clean way to link two related html spans using id
+
 summary_html <-
   shiny::div(
     shiny::p(
       "We create a variable ",
-      shiny::span("nba", class="callout_text", id = "A", .noWS = "outside"),
+      shiny::span("nba", class="initiator receiver callout_text", id = "A", .noWS = "outside"),
       " to store the final DataFrame. First, we ",
-      shiny::span("rename", class="callout_text", id = "B", .noWS = "outside"),
+      shiny::span("rename", class="initiator receiver callout_text", id = "B", .noWS = "outside"),
       " the original ",
-      shiny::span("columns", class="callout_text", id = "C", .noWS = "outside"),
+      shiny::span("columns", class="initiator receiver callout_text", id = "C", .noWS = "outside"),
       " by supplying the ",
-      shiny::span("column_names", class="callout_text", id = "D", .noWS = "outside"),
+      shiny::span("column_names", class="initiator receiver callout_text", id = "D", .noWS = "outside"),
       " dictionary",
       .noWS = "inside"
     ),
@@ -42,16 +52,19 @@ ui <- fluidPage(
   shiny::tags$head(
     shiny::includeScript(here::here("R/js/codemirror.js")),
     shiny::includeCSS(here::here("R/css/codemirror.css")),
+    shiny::includeCSS(here::here("R/css/callout.css")),
     shiny::includeScript(here::here("R/js/python.js")),
     tags$style("@import url(https://use.fontawesome.com/releases/v5.7.2/css/all.css);"),
     tags$script("
       Shiny.addCustomMessageHandler('step', function(number) {
         set_stepper_arrow(number);
       });
-    "),
-    shiny::includeCSS(here::here("R/css/callout.css")),
+    ")
   ),
-  fluidRow(shiny::htmlOutput("code")),
+  column(
+    12,
+    shiny::htmlOutput("code")
+  ),
   shiny::br(),
   shiny::column(
     12,
@@ -81,7 +94,6 @@ server <- function(input, output, session) {
   output$summary <- shiny::renderUI({
     shiny::tagList(
       summary_html
-      # shiny::includeScript(here::here("R/js/stepper.js"))
     )
   })
 

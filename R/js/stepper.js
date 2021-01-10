@@ -52,13 +52,14 @@ function setup_editor() {
 
 function setup_callouts() {
   // TODO CLEAN UP THIS REDUNDANCY!!!!
+
   var snippet = "nba";
   var lineNumber = 0;
   var charNumber = doc.getValue().indexOf(snippet);
-  //console.log(snippet.indexOf("nba"));
   var htmlNode = document.createElement("span");
   htmlNode.innerHTML = snippet
-  htmlNode.className = 'callout_nba'
+  htmlNode.className = 'initiator receiver callout_code'
+  htmlNode.id = "A"  // this could be the name of the function / param / value to highlight
   doc.markText(
   	{line: lineNumber, ch: charNumber},
     {line: lineNumber, ch: charNumber + snippet.length},
@@ -66,14 +67,12 @@ function setup_callouts() {
   )
 
   var snippet = "rename";
-  //console.log(doc.getValue().indexOf(snippet));
   var lineNumber = 0;
   var charNumber = doc.getValue().indexOf(snippet);
-  //console.log(snippet.indexOf("nba"));
   var htmlNode = document.createElement("span");
   htmlNode.innerHTML = snippet
-  htmlNode.className = 'callout_rename'
-  //htmlNode.style = "background-color: #ffff7f";
+  htmlNode.className = 'initiator receiver callout_code'
+  htmlNode.id = "B"
   doc.markText(
   	{line: lineNumber, ch: charNumber},
     {line: lineNumber, ch: charNumber + snippet.length},
@@ -81,14 +80,12 @@ function setup_callouts() {
   )
 
   var snippet = "columns";
-  //console.log(doc.getValue().indexOf(snippet));
   var lineNumber = 0;
   var charNumber = doc.getValue().indexOf(snippet);
-  //console.log(snippet.indexOf("nba"));
   var htmlNode = document.createElement("span");
   htmlNode.innerHTML = snippet
-  htmlNode.className = 'callout_columns'
-  //htmlNode.style = "background-color: #ffff7f";
+  htmlNode.className = 'initiator receiver callout_code'
+  htmlNode.id = "C"
   doc.markText(
   	{line: lineNumber, ch: charNumber},
     {line: lineNumber, ch: charNumber + snippet.length},
@@ -96,14 +93,12 @@ function setup_callouts() {
   )
 
   var snippet = "column_names";
-  //console.log(doc.getValue().indexOf(snippet));
   var lineNumber = 0;
   var charNumber = doc.getValue().indexOf(snippet);
-  //console.log(snippet.indexOf("nba"));
   var htmlNode = document.createElement("span");
   htmlNode.innerHTML = snippet
-  htmlNode.className = 'callout_column_names'
-  //htmlNode.style = "background-color: #ffff7f";
+  htmlNode.className = 'initiator receiver callout_code'
+  htmlNode.id = "D"
   doc.markText(
   	{line: lineNumber, ch: charNumber},
     {line: lineNumber, ch: charNumber + snippet.length},
@@ -113,21 +108,32 @@ function setup_callouts() {
 
 function setup_linker() {
   // TODO CLEAN UP THIS REDUNDANCY!!!!
-  $('.callout_text#A').hover(function(event) {
-    $('.callout_nba').toggleClass('hover_yellow');
-    console.log('callout_nba div was hovered');
+  $(".initiator#A").hover(function(){
+     $(".receiver#A").addClass('hover_text');
+     console.log("A div was hovered");
+  }, function(){
+     $(".receiver#A").removeClass('hover_text');
   });
-  $('.callout_text#B').hover(function(event) {
-    $('.callout_rename').toggleClass('hover_yellow');
-    console.log('callout_rename div was hovered');
+
+  $(".initiator#B").hover(function(){
+     $(".receiver#B").addClass('hover_text');
+     console.log("B div was hovered");
+  }, function(){
+     $(".receiver#B").removeClass('hover_text');
   });
-  $('.callout_text#C').hover(function(event) {
-    $('.callout_columns').toggleClass('hover_yellow');
-    console.log('callout_columns div was hovered');
+
+   $(".initiator#C").hover(function(){
+     $(".receiver#C").addClass('hover_text');
+     console.log("C div was hovered");
+  }, function(){
+     $(".receiver#C").removeClass('hover_text');
   });
-  $('.callout_text#D').hover(function(event) {
-    $('.callout_column_names').toggleClass('hover_yellow');
-    console.log('callout_column_names div was hovered');
+
+  $(".initiator#D").hover(function(){
+     $(".receiver#D").addClass('hover_text');
+     console.log("D div was hovered");
+  }, function(){
+     $(".receiver#D").removeClass('hover_text');
   });
 }
 
@@ -136,3 +142,4 @@ $(document).ready(function(){
   setup_callouts();
   setup_linker();
 });
+
