@@ -66,41 +66,44 @@ nba = (nba.rename(columns=column_names)
 )
 ```
 
-## Stepper + textual / output annotations
+<!-- ## Stepper + textual / output annotations -->
 
 <!-- Old version: -->
-
-```{r nba_stepper, echo=FALSE}
-stepper(
-  start_expr = "nba.rename(columns=column_names)",
-  explanations = list(
-    explain(
-      "First, the old columns `r color_text(c('date', 'start', 'box', 'away_team', 'away_points', 'home_team', 'home_points'), 'modified')` are renamed using <a href='https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.rename.html' target='_blank'>`r kableExtra::text_spec(codeify('rename'), popover = 'Alter axes labels. Function / dict values must be unique (1-to-1). Labels not contained in a dict / Series will be left as-is. Extra labels listed don’t throw an error. Click for more details.')`</a> and supplying our earlier `r color_text('column_names', 'highlighted')` dict. Some of these columns are now more readable."
-      # callout_col_labels(2:7, "black", modified_color)
-    )
-    # explain(
-    #   "Testing: Rows `r color_text('1 and 2', 'inserted')` are green. Columns `r color_text('date', 'deleted')` and `r color_text('start', 'deleted')` are red. Column labels `r color_text(c('away_team', 'home_team'), 'modified')` are purple."
-    #   # callout_col_labels(c(4, 6), background = modified_color),
-    #   # callout_rows(2:3, background = inserted_color),
-    #   # callout_cols(3:4, color = "white", background = deleted_color)
-    # )
-  )
-)
-```
-
-<!-- TODO: New version -->
 
 <!-- ```{r nba_stepper, echo=FALSE} -->
 <!-- stepper( -->
 <!--   start_expr = "nba.rename(columns=column_names)", -->
 <!--   explanations = list( -->
-<!--     code_summary( -->
-<!--       "We create a variable ", callout_text("nba"), " to store the final DataFrame. First, we ", -->
-<!--       callout_text("rename"), " the original ", callout_text("columns"), " by supplying the ", -->
-<!--       callout_text("column_names"), " dictionary" -->
+<!--     explain( -->
+<!--       "First, the old columns `r color_text(c('date', 'start', 'box', 'away_team', 'away_points', 'home_team', 'home_points'), 'modified')` are renamed using <a href='https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.rename.html' target='_blank'>`r kableExtra::text_spec(codeify('rename'), popover = 'Alter axes labels. Function / dict values must be unique (1-to-1). Labels not contained in a dict / Series will be left as-is. Extra labels listed don’t throw an error. Click for more details.')`</a> and supplying our earlier `r color_text('column_names', 'highlighted')` dict. Some of these columns are now more readable." -->
+<!--       # callout_col_labels(2:7, "black", modified_color) -->
 <!--     ) -->
-
+<!--     # explain( -->
+<!--     #   "Testing: Rows `r color_text('1 and 2', 'inserted')` are green. Columns `r color_text('date', 'deleted')` and `r color_text('start', 'deleted')` are red. Column labels `r color_text(c('away_team', 'home_team'), 'modified')` are purple." -->
+<!--     #   # callout_col_labels(c(4, 6), background = modified_color), -->
+<!--     #   # callout_rows(2:3, background = inserted_color), -->
+<!--     #   # callout_cols(3:4, color = "white", background = deleted_color) -->
+<!--     # ) -->
 <!--   ) -->
 <!-- ) -->
-
 <!-- ``` -->
+
+<!-- TODO: New version -->
+
+## New stepper
+
+We have an editor to show code (read only), arrow to indicate current line (executed), linked highlights for focus btw elements in text and code.
+
+```{r nba_stepper, echo=FALSE}
+stepper_new(
+  start_expr = "nba.rename(columns=column_names)",
+  explanations = list(
+    code_summary(
+      "We create a variable ", callout_text("nba"), " to store the final DataFrame. First, we ",
+      callout_text("rename"), " the original ", callout_text("columns"), " by supplying the ",
+      callout_text("column_names"), " dictionary."
+    )
+  )
+)
+```
+

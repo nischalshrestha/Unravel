@@ -90,6 +90,99 @@ stepper <- function(start_expr = "", explanations = list()) {
   ret
 }
 
+#' This is the first stage of creating the stepper Shiny app.
+#' We return a list structure that will then be rendered with a `knitr::knit_print`
+#' on the rendering stage of the app.
+#'
+#' @param explanations
+#'
+#' @param start_expr
+#' @param explanations
+#'
+#' @return a list structure with a class of "tutorial_stepper":
+#'  list(
+#'    id,
+#'    setup_code,
+#'    start_expr,
+#'    stepper_code = list(
+#'      source_code,
+#'      eval_code
+#'    ),
+#'    summaries,
+#'    callouts
+#'  )
+#'
+#' @export
+#'
+#' @examples
+stepper_new <- function(start_expr = "", explanations = list()) {
+
+  # create an id for stepper based on current chunk label
+  label <- knitr::opts_current$get("label")
+  # stepper chunk must have a label
+  if (is.null(label) || grepl("unnamed-chunk", label)) {
+    stop("A stepper chunk must include a label.", call. = FALSE)
+  }
+
+  # TODO eventually be able to walk through either Python or R based on engine info
+  # grab the setup and code chunks
+  code_label <- paste0(label, "-code")
+  # we use -warmup so as not to conflict with learnr's -setup
+  setup_chunk <- knitr::knit_code$get(paste0(label, "-warmup"))
+  code_chunk <- knitr::knit_code$get(code_label)
+
+  # must require code
+  if (is.null(code_chunk)) {
+    stop(glue::glue(
+      "The code chunk with label, {code_label}, could not be found. Make sure you have included it."
+    ), call. = FALSE)
+  }
+
+  # must require explanations
+  if (!length(explanations)) {
+    stop("The `explanations` list must be provided for the stepper to render.")
+  }
+  # TODO also check if the length of list matches code vector length
+  # (we want 1:1 mapping of explanation to snippet line)
+
+  # one time tutor initialization
+  initialize_tutorial()
+
+  # make sure we have one string for setup code (handy when running `reticulate::py_eval_string`)
+  setup_code <- paste0(setup_chunk, collapse = "\n")
+  # we will maintain the source code as it was written so we can display it verbatim
+  source_code <- paste0(code_chunk, collapse = "\n")
+  # but we will also maintain a code vector so we can step through each line
+  eval_code <- purrr::map_chr(code_chunk, stringr::str_trim)
+
+  # collect summaries, turning text into markdown if needed
+  # summaries = lapply(
+  #   explanations,
+  #   function(explain) stepper_text(explain$summary)
+  # )
+  summaries = explanations
+
+  # collect callouts, turning them into proper list structure
+  # callouts = lapply(
+  #   explanations,
+  #   function(explain) explain$callouts
+  # )
+
+  ret <- list(
+    id = label,
+    setup_code = setup_code,
+    start_expr = start_expr,
+    stepper_code = list(
+      source_code = source_code,
+      eval_code = eval_code
+    ),
+    summaries = summaries
+    # callouts = callouts
+  )
+  class(ret) <- "tutorial_stepper"
+  ret
+}
+
 
 #' Constructor for an explanation of a given line of code
 #'
@@ -272,15 +365,6 @@ stepper_module_ui <- function(id) {
         });
       ")
     ),
-#
-#     # for syntax highlighting the code text
-#     shiny::tags$head(
-#       shiny::includeCSS(here::here("inst/tutorials/stepper/css/prism.min.css")),
-#       shiny::includeCSS(here::here("inst/tutorials/stepper/css/prism-coy-without-shadows.css")),
-#       shiny::includeScript(here::here("inst/tutorials/stepper/js/prism.min.js")),
-#       shiny::includeScript(here::here("inst/tutorials/stepper/js/prism-python.min.js")),
-#     ),
-
     shiny::column(
       12,
       shiny::htmlOutput(ns("code_text"))
@@ -345,7 +429,7 @@ stepper_module_server <- function(input, output, session, stepper) {
   setup_code <- stepper$setup_code
   eval_code <- stepper$stepper_code$eval_code
   source_code <- stepper$stepper_code$source_code
-  # summary +
+  # summary + callouts
   summaries <- stepper$summaries
   all_callouts <- stepper$callouts
   # to assist with parsing
@@ -378,6 +462,7 @@ stepper_module_server <- function(input, output, session, stepper) {
 
   # get next summary
   get_summary <- function(idx) {
+    # summaries[[idx]]
     summaries[[idx]]
   }
   # get next annotation
@@ -393,39 +478,31 @@ stepper_module_server <- function(input, output, session, stepper) {
   df_kable <- function(idx) {
     # first get the raw pandas dataframe
     raw_df <- df_outputs[[idx]]
-    callouts <- get_callouts(idx)
+    # callouts <- get_callouts(idx)
     # check if df is a MultiIndex
     is_multi_index <- "pandas.core.indexes.multi.MultiIndex" %in% class(raw_df$index)
     kable_pandas(
       df = raw_df,
       show_rownames = !is_multi_index,
-      callouts = callouts
+      callouts = list()
     )
   }
 
-  flair_line <- function(idx) {
-    # look for the pattern of the current line in code
-    # currently, this is just whatever line we are on
-    # code <- eval_code[[idx]]
-    # flair the whole source code with the pattern line highlighted
-    # highlighted_code <- flair::flair(source_code, code)
-    prismCodeBlock(source_code)
-  }
-
-  summary_info <- list(
-    code_summary(
-      "We create a variable ", callout_text("nba"), " to store the final DataFrame. First, we ",
-      callout_text("rename"), " the original ", callout_text("columns"), " by supplying the ",
-      callout_text("column_names"), " dictionary"
-    )
-  )
+  # summary_info <- list(
+  #   code_summary(
+  #     "We create a variable ", callout_text("nba"), " to store the final DataFrame. First, we ",
+  #     callout_text("rename"), " the original ", callout_text("columns"), " by supplying the ",
+  #     callout_text("column_names"), " dictionary"
+  #   )
+  # )
 
   # handlers for each button
   shiny::observeEvent(input$firstLine, {
     current(0)
     session$sendCustomMessage("step", current())
-    session$sendCustomMessage("setupCallouts", summary_info[[current() + 1]]$callout_words)
-    session$sendCustomMessage("setupLinker", summary_info[[current() + 1]]$callout_words)
+    summary <- get_summary(current() + 1)
+    session$sendCustomMessage("setupCallouts", summary$callout_words)
+    session$sendCustomMessage("setupLinker", summary$callout_words)
     message("clicked First button: ", current())
     learnr:::event_trigger(session = session, event = "clicked_button", data = list(btn = "first"))
   })
@@ -435,9 +512,10 @@ stepper_module_server <- function(input, output, session, stepper) {
       current(current() - 1)
     }
     session$sendCustomMessage("step", current())
-    if (current() + 1 <= length(summary_info)) {
-      session$sendCustomMessage("setupCallouts", summary_info[[current() + 1]]$callout_words)
-      session$sendCustomMessage("setupLinker", summary_info[[current() + 1]]$callout_words)
+    if (current() + 1 <= length(summaries)) {
+      summary <- get_summary(current() + 1)
+      session$sendCustomMessage("setupCallouts", summary$callout_words)
+      session$sendCustomMessage("setupLinker", summary$callout_words)
     }
     message("clicked Previous button: ", current())
     learnr:::event_trigger(session = session, event = "clicked_button", data = list(btn = "previous"))
@@ -447,23 +525,26 @@ stepper_module_server <- function(input, output, session, stepper) {
     if (current() < lastLine) {
       current(current() + 1)
     }
+    browser()
     session$sendCustomMessage("step", current())
-    if (current() + 1 <= length(summary_info)) {
-      session$sendCustomMessage("setupCallouts", summary_info[[current() + 1]]$callout_words)
-      session$sendCustomMessage("setupLinker", summary_info[[current() + 1]]$callout_words)
+    if (current() + 1 <= length(summaries)) {
+      summary <- get_summary(current() + 1)
+      session$sendCustomMessage("setupCallouts", summary$callout_words)
+      session$sendCustomMessage("setupLinker", summary$callout_words)
     }
     message("clicked Next button: ", current())
     learnr:::event_trigger(session = session, event = "clicked_button", data = list(btn = "next"))
   })
 
   shiny::observeEvent(input$lastLine, {
-    if (current() < lastLine) {
+    if (current() + 1 < lastLine) {
       current(lastLine)
     }
     session$sendCustomMessage("step", current())
-    if (current() + 1 <= length(summary_info)) {
-      session$sendCustomMessage("setupCallouts", summary_info[[current() + 1]]$callout_words)
-      session$sendCustomMessage("setupLinker", summary_info[[current() + 1]]$callout_words)
+    if (current() + 1 <= length(summaries)) {
+      summary <- get_summary(current() + 1)
+      session$sendCustomMessage("setupCallouts", summary$callout_words)
+      session$sendCustomMessage("setupLinker", summary$callout_words)
     }
     message("clicked Last button: ", current())
     learnr:::event_trigger(session = session, event = "clicked_button", data = list(btn = "last"))
@@ -471,12 +552,14 @@ stepper_module_server <- function(input, output, session, stepper) {
 
   observeEvent(input$callout, {
     message("woah callout")
-    session$sendCustomMessage("setupCallouts", summary_info[[current() + 1]]$callout_words)
+    summary <- get_summary(current() + 1)
+    session$sendCustomMessage("setupCallouts", summary$callout_words)
   })
 
   observeEvent(input$linker, {
     message("woah linker")
-    session$sendCustomMessage("setupLinker", summary_info[[current() + 1]]$callout_words)
+    summary <- get_summary(current() + 1)
+    session$sendCustomMessage("setupLinker", summary$callout_words)
   })
 
   output$code_text <- shiny::renderUI({
@@ -488,35 +571,38 @@ stepper_module_server <- function(input, output, session, stepper) {
       ),
       shiny::includeScript(here::here("inst/tutorials/stepper/js/stepper.js"))
     )
-    # flair_line(current())
   })
-  # inst/tutorials/stepper/
 
   output$summary <- shiny::renderUI({
-    shiny::tagList(
-      summary_info[[current() + 1]]$html,
-      # shiny::tags$script(
-      shiny::includeScript(here::here("inst/tutorials/stepper/js/callouts.js")),
-      shiny::includeScript(here::here("inst/tutorials/stepper/js/linker.js")),
-#         shiny::HTML(
-#           "$(document).ready(function(){
-#     $('.popover-dismiss').popover({
-#       trigger: 'hover'
-#     })
-#     $('[data-toggle=\"popover\"]').popover({
-#       trigger: 'hover',
-#       html: true
-#     });
-# });"
-#         )
-      # ),
-      # get_summary(current())
-    )
+    if (current() + 1 <= length(summaries)) {
+      summary <- get_summary(current() + 1)
+      shiny::tagList(
+        summary$html,
+        # shiny::tags$script(
+        shiny::includeScript(here::here("inst/tutorials/stepper/js/callouts.js")),
+        shiny::includeScript(here::here("inst/tutorials/stepper/js/linker.js"))
+  #         shiny::HTML(
+  #           "$(document).ready(function(){
+  #     $('.popover-dismiss').popover({
+  #       trigger: 'hover'
+  #     })
+  #     $('[data-toggle=\"popover\"]').popover({
+  #       trigger: 'hover',
+  #       html: true
+  #     });
+  # });"
+  #         )
+        # ),
+        # get_summary(current())
+      )
+    }
   })
 
   output$line_table <- function() {
     message("rendering table: ", current())
-    df_kable(current() + 1)
+    if (current() + 1 <= length(df_outputs)) {
+      df_kable(current() + 1)
+    }
   }
 
 }

@@ -260,6 +260,7 @@ callout_text <- function(string, which_code_match = 1) {
 #'
 #' @examples
 code_summary <- function(...) {
+  # TODO process markdown text for non-callout strings, use `stepper_text`
   arguments <- list(...)
   callouts <- Filter(function(x) inherits(x, "callout"), arguments)
   callouts <- lapply(callouts, function(x) attr(x, "word"))
@@ -275,16 +276,15 @@ code_summary <- function(...) {
   )
 }
 
-
-x <- code_summary(
-  "We create a variable ", callout_text("nba"), " to store the final DataFrame. First, we ",
-  callout_text("rename"), " the original ", callout_text("columns"), " by supplying the ",
-  callout_text("column_names"), " dictionary"
-)
-
-names(x)
-x$html
-x$callout_words
-
+# x <- code_summary(
+#   "We create a variable ", callout_text("nba"), " to store the final DataFrame. First, we ",
+#   callout_text("rename"), " the original ", callout_text("columns"), " by supplying the ",
+#   callout_text("column_names"), " dictionary"
+# )
+#
+# summaries <- list(x)
+# summaries[[1]]
+# summaries[[1]]$html
+# summaries[[1]]$callout_words
 
 
