@@ -220,4 +220,58 @@ rinline_to_html <- function(text) {
   return(shiny::HTML(out_text))
 }
 
+match_gregexpr <- function(pattern, string, which_one = 1) {
+  gregexpr(pattern, string)[[1]][[which_one]]
+}
+
+#' This creates a "callout" object which is essentially a span that has classes, and an id associated
+#' with it, which allows it to be highlighted on a hover.
+#'
+#' @param string the callout string
+#' @param which_code_match TODO: use this numeric to specify which regex'd string to use if there are multiple
+#' in a given line
+#'
+#' @return
+#' @export
+#'
+#' @examples
+callout_text <- function(string, which_code_match = 1) {
+  # spec for how the callouts are related:
+  # class for both code / text callout has to be <span class = "initiator receiver callout_[text|code]" id = "foo"></span>
+  # where callout_text is for the explanation, and
+  # where callout_code is for the code (bc we underline in this case instead of bubble), and
+  # the identifier that links the two for a given pair is `id`
+  html <- shiny::span(string, class="initiator receiver callout_text", id = string, .noWS = "outside")
+  attr(html, "class") <- c(class(html), "callout")
+  attr(html, "word") <- string
+  html
+}
+
+# reasoning:
+# this enables 2-way highlight on hover
+# and clean way to link two related html spans using id
+
+#' This creates a summary div for the stepper explanation.
+#'
+#' @param ... a variable number of `character` or a `callout` object.
+#'
+#' @return a `[shiny::div(shiny::p(...), class = "summary"), [character]]`
+#' @export
+#'
+#' @examples
+code_summary <- function(...) {
+  arguments <- list(...)
+  callouts <- Filter(function(x) inherits(x, "callout"), arguments)
+  callouts <- lapply(callouts, function(x) attr(x, "word"))
+  list(
+    html = shiny::div(
+      shiny::p(
+        arguments,
+        .noWS = "inside"
+      ),
+      class = "summary"
+    ),
+    callout_words = callouts
+  )
+}
 

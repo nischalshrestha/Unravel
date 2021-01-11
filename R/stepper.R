@@ -259,6 +259,20 @@ stepper_module_ui <- function(id) {
   # namespace for module
   ns <- shiny::NS(id)
   shiny::fluidPage(
+    # TODO: make sure these resources load in properly; you may have to have these in the tutorial folder
+    # shiny::tags$head(
+    #   shiny::includeScript(here::here("inst/tutorials/stepper/js/codemirror.js")),
+    #   shiny::includeCSS(here::here("inst/tutorials/stepper/css/codemirror.css")),
+    #   shiny::includeScript(here::here("inst/tutorials/stepper/js/python.js")),
+    #   tags$style("@import url(https://use.fontawesome.com/releases/v5.7.2/css/all.css);"),
+    #   shiny::includeCSS(here::here("inst/tutorials/stepper/css/callout.css")),
+    #   tags$script("
+    #   Shiny.addCustomMessageHandler('step', function(number) {
+    #     set_stepper_arrow(number);
+    #   });
+    # ")
+    # ),
+
     # for syntax highlighting the code text
     shiny::tags$body(
       shiny::includeCSS(here::here("inst/tutorials/stepper/css/prism.min.css")),
@@ -266,6 +280,7 @@ stepper_module_ui <- function(id) {
       shiny::includeScript(here::here("inst/tutorials/stepper/js/prism.min.js")),
       shiny::includeScript(here::here("inst/tutorials/stepper/js/prism-python.min.js")),
     ),
+
     shiny::column(
       12,
       shiny::htmlOutput(ns("code_text"))
