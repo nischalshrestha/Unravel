@@ -275,3 +275,16 @@ code_summary <- function(...) {
   )
 }
 
+
+x <- code_summary(
+  "We create a variable ", callout_text("nba"), " to store the final DataFrame. First, we ",
+  callout_text("rename"), " the original ", callout_text("columns"), " by supplying the ",
+  callout_text("column_names"), " dictionary"
+)
+
+names(x)
+x$html
+x$callout_words
+
+
+

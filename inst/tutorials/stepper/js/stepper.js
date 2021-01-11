@@ -22,6 +22,7 @@ Functionalities to set properties of the CodeMirror editor such as stepper arrow
 var code = null;
 var doc = null;
 var currentLine = 0;
+var namespaceID = "";
 
 function makeMarker() {
   const marker = document.createElement('div');
@@ -41,7 +42,11 @@ function set_stepper_arrow(lineNumber) {
 }
 
 function setup_editor() {
-  code = CodeMirror.fromTextArea(document.getElementsByClassName('code')[0], {
+  // TODO figure out how to get namespace id before this
+  //myTextArea = document.getElementsByClassName('codemirror_editor')[0]
+  //namespaceID = myTextArea.id;
+  //console.log(namespaceID);
+  code = CodeMirror.fromTextArea(document.getElementsByClassName('codemirror_editor')[0], {
     mode: 'python',
     readOnly: 'nocursor',
     styleActiveLine: true,

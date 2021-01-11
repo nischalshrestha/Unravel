@@ -260,26 +260,26 @@ stepper_module_ui <- function(id) {
   ns <- shiny::NS(id)
   shiny::fluidPage(
     # TODO: make sure these resources load in properly; you may have to have these in the tutorial folder
-    # shiny::tags$head(
-    #   shiny::includeScript(here::here("inst/tutorials/stepper/js/codemirror.js")),
-    #   shiny::includeCSS(here::here("inst/tutorials/stepper/css/codemirror.css")),
-    #   shiny::includeScript(here::here("inst/tutorials/stepper/js/python.js")),
-    #   tags$style("@import url(https://use.fontawesome.com/releases/v5.7.2/css/all.css);"),
-    #   shiny::includeCSS(here::here("inst/tutorials/stepper/css/callout.css")),
-    #   tags$script("
-    #   Shiny.addCustomMessageHandler('step', function(number) {
-    #     set_stepper_arrow(number);
-    #   });
-    # ")
-    # ),
-
-    # for syntax highlighting the code text
     shiny::tags$body(
-      shiny::includeCSS(here::here("inst/tutorials/stepper/css/prism.min.css")),
-      shiny::includeCSS(here::here("inst/tutorials/stepper/css/prism-coy-without-shadows.css")),
-      shiny::includeScript(here::here("inst/tutorials/stepper/js/prism.min.js")),
-      shiny::includeScript(here::here("inst/tutorials/stepper/js/prism-python.min.js")),
+      shiny::includeScript(here::here("inst/tutorials/stepper/js/codemirror.js")),
+      shiny::includeCSS(here::here("inst/tutorials/stepper/css/codemirror.css")),
+      shiny::includeScript(here::here("inst/tutorials/stepper/js/python.js")),
+      tags$style("@import url(https://use.fontawesome.com/releases/v5.7.2/css/all.css);"),
+      shiny::includeCSS(here::here("inst/tutorials/stepper/css/callout.css")),
+      tags$script("
+        Shiny.addCustomMessageHandler('step', function(number) {
+          set_stepper_arrow(number);
+        });
+      ")
     ),
+#
+#     # for syntax highlighting the code text
+#     shiny::tags$head(
+#       shiny::includeCSS(here::here("inst/tutorials/stepper/css/prism.min.css")),
+#       shiny::includeCSS(here::here("inst/tutorials/stepper/css/prism-coy-without-shadows.css")),
+#       shiny::includeScript(here::here("inst/tutorials/stepper/js/prism.min.js")),
+#       shiny::includeScript(here::here("inst/tutorials/stepper/js/prism-python.min.js")),
+#     ),
 
     shiny::column(
       12,
@@ -339,7 +339,7 @@ stepper_prerendered_chunk <- function(stepper, ...) {
 stepper_module_server <- function(input, output, session, stepper) {
   # current index of code lines
   # we make it a reactiveVal because we will update it via stepper button clicks
-  current <- shiny::reactiveVal(1)
+  current <- shiny::reactiveVal(0)
 
   # extract the setup, eval + source code, and the explanation list
   setup_code <- stepper$setup_code
@@ -403,47 +403,6 @@ stepper_module_server <- function(input, output, session, stepper) {
     )
   }
 
-  df_reactable <- function(idx) {
-    # first get the raw pandas dataframe
-    raw_df <- df_outputs[[idx]]
-    # check if df is a MultiIndex
-    is_multi_index <- "pandas.core.indexes.multi.MultiIndex" %in% class(raw_df$index)
-    converted_result <- python_df(raw_df)
-    if (is_multi_index) {
-      show_index <- !identical(converted_result[[1]], rownames(converted_result))
-      grp_cols <- group_columns(
-        colnames(converted_result),
-        start = ifelse(show_index, 1, 2)
-      )
-      return(
-        reactable::reactable(
-          converted_result,
-          rownames = show_index,
-          compact = TRUE,
-          minRows = 8,
-          defaultPageSize = 8,
-          showPagination = FALSE,
-          # height = 300,
-          highlight = TRUE,
-          bordered = TRUE,
-          columns = grp_cols[[1]],
-          columnGroups = grp_cols[[2]]
-        )
-      )
-    }
-
-    reactable::reactable(
-      converted_result,
-      compact = TRUE,
-      minRows = 8,
-      defaultPageSize = 8,
-      showPagination = FALSE,
-      # height = 300,
-      highlight = TRUE,
-      bordered = TRUE,
-    )
-  }
-
   flair_line <- function(idx) {
     # look for the pattern of the current line in code
     # currently, this is just whatever line we are on
@@ -453,18 +412,32 @@ stepper_module_server <- function(input, output, session, stepper) {
     prismCodeBlock(source_code)
   }
 
+  summary_info <- list(
+    code_summary(
+      "We create a variable ", callout_text("nba"), " to store the final DataFrame. First, we ",
+      callout_text("rename"), " the original ", callout_text("columns"), " by supplying the ",
+      callout_text("column_names"), " dictionary"
+    )
+  )
+
   # handlers for each button
   shiny::observeEvent(input$firstLine, {
-    if (current() > 1) {
-      current(1)
-    }
+    current(0)
+    session$sendCustomMessage("step", current())
+    session$sendCustomMessage("setupCallouts", summary_info[[current() + 1]]$callout_words)
+    session$sendCustomMessage("setupLinker", summary_info[[current() + 1]]$callout_words)
     message("clicked First button: ", current())
     learnr:::event_trigger(session = session, event = "clicked_button", data = list(btn = "first"))
   })
 
   shiny::observeEvent(input$previousLine, {
-    if (current() > 1) {
+    if (current() >= 1) {
       current(current() - 1)
+    }
+    session$sendCustomMessage("step", current())
+    if (current() + 1 <= length(summary_info)) {
+      session$sendCustomMessage("setupCallouts", summary_info[[current() + 1]]$callout_words)
+      session$sendCustomMessage("setupLinker", summary_info[[current() + 1]]$callout_words)
     }
     message("clicked Previous button: ", current())
     learnr:::event_trigger(session = session, event = "clicked_button", data = list(btn = "previous"))
@@ -474,6 +447,11 @@ stepper_module_server <- function(input, output, session, stepper) {
     if (current() < lastLine) {
       current(current() + 1)
     }
+    session$sendCustomMessage("step", current())
+    if (current() + 1 <= length(summary_info)) {
+      session$sendCustomMessage("setupCallouts", summary_info[[current() + 1]]$callout_words)
+      session$sendCustomMessage("setupLinker", summary_info[[current() + 1]]$callout_words)
+    }
     message("clicked Next button: ", current())
     learnr:::event_trigger(session = session, event = "clicked_button", data = list(btn = "next"))
   })
@@ -482,37 +460,63 @@ stepper_module_server <- function(input, output, session, stepper) {
     if (current() < lastLine) {
       current(lastLine)
     }
+    session$sendCustomMessage("step", current())
+    if (current() + 1 <= length(summary_info)) {
+      session$sendCustomMessage("setupCallouts", summary_info[[current() + 1]]$callout_words)
+      session$sendCustomMessage("setupLinker", summary_info[[current() + 1]]$callout_words)
+    }
     message("clicked Last button: ", current())
     learnr:::event_trigger(session = session, event = "clicked_button", data = list(btn = "last"))
   })
 
-  output$code_text <- shiny::renderUI({
-    flair_line(current())
+  observeEvent(input$callout, {
+    message("woah callout")
+    session$sendCustomMessage("setupCallouts", summary_info[[current() + 1]]$callout_words)
   })
+
+  observeEvent(input$linker, {
+    message("woah linker")
+    session$sendCustomMessage("setupLinker", summary_info[[current() + 1]]$callout_words)
+  })
+
+  output$code_text <- shiny::renderUI({
+    shiny::tagList(
+      shiny::tags$textarea(
+        source_code,
+        class = 'codemirror_editor',
+        id = stepper$id
+      ),
+      shiny::includeScript(here::here("inst/tutorials/stepper/js/stepper.js"))
+    )
+    # flair_line(current())
+  })
+  # inst/tutorials/stepper/
 
   output$summary <- shiny::renderUI({
     shiny::tagList(
-      shiny::tags$script(
-        shiny::HTML(
-          "$(document).ready(function(){
-    $('.popover-dismiss').popover({
-      trigger: 'hover'
-    })
-    $('[data-toggle=\"popover\"]').popover({
-      trigger: 'hover',
-      html: true
-    });
-});"
-        )
-      ),
-      get_summary(current())
+      summary_info[[current() + 1]]$html,
+      # shiny::tags$script(
+      shiny::includeScript(here::here("inst/tutorials/stepper/js/callouts.js")),
+      shiny::includeScript(here::here("inst/tutorials/stepper/js/linker.js")),
+#         shiny::HTML(
+#           "$(document).ready(function(){
+#     $('.popover-dismiss').popover({
+#       trigger: 'hover'
+#     })
+#     $('[data-toggle=\"popover\"]').popover({
+#       trigger: 'hover',
+#       html: true
+#     });
+# });"
+#         )
+      # ),
+      # get_summary(current())
     )
   })
 
-
   output$line_table <- function() {
     message("rendering table: ", current())
-    df_kable(current())
+    df_kable(current() + 1)
   }
 
 }

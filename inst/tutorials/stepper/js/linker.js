@@ -11,7 +11,8 @@ function setup_linker(calloutWords) {
 }
 
 $(document).ready(function(){
-  Shiny.setInputValue("linker", "ready");
+  // TODO figure out how to get namespace id before this
+  Shiny.setInputValue("nba_stepper-linker", "ready");
   Shiny.addCustomMessageHandler('setupLinker', function(calloutWords) {
     console.log("setting up callout links");
     setup_linker(calloutWords);

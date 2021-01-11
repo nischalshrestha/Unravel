@@ -18,7 +18,9 @@ function setup_callouts(calloutWords) {
 }
 
 $(document).ready(function(){
-  Shiny.setInputValue("callout", "ready");
+  // TODO figure out how to get namespace id before this
+  //Shiny.setInputValue(namespaceID.concat("-callout"), "ready");
+  Shiny.setInputValue("nba_stepper-callout", "ready");
   Shiny.addCustomMessageHandler('setupCallouts', function(calloutWords) {
     console.log("setting up callouts");
     setup_callouts(calloutWords);
