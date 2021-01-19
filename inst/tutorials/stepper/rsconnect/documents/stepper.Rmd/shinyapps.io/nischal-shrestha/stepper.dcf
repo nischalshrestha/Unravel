@@ -1,0 +1,13 @@
+name: stepper
+title: stepper
+username:
+account: nischal-shrestha
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3461887
+bundleId: 4082993
+url: https://nischal-shrestha.shinyapps.io/stepper/
+when: 1610387204.24461
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: .Rprofile|code_template.html|data/pew.csv

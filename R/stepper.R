@@ -525,7 +525,6 @@ stepper_module_server <- function(input, output, session, stepper) {
     if (current() < lastLine) {
       current(current() + 1)
     }
-    browser()
     session$sendCustomMessage("step", current())
     if (current() + 1 <= length(summaries)) {
       summary <- get_summary(current() + 1)
