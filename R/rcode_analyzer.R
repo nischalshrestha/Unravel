@@ -1,28 +1,28 @@
 library(tidyverse)
 
-#' Given a dplyr chain, return a list of intermediate expressions, including
+#' Given a quoted dplyr chain code, return a list of intermediate expressions, including
 #' the dataframe name expression.
 #'
-#' @param lhs
-#' @param outputs
+#' @param dplyr_tree quoted dplyr code
+#' @param outputs list
 #'
 #' @return [`language`]
 #'
 #' @examples
-recurse_lhs <- function(lhs, outputs = list()) {
-  if (inherits(lhs, "name")) {
-    return(list(lhs))
+recurse_dplyr <- function(dplyr_tree, outputs = list()) {
+  if (inherits(dplyr_tree, "name")) {
+    return(list(dplyr_tree))
   }
   # get the output of the quoted expression so far
-  base <- append(list(lhs), outputs)
+  base <- append(list(dplyr_tree), outputs)
   return(
-    append(recurse_lhs(lhs[[2]]), base)
+    append(recurse_dplyr(dplyr_tree[[2]]), base)
   )
 }
 
 #' Given a quoted dplyr chained code, return a list of intermediate outputs.
 #'
-#' If there is an error, \code{get_intermediates} will return outputs up to that
+#' If there is an error, \code{get_dplyr_intermediates} will return outputs up to that
 #' line, with an error message for the subsequent line at fault.
 #'
 #' @param pipeline quoted dplyr code
@@ -34,13 +34,20 @@ recurse_lhs <- function(lhs, outputs = list()) {
 #' @export
 #'
 #' @examples
-get_intermediates <- function(pipeline) {
+#' "diamonds %>%
+#'   select(carat, cut, color, clarity, price) %>%
+#'   group_by(colorr) %>%
+#'   summarise(n = n(), price = mean(price)) %>%
+#'   arrange(desc(color))" -> pipeline
+#' quoted <- rlang::parse_expr(pipeline)
+#' outputs <- get_dplyr_intermediates(quoted)
+get_dplyr_intermediates <- function(pipeline) {
   # if first part of ast is not a %>% just quit
   if (!identical(pipeline[[1]], as.symbol("%>%"))) {
     stop("`pipeline` input is not a pipe call!")
   }
   # first grab all of the lines as a list of of language objects
-  lines <- recurse_lhs(quoted)
+  lines <- recurse_dplyr(quoted)
   results <- list()
   for (i in seq_len(length(lines))) {
     err <- NULL
@@ -70,13 +77,3 @@ get_intermediates <- function(pipeline) {
   }
   return(results)
 }
-
-# example
-"diamonds %>%
-  select(carat, cut, color, clarity, price) %>%
-  group_by(color) %>%
-  summarise(n = n(), price = mean(price)) %>%
-  arrange(desc(color))" -> pipeline
-quoted <- rlang::parse_expr(pipeline)
-outputs <- get_intermediates(quoted)
-
