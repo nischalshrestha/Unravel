@@ -1,48 +1,52 @@
 library(tidyverse)
 
-#' Given a tidyverse expression, return a list containing
-#' all the intermediate dataframes/tibbles, and potentially
-#' an error message if a certain subexpression cannot be evaluated.
+#' Given a dplyr chain, return a list of intermediate expressions, including
+#' the dataframe name expression.
 #'
-#' TODO override tidylog to format better messages for data prompts.
+#' @param lhs
+#' @param outputs
 #'
-#' NOTE: this is a quick and dirty version that relies on character wrangling
-#' and string building / evaling. A better approach to build a more robust
-#' function might be to use rlang functions like parse_expr and use a tree walking
-#' approach instead. For that, we can make this function take in a quoted expr instead.
+#' @return [`language`]
 #'
-#' @param expr
+#' @examples
+recurse_lhs <- function(lhs, outputs = list()) {
+  if (inherits(lhs, "name")) {
+    return(list(lhs))
+  }
+  # get the output of the quoted expression so far
+  base <- append(list(lhs), outputs)
+  return(
+    append(recurse_lhs(lhs[[2]]), base)
+  )
+}
+
+#' Given a quoted dplyr chained code, return a list of intermediate outputs.
 #'
-#' @return `[results = [tibble], error = character]`
+#' If there is an error, \code{get_intermediates} will return outputs up to that
+#' line, with an error message for the subsequent line at fault.
+#'
+#' @param pipeline quoted dplyr code
+#'
+#' @return list(
+#'   intermediates = list(`tibble`),
+#'   error = character(),
+#' )
 #' @export
 #'
 #' @examples
-pipeline_intermediates <- function(expr) {
-  expr_lines <- unlist(lapply(strsplit(expr, "%>%"), trimws))
+get_intermediates <- function(pipeline) {
+  # if first part of ast is not a %>% just quit
+  if (!identical(pipeline[[1]], as.symbol("%>%"))) {
+    stop("`pipeline` input is not a pipe call!")
+  }
+  # first grab all of the lines as a list of of language objects
+  lines <- recurse_lhs(quoted)
   results <- list()
-  start_expr <- expr_lines[[1]]
-  # TODO pull this into a function
-  if (length(expr_lines) == 1) {
+  for (i in seq_len(length(lines))) {
     err <- NULL
     tryCatch(
-      results <- append(results, list(eval(parse(text = start_expr)))),
-      error = function(e) {
-        err <<- e
-      }
-    )
-    return(list(
-      results = results,
-      error = ""
-    ))
-  }
-  for (i in 1:(length(expr_lines) - 1)) {
-    # Thought: we could get rid of mistakes entirely, and only focus on tinkering with
-    # what is valid ala structured editing ethos. E.g. dropdown on column names in UI.
-    # TODO pull this into a function
-    err <- NULL
-    tryCatch({
-        results <- append(results, list(eval(parse(text = start_expr))))
-      },
+      # TODO alter tidylog and get the log output to attach as well
+      results <- append(results, list(eval(lines[[i]]))),
       error = function(e) {
         err <<- e
       }
@@ -52,29 +56,27 @@ pipeline_intermediates <- function(expr) {
       # Error: Must group by variables found in `.data`.
       # * Column `colorr` is not found.
       # for e.g. we could replace the `.data` with the actual expression
-      print(err$message)
+      message(err$message)
       msg <- ifelse(
         nzchar(err$message),
         crayon::strip_style(err$message),
         crayon::strip_style(paste0(err))
       )
       return(list(
-        results = results,
+        intermediates = results,
         error = msg
       ))
     }
-    start_expr <- paste(start_expr, "%>%", expr_lines[[i + 1]])
   }
-  results
+  return(results)
 }
 
+# example
 "diamonds %>%
   select(carat, cut, color, clarity, price) %>%
   group_by(color) %>%
   summarise(n = n(), price = mean(price)) %>%
-  arrange(desc(color))" -> expr
+  arrange(desc(color))" -> pipeline
+quoted <- rlang::parse_expr(pipeline)
+outputs <- get_intermediates(quoted)
 
-# expr <- "select(diamonds, carat, cut, color, clarity, price)"
-
-x <- pipeline_intermediates(expr)
-x
