@@ -1,0 +1,50 @@
+ 
+.glyphicon-move {
+  font-size: 1em;
+  color: #2c3745;
+  cursor: -webkit-grabbing;
+  margin-top: 0.5em;
+} 
+
+.list-group-item {
+  border: 1px solid #eee;
+  padding: 0px;
+  margin: 0px;
+  display: flex;
+  align-items: center;
+}
+
+.container {
+  display: flex;
+  /* align-items: center; */
+  justify-content: right;
+  width: 100%;
+}
+
+.CodeMirror {
+  border: 1px solid #eee;
+  /* height: auto; */
+  margin: 0px;
+  padding: 0px;
+  width: 96%;
+  float: right;
+}
+
+.summary {
+  padding: 1em;
+}
+
+.fast .toggle-group { transition: left 0.2s; -webkit-transition: left 0.1s; }
+
+.toggle.ios, .toggle-on.ios, .toggle-off.ios { 
+  height: 2px;
+  margin: 0.2em; 
+  padding: 0.1em; 
+  border-radius: 10rem; 
+}
+
+.toggle.ios .toggle-handle { 
+  padding-bottom: 0em;
+  border-radius: 10rem; 
+}
+
