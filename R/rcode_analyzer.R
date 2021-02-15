@@ -82,7 +82,7 @@ get_dplyr_intermediates <- function(pipeline) {
 #'
 #' @param quoted dplyr code
 #'
-#' @return A list of "expr" / "columns"
+#' @return A list of "expr" (character) / "columns" (data.frame)
 #'   $expr
 #'   [1] "group_by(year, sex)"
 #'   $columns
@@ -135,9 +135,17 @@ columns_in_verbs <- function(quoted) {
         symbols$text
       )
       # only retrieve rows for which symbols were valid columns, and rename col1 + col2
-      valid_columns <- symbols %>%
-        filter(text == valid_symbols) %>%
-        rename(start_col = col1, end_col= col2)
+      # sometimes there are no valid columns (for e.g. if referring to another dataframe)
+      # TODO it's good think what would you show in the case of both column or a dataframe referenced
+      # TODO also, how does one even figure out that the SYMBOL is referring to a dataframe? eval it? probably.
+      # but for now, set it to NULL by default
+      valid_columns <- NULL
+      # but on most cases there are valid columns mentioned so do the filtering/renaming
+      if (length(valid_symbols) > 0) {
+        valid_columns <- symbols %>%
+          filter(text == valid_symbols) %>%
+          rename(start_col = col1, end_col = col2)
+      }
       all_columns <- append(all_columns, list(
           expr = deparsed,
           columns = valid_columns
