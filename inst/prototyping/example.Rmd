@@ -1,204 +1,7 @@
 ---
-pagetitle: tidy_parsons
-example:
-  title: tidy_parsons
-  runtime: repl
-  mode:
-    document: html
-  initial:
-    js: |
-      /* console.log(document.getElementsByClassName('data')[0]); */
-
-      var data = CodeMirror.fromTextArea(document.getElementsByClassName('data')[0], {
-        mode: 'r',
-        readOnly: 'nocursor',
-        styleActiveLine: false,
-        lineNumbers: false,
-        gutters: ['data_line']
-      });
-      data.setSize(null, 30); // this done so that width is auto but we manually set height on a tidyverse line
-
-
-      var verb1 = CodeMirror.fromTextArea(document.getElementsByClassName('verb')[0], {
-        mode: 'r',
-        readOnly: 'nocursor',
-        styleActiveLine: false,
-        lineNumbers: false,
-        gutters: ['verb1_line'],
-        firstLineNumber: 2
-      });
-      verb1.setSize(null, 30);
-
-      var verb2 = CodeMirror.fromTextArea(document.getElementsByClassName('verb')[1], {
-        mode: 'r',
-        readOnly: 'nocursor',
-        styleActiveLine: false,
-        lineNumbers: false,
-        gutters: ['verb2_line'],
-        firstLineNumber: 3
-      });
-      verb2.setSize(null, 30);
-
-      var verb3 = CodeMirror.fromTextArea(document.getElementsByClassName('verb')[2], {
-        mode: 'r',
-        readOnly: 'nocursor',
-        styleActiveLine: false,
-        lineNumbers: false,
-        gutters: ['verb2_line'],
-        firstLineNumber: 3
-      });
-      verb3.setSize(null, 30);
-
-      var verb4 = CodeMirror.fromTextArea(document.getElementsByClassName('verb')[3], {
-        mode: 'r',
-        readOnly: 'nocursor',
-        styleActiveLine: false,
-        lineNumbers: false,
-        gutters: ['verb2_line'],
-        firstLineNumber: 3
-      });
-      verb4.setSize(null, 30);
-
-      function makeMarker() {
-        const marker = document.createElement('span');
-        marker.className = 'glyphicon glyphicon-move';
-        marker.style.paddingLeft = '2px'
-        marker.style.paddingRight = '0px'
-        marker.style.color = 'grey';
-        marker.style.cursor = 'move';
-        marker.style.fontSize = '0.8em';
-        marker.style.color = '#2c3745';
-        marker.style.cursor = '-webkit-grabbing';
-        marker.style.float = 'left'
-        return marker;
-      }
-
-      /* doc = data.getDoc()
-      lh = doc.getLineHandle(0);
-      doc.setGutterMarker(lh, 'data_line', makeMarker()); */
-
-      /* doc = verb1.getDoc()
-      lh = doc.getLineHandle(0);
-      doc.setGutterMarker(lh, 'verb1_line', makeMarker()); */
-
-      /* doc = verb2.getDoc()
-      lh = doc.getLineHandle(0);
-      doc.setGutterMarker(lh, 'verb2_line', makeMarker());  */
-
-      Sortable.create(simpleList, {
-        /* options */
-      });
-    css: " \n.glyphicon-move {\n  font-size: 1em;\n  color: #2c3745;\n  cursor: -webkit-grabbing;\n
-      \ margin-top: 0.5em;\n} \n\n.list-group-item {\n  border: 1px solid #eee;\n
-      \ padding: 0px;\n  margin: 0px;\n  display: flex;\n  align-items: center;\n}\n\n.container
-      {\n  display: flex;\n  /* align-items: center; */\n  justify-content: right;\n
-      \ width: 100%;\n}\n\n.CodeMirror {\n  border: 1px solid #eee;\n  /* height:
-      auto; */\n  margin: 0px;\n  padding: 0px;\n  width: 96%;\n  float: right;\n}\n\n.summary
-      {\n  padding: 1em;\n}\n\n.fast .toggle-group { transition: left 0.2s; -webkit-transition:
-      left 0.1s; }\n\n.toggle.ios, .toggle-on.ios, .toggle-off.ios { \n  height: 2px;\n
-      \ margin: 0.2em; \n  padding: 0.1em; \n  border-radius: 10rem; \n}\n\n.toggle.ios
-      .toggle-handle { \n  padding-bottom: 0em;\n  border-radius: 10rem; \n}\n"
-  solution:
-    js: |
-      /* console.log(document.getElementsByClassName('data')[0]); */
-
-      var data = CodeMirror.fromTextArea(document.getElementsByClassName('data')[0], {
-        mode: 'r',
-        readOnly: 'nocursor',
-        styleActiveLine: false,
-        lineNumbers: false,
-        gutters: ['data_line']
-      });
-      data.setSize(null, 30); // this done so that width is auto but we manually set height on a tidyverse line
-
-
-      var verb1 = CodeMirror.fromTextArea(document.getElementsByClassName('verb')[0], {
-        mode: 'r',
-        readOnly: 'nocursor',
-        styleActiveLine: false,
-        lineNumbers: false,
-        gutters: ['verb1_line'],
-        firstLineNumber: 2
-      });
-      verb1.setSize(null, 30);
-
-      var verb2 = CodeMirror.fromTextArea(document.getElementsByClassName('verb')[1], {
-        mode: 'r',
-        readOnly: 'nocursor',
-        styleActiveLine: false,
-        lineNumbers: false,
-        gutters: ['verb2_line'],
-        firstLineNumber: 3
-      });
-      verb2.setSize(null, 30);
-
-      var verb3 = CodeMirror.fromTextArea(document.getElementsByClassName('verb')[2], {
-        mode: 'r',
-        readOnly: 'nocursor',
-        styleActiveLine: false,
-        lineNumbers: false,
-        gutters: ['verb2_line'],
-        firstLineNumber: 3
-      });
-      verb3.setSize(null, 30);
-
-      var verb4 = CodeMirror.fromTextArea(document.getElementsByClassName('verb')[3], {
-        mode: 'r',
-        readOnly: 'nocursor',
-        styleActiveLine: false,
-        lineNumbers: false,
-        gutters: ['verb2_line'],
-        firstLineNumber: 3
-      });
-      verb4.setSize(null, 30);
-
-      function makeMarker() {
-        const marker = document.createElement('span');
-        marker.className = 'glyphicon glyphicon-move';
-        marker.style.paddingLeft = '2px'
-        marker.style.paddingRight = '0px'
-        marker.style.color = 'grey';
-        marker.style.cursor = 'move';
-        marker.style.fontSize = '0.8em';
-        marker.style.color = '#2c3745';
-        marker.style.cursor = '-webkit-grabbing';
-        marker.style.float = 'left'
-        return marker;
-      }
-
-      /* doc = data.getDoc()
-      lh = doc.getLineHandle(0);
-      doc.setGutterMarker(lh, 'data_line', makeMarker()); */
-
-      /* doc = verb1.getDoc()
-      lh = doc.getLineHandle(0);
-      doc.setGutterMarker(lh, 'verb1_line', makeMarker()); */
-
-      /* doc = verb2.getDoc()
-      lh = doc.getLineHandle(0);
-      doc.setGutterMarker(lh, 'verb2_line', makeMarker());  */
-
-      Sortable.create(simpleList, {
-        /* options */
-      });
-    css: " \n.glyphicon-move {\n  font-size: 1em;\n  color: #2c3745;\n  cursor: -webkit-grabbing;\n
-      \ margin-top: 0.5em;\n} \n\n.list-group-item {\n  border: 1px solid #eee;\n
-      \ padding: 0px;\n  margin: 0px;\n  display: flex;\n  align-items: center;\n}\n\n.container
-      {\n  display: flex;\n  /* align-items: center; */\n  justify-content: right;\n
-      \ width: 100%;\n}\n\n.CodeMirror {\n  border: 1px solid #eee;\n  /* height:
-      auto; */\n  margin: 0px;\n  padding: 0px;\n  width: 96%;\n  float: right;\n}\n\n.summary
-      {\n  padding: 1em;\n}\n\n.fast .toggle-group { transition: left 0.2s; -webkit-transition:
-      left 0.1s; }\n\n.toggle.ios, .toggle-on.ios, .toggle-off.ios { \n  height: 2px;\n
-      \ margin: 0.2em; \n  padding: 0.1em; \n  border-radius: 10rem; \n}\n\n.toggle.ios
-      .toggle-handle { \n  padding-bottom: 0em;\n  border-radius: 10rem; \n}\n"
-output:
-  js4shiny::html_document_js4shiny:
-    css: ~
-    script:
-      head: https://unpkg.com/jquery@3.4.1
-
+output: html_document
 ---
-<div><!--for pandoc-->
+
 <!DOCTYPE html>
 <html>
 
@@ -230,64 +33,496 @@ output:
 
     <!-- fontawesome! -->
     <link rel="stylesheet" , href="https://use.fontawesome.com/releases/v5.12.1/css/all.css" />
+    
+     <p class="summary">Here we take the <code>babynames</code> dataframe, and use <code>group_by</code> to group the data into year and sex. Then, we count the total names for each year and sex group, and create a new column <code>total</code>. Next, it's useful to reshape the data by the <code>sex</code> column such that we end up with <strong>M</strong> and <strong>F</strong> columns. This sets us up to compute a ratio of males to females for the last step.</p>
 
-
-    <p class="summary">Here we take the <code>babynames</code> dataframe, and use <code>group_by</code> to group the data into year and sex. Then, we count the total names for each year and sex group, and create a new column <code>total</code>. Next, it's useful to reshape the data by the <code>sex</code> column such that we end up with <strong>M</strong> and <strong>F</strong> columns. This sets us up to compute a ratio of males to females for the last step.</p>
-    <br>
-
-    <!-- <div class = "container"> -->
+    <!-- Sortable list -->
     <div id="simpleList" class="list-group">
-      <div class="list-group-item disabled">
-        <textarea class="data ">babynames %>%</textarea>
-      </div>
-      <div class="list-group-item">
-        <div class="row">
-          <div class="col-sm">
-            <span class="glyphicon glyphicon-move" aria-hidden="true"></span>
-            <textarea class="verb">&nbsp;&nbsp;&nbsp;&nbsp;group_by(year, sex) %>%</textarea>
-          </div>
-          <div class="col-xs">
-            <input type="checkbox" checked data-toggle="toggle" data-size="s" data-width="20" data-on=" " data-off=" " data-style="ios fast" data-onstyle="success" data-offstyle="secondary">
-          </div>
-        </div>
-      </div>
-      <div class="list-group-item">
-        <div class="row">
-          <div class="col-sm">
-            <span class="glyphicon glyphicon-move" aria-hidden="true"></span>
-            <textarea class="verb">&nbsp;&nbsp;&nbsp;&nbsp;summarise(total = sum(n)) %>%</textarea>
-          </div>
-          <div class="col-xs">
-            <input type="checkbox" checked data-toggle="toggle" data-size="s" data-width="20" data-on=" " data-off=" " data-style="ios fast" data-onstyle="success" data-offstyle="secondary">
+
+      <!-- Summary boxes -->
+
+      <!-- Summary box 1 -->
+      <div class="d-flex list-group-item disabled">
+
+        <!-- Empty div for the row dimension -->
+        <div class="justify-content-center align-self-baseline">
+          <div>
+            <div class="d-flex justify-content-center align-self-center">
+              <div class="row" style="font-size:1em;">&nbsp;</div>
+            </div>
+            <div class="d-flex empty-square justify-content-center">
+              <p class="align-self-center" style="font-size: 0.8em;">1.9M</p>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="list-group-item">
-        <div class="row">
-          <div class="col-sm">
-            <span class="glyphicon glyphicon-move" aria-hidden="true"></span>
-            <textarea class="verb">&nbsp;&nbsp;&nbsp;&nbsp;spread(sex, total) %>%</textarea>
-          </div>
-          <div class="col-xs">
-            <input type="checkbox" checked data-toggle="toggle" data-size="s" data-width="20" data-on=" " data-off=" " data-style="ios fast" data-onstyle="success" data-offstyle="secondary">
-          </div>
-        </div>
-      </div>
-      <div class="list-group-item">
-        <div class="row">
-          <div class="col-sm">
-            <span class="glyphicon glyphicon-move" aria-hidden="true"></span>
-            <textarea class="verb">&nbsp;&nbsp;&nbsp;&nbsp;mutate(ratio = M / F)</textarea>
-          </div>
-          <div class="col-xs">
-            <input type="checkbox" checked data-toggle="toggle" data-size="s" data-width="20" data-on=" " data-off=" " data-style="ios fast" data-onstyle="success" data-offstyle="secondary">
+
+        <!-- Div for column dimension + square -->
+        <div class="justify-content-center align-self-baseline">
+          <div>
+            <div class="d-flex justify-content-center align-self-center">
+              <div class="row" style="font-size: 0.8em;">5</div>
+            </div>
+            <div class="d-flex grey-square justify-content-center align-self-center"></div>
           </div>
         </div>
+
+        <!-- Div for column dimension + square -->
+        <div class="justify-content-center align-self-baseline">
+          <div>
+            <div class="d-flex justify-content-center align-self-center">
+              <div class="row" style="font-size: 0.8em;">&nbsp;</div>
+            </div>
+            <div class="d-flex justify-content-center align-self-center"><span class="glyphicon glyphicon-move" aria-hidden="true" style="opacity:0;"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-sm justify-content-center align-self-baseline">
+          <div>
+            <div class="d-flex justify-content-center align-self-center">
+              <div class="row" style="font-size: 0.8em;">&nbsp;</div>
+            </div>
+            <textarea class="verb" style="opacity: 0;">babynames %>%</textarea>
+          </div>
+        </div>
+        
+        <div class="col-xs" style="opacity:0;">
+          <div class="d-flex justify-content-center align-self-center">
+            <div class="row" style="font-size: 0.8em;">&nbsp;</div>
+          </div>
+          <input type="checkbox" checked data-toggle="toggle" data-size="xs" data-height="20" data-width="30" data-on=" " data-off=" " data-style="ios fast" data-onstyle="success" data-offstyle="secondary">
+        </div>
+
       </div>
+
+
+      <div class="d-flex list-group-item">
+
+        <!-- Summary box 2 -->
+        <!-- Empty div for the row dimension -->
+        <div class="justify-content-center align-self-baseline " style="background:white;">
+          <div>
+            <div class="d-flex justify-content-center align-self-center" style="background:white;">
+              <div class="row" style="font-size:1em;">&nbsp;</div>
+            </div>
+            <div class="d-flex empty-square justify-content-center">
+              <p class="align-self-center" style="font-size: 0.8em;">1.9M</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Div for column dimension + square -->
+        <div class="justify-content-center align-self-baseline " style="background:white;">
+          <div>
+            <div class="d-flex justify-content-center align-self-center " style="background:white;">
+              <div class="row" style="font-size: 0.8em;">5</div>
+            </div>
+            <div class="d-flex blue-square justify-content-center align-self-center"></div>
+          </div>
+        </div>
+
+        <!-- Div for column dimension + square -->
+        <div class="justify-content-center align-self-baseline " style="background:white;">
+          <div>
+            <div class="d-flex justify-content-center align-self-center " style="background:white;">
+              <div class="row" style="font-size: 0.8em;">&nbsp;</div>
+            </div>
+            <div class="d-flex justify-content-center align-self-center" style="background:white;"><span class="glyphicon glyphicon-move" aria-hidden="true"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-sm justify-content-center align-self-baseline " style="background:white;">
+          <div>
+            <div class="d-flex justify-content-center align-self-center " style="background:white;">
+              <div class="row" style="font-size: 0.8em;">&nbsp;</div>
+            </div>
+            <textarea class="verb">&#9;group_by(year, sex) %>%</textarea>
+          </div>
+        </div>
+
+        <!-- Toggle -->
+        <div class="col-xs">
+          <div class="d-flex justify-content-center align-self-center">
+            <div class="row" style="font-size: 0.8em;">&nbsp;</div>
+          </div>
+          <input type="checkbox" checked data-toggle="toggle" data-size="xs" data-height="20" data-width="30" data-on=" " data-off=" " data-style="ios fast" data-onstyle="success" data-offstyle="secondary">
+        </div>
+
+      </div>
+
+      <!-- Summary box 3 -->
+      <div class="d-flex list-group-item">
+
+        <!-- Empty div for the row dimension -->
+        <div class="justify-content-center align-self-baseline " style="background:white;">
+          <div>
+            <div class="d-flex justify-content-center align-self-center" style="background:white;">
+              <div class="row" style="font-size:1em;">&nbsp;</div>
+            </div>
+            <div class="d-flex empty-square justify-content-center">
+              <p class="align-self-center" style="font-size: 0.8em;">276</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Div for column dimension + square -->
+        <div class="justify-content-center align-self-baseline " style="background:white;">
+          <div>
+            <div class="d-flex justify-content-center align-self-center " style="background:white;">
+              <div class="row" style="font-size: 0.8em;">3</div>
+            </div>
+            <div class="d-flex yellow-square justify-content-center align-self-center"></div>
+          </div>
+        </div>
+
+        <!-- Div for column dimension + square -->
+        <div class="justify-content-center align-self-baseline " style="background:white;">
+          <div>
+            <div class="d-flex justify-content-center align-self-center " style="background:white;">
+              <div class="row" style="font-size: 0.8em;">&nbsp;</div>
+            </div>
+            <div class="d-flex justify-content-center align-self-center" style="background:white;">
+              <span class="glyphicon glyphicon-move" aria-hidden="true"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-sm justify-content-center align-self-baseline " style="background:white;">
+          <div>
+            <div class="d-flex justify-content-center align-self-center " style="background:white;">
+              <div class="row" style="font-size: 0.8em;">&nbsp;</div>
+            </div>
+            <textarea class="verb">&#9;summarise(total = sum(n)) %>%</textarea>
+          </div>
+        </div>
+        
+        <!-- Toggle -->
+        <div class="col-xs">
+          <div class="d-flex justify-content-center align-self-center">
+            <div class="row" style="font-size: 0.8em;">&nbsp;</div>
+          </div>
+          <input type="checkbox" checked data-toggle="toggle" data-size="xs" data-height="20" data-width="30" data-on=" " data-off=" " data-style="ios fast" data-onstyle="success" data-offstyle="secondary">
+        </div>
+
+      </div>
+      
+      <!-- Summary box 4 -->
+      <div class="d-flex list-group-item">
+
+        <!-- Empty div for the row dimension -->
+        <div class="justify-content-center align-self-baseline " style="background:white;">
+          <div>
+            <div class="d-flex justify-content-center align-self-center" style="background:white;">
+              <div class="row" style="font-size:1em;">&nbsp;</div>
+            </div>
+            <div class="d-flex empty-square justify-content-center">
+              <p class="align-self-center" style="font-size: 0.8em;">138</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Div for column dimension + square -->
+        <div class="justify-content-center align-self-baseline " style="background:white;">
+          <div>
+            <div class="d-flex justify-content-center align-self-center " style="background:white;">
+              <div class="row" style="font-size: 0.8em;">3</div>
+            </div>
+            <div class="d-flex yellow-square justify-content-center align-self-center"></div>
+          </div>
+        </div>
+
+        <!-- Div for column dimension + square -->
+        <div class="justify-content-center align-self-baseline " style="background:white;">
+          <div>
+            <div class="d-flex justify-content-center align-self-center " style="background:white;">
+              <div class="row" style="font-size: 0.8em;">&nbsp;</div>
+            </div>
+            <div class="d-flex justify-content-center align-self-center" style="background:white;">
+              <span class="glyphicon glyphicon-move" aria-hidden="true"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-sm justify-content-center align-self-baseline " style="background:white;">
+          <div>
+            <div class="d-flex justify-content-center align-self-center " style="background:white;">
+              <div class="row" style="font-size: 0.8em;">&nbsp;</div>
+            </div>
+            <textarea class="verb">&#9;pivot_wider(names_from = sex, values_from = total) %>%</textarea>
+          </div>
+        </div>
+        
+        <!-- Toggle -->
+        <div class="col-xs">
+          <div class="d-flex justify-content-center align-self-center">
+            <div class="row" style="font-size: 0.8em;">&nbsp;</div>
+          </div>
+          <input type="checkbox" checked data-toggle="toggle" data-size="xs" data-height="20" data-width="30" data-on=" " data-off=" " data-style="ios fast" data-onstyle="success" data-offstyle="secondary">
+        </div>
+
+      </div>
+
+      <!-- Summary box 4 -->
+      <div class="d-flex list-group-item">
+
+        <!-- Empty div for the row dimension -->
+        <div class="justify-content-center align-self-baseline " style="background:white;">
+          <div>
+            <div class="d-flex justify-content-center align-self-center" style="background:white;">
+              <div class="row" style="font-size:1em;">&nbsp;</div>
+            </div>
+            <div class="d-flex empty-square justify-content-center">
+              <p class="align-self-center" style="font-size: 0.8em;">138</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Div for column dimension + square -->
+        <div class="justify-content-center align-self-baseline " style="background:white;">
+          <div>
+            <div class="d-flex justify-content-center align-self-center " style="background:white;">
+              <div class="row" style="font-size: 0.8em;">4</div>
+            </div>
+            <div class="d-flex yellow-square justify-content-center align-self-center"></div>
+          </div>
+        </div>
+
+        <!-- Div for column dimension + square -->
+        <div class="justify-content-center align-self-baseline " style="background:white;">
+          <div>
+            <div class="d-flex justify-content-center align-self-center " style="background:white;">
+              <div class="row" style="font-size: 0.8em;">&nbsp;</div>
+            </div>
+            <div class="d-flex justify-content-center align-self-center" style="background:white;">
+              <span class="glyphicon glyphicon-move" aria-hidden="true"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-sm justify-content-center align-self-baseline " style="background:white;">
+          <div>
+            <div class="d-flex justify-content-center align-self-center " style="background:white;">
+              <div class="row" style="font-size: 0.8em;">&nbsp;</div>
+            </div>
+            <textarea class="verb">&#9;mutate(ratio = M / F)</textarea>
+          </div>
+        </div>
+        
+        <!-- Toggle -->
+        <div class="col-xs">
+          <div class="d-flex justify-content-center align-self-center">
+            <div class="row" style="font-size: 0.8em;">&nbsp;</div>
+          </div>
+          <input type="checkbox" checked data-toggle="toggle" data-size="xs" data-height="20" data-width="30" data-on=" " data-off=" " data-style="ios fast" data-onstyle="success" data-offstyle="secondary">
+        </div>
+
+      </div>
+
     </div>
 
   </body>
 
 </html>
 
-</div><!--for pandoc-->
+
+```{js, echo=FALSE}
+/* console.log(document.getElementsByClassName('data')[0]); */
+
+var verb1 = CodeMirror.fromTextArea(document.getElementsByClassName('verb')[0], {
+  mode: 'r',
+  readOnly: 'nocursor',
+  styleActiveLine: false,
+  lineNumbers: false,
+  gutters: ['verb1_line'],
+  firstLineNumber: 1
+});
+verb1.setSize(null, 30);
+
+var verb2 = CodeMirror.fromTextArea(document.getElementsByClassName('verb')[1], {
+  mode: 'r',
+  readOnly: 'nocursor',
+  styleActiveLine: false,
+  lineNumbers: false,
+  gutters: ['verb2_line'],
+  firstLineNumber: 3
+});
+verb2.setSize(null, 30);
+
+var verb3 = CodeMirror.fromTextArea(document.getElementsByClassName('verb')[2], {
+  mode: 'r',
+  readOnly: 'nocursor',
+  styleActiveLine: false,
+  lineNumbers: false,
+  gutters: ['verb3_line'],
+  firstLineNumber: 3
+});
+verb3.setSize(null, 30);
+
+var verb4 = CodeMirror.fromTextArea(document.getElementsByClassName('verb')[3], {
+  mode: 'r',
+  readOnly: 'nocursor',
+  styleActiveLine: false,
+  lineNumbers: false,
+  gutters: ['verb4_line'],
+  firstLineNumber: 4
+});
+verb4.setSize(null, 30);
+
+var verb5 = CodeMirror.fromTextArea(document.getElementsByClassName('verb')[4], {
+  mode: 'r',
+  readOnly: 'nocursor',
+  styleActiveLine: false,
+  lineNumbers: false,
+  gutters: ['verb4_line'],
+  firstLineNumber: 5
+});
+verb5.setSize(null, 30);
+
+function makeMarker() {
+  const marker = document.createElement('span');
+  marker.className = 'glyphicon glyphicon-move';
+  marker.style.paddingLeft = '2px'
+  marker.style.paddingRight = '0px'
+  marker.style.color = 'grey';
+  marker.style.cursor = 'move';
+  marker.style.fontSize = '0.8em';
+  marker.style.color = '#2c3745';
+  marker.style.cursor = '-webkit-grabbing';
+  marker.style.float = 'left'
+  return marker;
+}
+
+/* doc = data.getDoc()
+lh = doc.getLineHandle(0);
+doc.setGutterMarker(lh, 'data_line', makeMarker()); */
+
+/* doc = verb1.getDoc()
+lh = doc.getLineHandle(0);
+doc.setGutterMarker(lh, 'verb1_line', makeMarker()); */
+
+/* doc = verb2.getDoc()
+lh = doc.getLineHandle(0);
+doc.setGutterMarker(lh, 'verb2_line', makeMarker());  */
+
+Sortable.create(simpleList, {
+  /* options */
+});
+
+````
+
+```{css, echo=FALSE}
+.blue-square {
+  border: 1px solid black;
+  width: 2em;
+  height: 2em;
+  background-color: lightblue;
+}
+
+.grey-square {
+  border: 1px solid black;
+  width: 2em;
+  height: 2em;
+  background-color: grey;
+}
+
+.yellow-square {
+  border: 1px solid black;
+  width: 2em;
+  height: 2em;
+  background-color: #fff1ce;
+}
+
+.empty-square {
+  width: 3em;
+  height: 2em;
+  /* padding-top: 90%; */
+}
+
+.editor-square {
+  width: 60em;
+  height: 1em;
+  padding: 0px;
+  margin: 0px;
+  /* padding-top: 90%; */
+}
+
+.glyphicon-move {
+  font-size: 1em;
+  color: #2c3745;
+  cursor: -webkit-grabbing;
+  margin-top: 0.5em;
+  padding-left: 0.5em;
+} 
+
+.list-group-item {
+  width: 100%;
+  height: auto;
+  border: 1px solid #eee;
+  padding: 2px;
+  margin: 2px;
+  display: flex;
+  align-items: center;
+}
+
+.list-group-item .disabled {
+  /* width: 80%;
+  height: auto; */
+  opacity: 0;
+  border: 1px solid #eee;
+  padding: 2px;
+  margin: 2px;
+  display: flex;
+  align-items: center;
+}
+
+.container {
+  /* display: flex; */
+  /* align-items: center; */
+  /* justify-content: center; */
+  width: 100%;
+}
+
+.CodeMirror {
+  background: red;
+  border: 1px dashed grey;
+  height: auto;
+  width: 100%;
+  margin: 0px;
+  padding: 0px;
+  /* float: right; */
+}
+
+.CodeMirror-gutters {
+  opacity: 0;
+  border-right: 1px solid #ddd;
+  background-color: #f7f7f7;
+  white-space: nowrap;
+}
+
+.summary {
+  padding: 1em;
+}
+
+.fast .toggle-group { transition: left 0.2s; -webkit-transition: left 0.1s; }
+
+.toggle.ios, .toggle-on.ios, .toggle-off.ios { 
+  /* height: 3px; */
+  margin: 0.1em; 
+  padding: 0.1em; 
+  border-radius: 20rem;
+}
+
+.toggle.ios .toggle-handle { 
+  padding: 8px;
+  border-radius: 10rem; 
+}
+
+/* 
+.row {
+  width:100%;
+  margin:0;
+  padding:0;
+  display:flex;
+} */
+```
