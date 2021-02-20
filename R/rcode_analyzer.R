@@ -1,4 +1,16 @@
 library(tidyverse)
+library(tidylog)
+
+# this is a quick way to store a tidylog summary instead of `message`ing it.
+verb_summary <- ""
+store_message <- function(m) {
+  if (identical(as.character(m), verb_summary)) {
+    verb_summary <<- ""
+  } else {
+    verb_summary <<- as.character(m)
+  }
+}
+options("tidylog.display" = list(store_message))
 
 #' Given a quoted dplyr chain code, return a list of intermediate expressions, including
 #' the dataframe name expression.
@@ -36,12 +48,14 @@ recurse_dplyr <- function(dplyr_tree, outputs = list()) {
 #' @examples
 #' "diamonds %>%
 #'   select(carat, cut, color, clarity, price) %>%
-#'   group_by(colorr) %>%
+#'   group_by(color) %>%
 #'   summarise(n = n(), price = mean(price)) %>%
 #'   arrange(desc(color))" -> pipeline
 #' quoted <- rlang::parse_expr(pipeline)
 #' outputs <- get_dplyr_intermediates(quoted)
 get_dplyr_intermediates <- function(pipeline) {
+  verb_summary <<- ""
+  old_verb_summary <<- ""
   # if first part of ast is not a %>% just quit
   if (!identical(pipeline[[1]], as.symbol("%>%"))) {
     stop("`pipeline` input is not a pipe call!")
@@ -50,10 +64,15 @@ get_dplyr_intermediates <- function(pipeline) {
   lines <- recurse_dplyr(quoted)
   results <- list()
   for (i in seq_len(length(lines))) {
+    intermediate <- list(line = i)
     err <- NULL
-    tryCatch(
-      # TODO alter tidylog and get the log output to attach as well
-      results <- append(results, list(eval(lines[[i]]))),
+    tryCatch({
+        # TODO alter some tidylog verbs to make them more readable
+        # and annotate them with divs.
+        intermediate["output"] <- list(eval(lines[[i]]))
+        intermediate["summary"] <- ifelse(identical(verb_summary, old_verb_summary), "", verb_summary)
+        old_verb_summary <- verb_summary
+      },
       error = function(e) {
         err <<- e
       }
@@ -63,17 +82,17 @@ get_dplyr_intermediates <- function(pipeline) {
       # Error: Must group by variables found in `.data`.
       # * Column `colorr` is not found.
       # for e.g. we could replace the `.data` with the actual expression
-      message(err$message)
+      # message(err$message)
       msg <- ifelse(
         nzchar(err$message),
         crayon::strip_style(err$message),
         crayon::strip_style(paste0(err))
       )
-      return(list(
-        intermediates = results,
-        error = msg
-      ))
+      intermediate[["err"]] <- msg
+      results <- append(results, intermediate)
+      return(results)
     }
+    results <- append(results, intermediate)
   }
   return(results)
 }
