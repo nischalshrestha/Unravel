@@ -4,6 +4,8 @@ library(tidylog)
 # this is a quick way to store a tidylog summary instead of `message`ing it.
 verb_summary <- ""
 store_message <- function(m) {
+  # we would have the same summary when tidylog does not support a certain
+  # verb, so let's set it to empty string if that's the case
   if (identical(as.character(m), verb_summary)) {
     verb_summary <<- ""
   } else {
