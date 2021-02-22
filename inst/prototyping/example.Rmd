@@ -6,7 +6,7 @@ example:
   mode:
     document: html
   initial:
-    js: "var data = CodeMirror.fromTextArea($('#data')[0], {\n  mode: 'r',\n  readOnly:
+    js: "\nvar data = CodeMirror.fromTextArea($('#data')[0], {\n  mode: 'r',\n  readOnly:
       'nocursor',\n  styleActiveLine: false,\n  lineNumbers: false,\n  gutters: ['data_line'],\n
       \ firstLineNumber: 1\n});\ndata.setSize(null, 50);\n\nvar group_by_verb_editor
       = CodeMirror.fromTextArea($('#group_by_verb')[0], {\n  mode: 'r',\n  readOnly:
@@ -14,10 +14,31 @@ example:
       \ firstLineNumber: 1\n});\ngroup_by_verb_editor.setSize(null, 50);\ngroup_by_verb_editor_wrapper
       = group_by_verb_editor.getWrapperElement();\ngroup_by_glyph = $(\".group_by_glyph\")[0]\ngroup_by_summary_box
       = $(\".group_by_summary_box\")[0]\ngroup_by_summary_box_row = $(\".group_by_summary_box_row\")[0]\ngroup_by_summary_box_col
-      = $(\".group_by_summary_box_col\")[0]\n\ngroup_by_tippy = tippy(group_by_summary_box,
-      {\n  theme: 'light',\n  allowHTML: true,\n  placement: 'bottom',\n  interactive:
-      true,\n  delay: [50, 50],\n  trigger: 'click'\n  /*   triggerTarget: group_by_verb_editor_wrapper
-      */\n});\n/* group_by_tippy.disable(); */\ngroup_by_tippy.setContent(\"<strong>Summary</strong>:
+      = $(\".group_by_summary_box_col\")[0]\n\nfunction callout_code_text(callout,
+      verb_doc) {\n  // this marks the specific snippet within a verb document \n
+      \ // such that we can refer to it later to enable or disable the span for callout
+      highlights\n  let snippet = callout.word;\n  var lineNumber = 0;\n  var charNumber
+      = verb_doc.getValue().indexOf(snippet);\n  console.log(verb_doc.getValue());\n
+      \ console.log(charNumber);\n  var callout_html_node = document.createElement(\"span\");\n
+      \ callout_html_node.innerHTML = snippet;\n  callout_html_node.id = callout.change;\n
+      \ verb_doc.markText(\n    {line: lineNumber, ch: charNumber}, \n    {line: lineNumber,
+      ch: charNumber + snippet.length}, \n    {replacedWith: callout_html_node}\n
+      \ )\n  return callout_html_node;\n}\n\ngroup_by_verb_doc = group_by_verb_editor.getDoc();\n//
+      the mapping for callouts is the word and the type of change (e.g. no-change,
+      internal-change, visible-change)\ngroup_by_verb_callouts = [\n    {\n      word:
+      \"year\", \n      change: \"internal-change\"\n    },\n    {\n      word: \"sex\",
+      \n      change: \"internal-change\"\n    }\n]\n/* console.log(group_by_verb_callouts);
+      */\ngroup_by_verb_callout_nodes = group_by_verb_callouts.map(callout => \n  callout_code_text(callout,
+      group_by_verb_doc)\n);\n\n/* map_callouts.forEach(item => console.log(item));
+      */\n\ngroup_by_tippy = tippy(group_by_summary_box, {\n  theme: 'light',\n  allowHTML:
+      true,\n  placement: 'bottom',\n  interactive: true,\n  delay: [50, 50],\n  trigger:
+      'click',\n  onShow(instance) {\n    \n    group_by_verb_callout_nodes.map(node
+      => node.className = node.id);\n    // when showing tippy, let's callout the
+      code editor's border to draw attention to it\n    group_by_verb_editor_wrapper.style.border
+      = \"2px solid black\";\n  },\n  onHide(instance) {\n    group_by_verb_callout_nodes.map(node
+      => node.className = '');\n    // when hiding tippy, let's remove the border
+      callout\n    group_by_verb_editor_wrapper.style.border = \"1px solid #eee\";\n
+      \ }\n});\n/* group_by_tippy.disable(); */\ngroup_by_tippy.setContent(\"<strong>Summary</strong>:
       <code class='code'>group_by</code> has no visible change, but we have internally
       grouped the dataframe by <span class='internal-change'>year</span>, and <span
       class='internal-change'>sex</span>. Now we can apply operations on these groups
@@ -32,10 +53,21 @@ example:
       \ firstLineNumber: 3\n});\nsummarise_verb_editor.setSize(null, 50);\nsummarise_verb_editor_wrapper
       = summarise_verb_editor.getWrapperElement();\nsummarise_glyph = $(\".summarise_glyph\")[0]\nsummarise_summary_box
       = $(\".summarise_summary_box\")[0]\nsummarise_summary_box_row = $(\".summarise_summary_box_row\")[0]\nsummarise_summary_box_col
-      = $(\".summarise_summary_box_col\")[0]\n\nsummarise_tippy = tippy(summarise_summary_box,
-      {\n  theme: 'light',\n  allowHTML: true,\n  placement: 'bottom',\n  interactive:
-      true,\n  delay: [50, 50],\n  trigger: 'click'\n  /*   triggerTarget: summarise_summary_box
-      */\n});\n/* group_by_tippy.disable(); */\nsummarise_tippy.setContent(\"<strong>Summary</strong>:
+      = $(\".summarise_summary_box_col\")[0]\n \n// setup the callout words\nsummarise_verb_doc
+      = summarise_verb_editor.getDoc();\n // the mapping for callouts is the word
+      and the type of change (e.g. no-change, internal-change, visible-change)\nsummarise_verb_callouts
+      = [\n    {\n      word: \"total\", \n      change: \"visible-change\"\n    }\n]\n/*
+      console.log(summarise_verb_callouts); */\nsummarise_verb_callout_nodes = summarise_verb_callouts.map(callout
+      => \n  callout_code_text(callout, summarise_verb_doc)\n);\n \nsummarise_tippy
+      = tippy(summarise_summary_box, {\n  theme: 'light',\n  allowHTML: true,\n  placement:
+      'bottom',\n  interactive: true,\n  delay: [50, 50],\n  trigger: 'click',\n  onShow(instance)
+      {\n    // when showing tippy, let's callout the code editor's border to draw
+      attention to it\n    summarise_verb_editor_wrapper.style.border = \"2px solid
+      black\";\n    summarise_verb_callout_nodes.map(node => node.className = node.id);\n
+      \ },\n  onHide(instance) {\n    // when hiding tippy, let's remove the border
+      callout\n    summarise_verb_editor_wrapper.style.border = \"1px solid #eee\";\n
+      \   summarise_verb_callout_nodes.map(node => node.className = '');\n  }\n});\n/*
+      group_by_tippy.disable(); */\nsummarise_tippy.setContent(\"<strong>Summary</strong>:
       <code class='code'>summarise</code> changed the dataframe's shape from <span
       class='number'>[1.9M x 5]</span> to <span class='visible-change number'>[276
       x 3]</span>. It calculated the total count for column <code class='code'>n</code>
@@ -54,25 +86,35 @@ example:
       = $(\".pivot_wider_summary_box_row\")[0]\npivot_wider_summary_box_col = $(\".pivot_wider_summary_box_col\")[0]\n\npivot_wider_tippy
       = tippy(pivot_wider_summary_box, {\n  theme: 'light',\n  allowHTML: true,\n
       \ placement: 'bottom',\n  interactive: true,\n  delay: [50, 50],\n  trigger:
-      'click'\n});\npivot_wider_tippy.setContent(\"<strong>Summary</strong>: <code
-      class='code'>pivot_wider</code> changed the dataframe's shape from <span class='number'>[276
-      x 3]</span> to <span class='visible-change number'>[138 x 3]</span>. It pivoted
-      the dataframe from a long form to a wide form by reorganizing columns (<code
-      class='code'>sex</code>, <code class='code'>total</code>) into (<span class='visible-change'>F</span>,
-      <span class='visible-change'>M</span>), where <span class='visible-change'>F</span>
-      and <span class='visible-change'>M</span> columns hold the values from <code
-      class='code'>total</code>.\");\n\nvar mutate_verb_editor = CodeMirror.fromTextArea($('#mutate_verb')[0],
-      {\n  mode: 'r',\n  readOnly: 'nocursor',\n  styleActiveLine: false,\n  lineNumbers:
-      false,\n  gutters: ['mutate_verb_editor_line'],\n  firstLineNumber: 4\n});\nmutate_verb_editor.setSize(null,
-      50);\nmutate_verb_editor_wrapper = mutate_verb_editor.getWrapperElement()\nmutate_glyph
-      = $(\".mutate_glyph\")[0]\nmutate_summary_box = $(\".mutate_summary_box\")[0]\nmutate_summary_box_row
-      = $(\".mutate_summary_box_row\")[0]\nmutate_summary_box_col = $(\".mutate_summary_box_col\")[0]\n\nmutate_tippy
-      = tippy(mutate_summary_box, {\n  theme: 'light',\n  allowHTML: true,\n  placement:
-      'bottom',\n  interactive: true,\n  delay: [50, 50],\n  trigger: 'click'\n});\nmutate_tippy.setContent(\"<strong>Summary</strong>:
-      <code class='code'>mutate</code> changed the dataframe's shape from <span class='number'>[276
-      x 3]</span> to <span class='visible-change number'>[138 x 3]</span>. It inserted
-      a new column <span class='visible-change'>ratio</span>, which was computed using
-      columns <code class='code'>M</code>, and <code class='code'>F</code>.\");\n\nfunction
+      'click',\n  onShow(instance) {\n    // when showing tippy, let's callout the
+      code editor's border to draw attention to it\n    pivot_wider_verb_editor_wrapper.style.border
+      = \"2px solid black\";\n  },\n  onHide(instance) {\n    // when hiding tippy,
+      let's remove the border callout\n    pivot_wider_verb_editor_wrapper.style.border
+      = \"1px solid #eee\";\n  }\n});\npivot_wider_tippy.setContent(\"<strong>Summary</strong>:
+      <code class='code'>pivot_wider</code> changed the dataframe's shape from <span
+      class='number'>[276 x 3]</span> to <span class='visible-change number'>[138
+      x 3]</span>. It pivoted the dataframe from a long form to a wide form by reorganizing
+      columns (<code class='code'>sex</code>, <code class='code'>total</code>) into
+      (<span class='visible-change'>F</span>, <span class='visible-change'>M</span>),
+      where <span class='visible-change'>F</span> and <span class='visible-change'>M</span>
+      columns hold the values from <code class='code'>total</code>.\");\n\nvar mutate_verb_editor
+      = CodeMirror.fromTextArea($('#mutate_verb')[0], {\n  mode: 'r',\n  readOnly:
+      'nocursor',\n  styleActiveLine: false,\n  lineNumbers: false,\n  gutters: ['mutate_verb_editor_line'],\n
+      \ firstLineNumber: 4\n});\nmutate_verb_editor.setSize(null, 50);\nmutate_verb_editor_wrapper
+      = mutate_verb_editor.getWrapperElement()\nmutate_glyph = $(\".mutate_glyph\")[0]\nmutate_summary_box
+      = $(\".mutate_summary_box\")[0]\nmutate_summary_box_row = $(\".mutate_summary_box_row\")[0]\nmutate_summary_box_col
+      = $(\".mutate_summary_box_col\")[0]\n\nmutate_tippy = tippy(mutate_summary_box,
+      {\n  theme: 'light',\n  allowHTML: true,\n  placement: 'bottom',\n  interactive:
+      true,\n  delay: [50, 50],\n  trigger: 'click',\n  onShow(instance) {\n    //
+      when showing tippy, let's callout the code editor's border to draw attention
+      to it\n    mutate_verb_editor_wrapper.style.border = \"2px solid black\";\n
+      \ },\n  onHide(instance) {\n    // when hiding tippy, let's remove the border
+      callout\n    mutate_verb_editor_wrapper.style.border = \"1px solid #eee\";\n
+      \ }\n});\nmutate_tippy.setContent(\"<strong>Summary</strong>: <code class='code'>mutate</code>
+      changed the dataframe's shape from <span class='number'>[276 x 3]</span> to
+      <span class='visible-change number'>[138 x 3]</span>. It inserted a new column
+      <span class='visible-change'>ratio</span>, which was computed using columns
+      <code class='code'>M</code>, and <code class='code'>F</code>.\");\n\n\nfunction
       makeMarker() {\n  const marker = document.createElement('span');\n  marker.className
       = 'glyphicon glyphicon-move';\n  marker.style.paddingLeft = '2px'\n  marker.style.paddingRight
       = '0px'\n  marker.style.color = 'grey';\n  marker.style.cursor = 'move';\n  marker.style.fontSize
@@ -164,7 +206,7 @@ example:
       {\n  border-radius: 1.5rem;\n  margin: 1em;\n}\n\n.tippy-content {\n  padding:
       1em;\n}\n\n.number {\n  font-family: Tahoma;\n}\n"
   solution:
-    js: "var data = CodeMirror.fromTextArea($('#data')[0], {\n  mode: 'r',\n  readOnly:
+    js: "\nvar data = CodeMirror.fromTextArea($('#data')[0], {\n  mode: 'r',\n  readOnly:
       'nocursor',\n  styleActiveLine: false,\n  lineNumbers: false,\n  gutters: ['data_line'],\n
       \ firstLineNumber: 1\n});\ndata.setSize(null, 50);\n\nvar group_by_verb_editor
       = CodeMirror.fromTextArea($('#group_by_verb')[0], {\n  mode: 'r',\n  readOnly:
@@ -172,10 +214,31 @@ example:
       \ firstLineNumber: 1\n});\ngroup_by_verb_editor.setSize(null, 50);\ngroup_by_verb_editor_wrapper
       = group_by_verb_editor.getWrapperElement();\ngroup_by_glyph = $(\".group_by_glyph\")[0]\ngroup_by_summary_box
       = $(\".group_by_summary_box\")[0]\ngroup_by_summary_box_row = $(\".group_by_summary_box_row\")[0]\ngroup_by_summary_box_col
-      = $(\".group_by_summary_box_col\")[0]\n\ngroup_by_tippy = tippy(group_by_summary_box,
-      {\n  theme: 'light',\n  allowHTML: true,\n  placement: 'bottom',\n  interactive:
-      true,\n  delay: [50, 50],\n  trigger: 'click'\n  /*   triggerTarget: group_by_verb_editor_wrapper
-      */\n});\n/* group_by_tippy.disable(); */\ngroup_by_tippy.setContent(\"<strong>Summary</strong>:
+      = $(\".group_by_summary_box_col\")[0]\n\nfunction callout_code_text(callout,
+      verb_doc) {\n  // this marks the specific snippet within a verb document \n
+      \ // such that we can refer to it later to enable or disable the span for callout
+      highlights\n  let snippet = callout.word;\n  var lineNumber = 0;\n  var charNumber
+      = verb_doc.getValue().indexOf(snippet);\n  console.log(verb_doc.getValue());\n
+      \ console.log(charNumber);\n  var callout_html_node = document.createElement(\"span\");\n
+      \ callout_html_node.innerHTML = snippet;\n  callout_html_node.id = callout.change;\n
+      \ verb_doc.markText(\n    {line: lineNumber, ch: charNumber}, \n    {line: lineNumber,
+      ch: charNumber + snippet.length}, \n    {replacedWith: callout_html_node}\n
+      \ )\n  return callout_html_node;\n}\n\ngroup_by_verb_doc = group_by_verb_editor.getDoc();\n//
+      the mapping for callouts is the word and the type of change (e.g. no-change,
+      internal-change, visible-change)\ngroup_by_verb_callouts = [\n    {\n      word:
+      \"year\", \n      change: \"internal-change\"\n    },\n    {\n      word: \"sex\",
+      \n      change: \"internal-change\"\n    }\n]\n/* console.log(group_by_verb_callouts);
+      */\ngroup_by_verb_callout_nodes = group_by_verb_callouts.map(callout => \n  callout_code_text(callout,
+      group_by_verb_doc)\n);\n\n/* map_callouts.forEach(item => console.log(item));
+      */\n\ngroup_by_tippy = tippy(group_by_summary_box, {\n  theme: 'light',\n  allowHTML:
+      true,\n  placement: 'bottom',\n  interactive: true,\n  delay: [50, 50],\n  trigger:
+      'click',\n  onShow(instance) {\n    \n    group_by_verb_callout_nodes.map(node
+      => node.className = node.id);\n    // when showing tippy, let's callout the
+      code editor's border to draw attention to it\n    group_by_verb_editor_wrapper.style.border
+      = \"2px solid black\";\n  },\n  onHide(instance) {\n    group_by_verb_callout_nodes.map(node
+      => node.className = '');\n    // when hiding tippy, let's remove the border
+      callout\n    group_by_verb_editor_wrapper.style.border = \"1px solid #eee\";\n
+      \ }\n});\n/* group_by_tippy.disable(); */\ngroup_by_tippy.setContent(\"<strong>Summary</strong>:
       <code class='code'>group_by</code> has no visible change, but we have internally
       grouped the dataframe by <span class='internal-change'>year</span>, and <span
       class='internal-change'>sex</span>. Now we can apply operations on these groups
@@ -190,10 +253,21 @@ example:
       \ firstLineNumber: 3\n});\nsummarise_verb_editor.setSize(null, 50);\nsummarise_verb_editor_wrapper
       = summarise_verb_editor.getWrapperElement();\nsummarise_glyph = $(\".summarise_glyph\")[0]\nsummarise_summary_box
       = $(\".summarise_summary_box\")[0]\nsummarise_summary_box_row = $(\".summarise_summary_box_row\")[0]\nsummarise_summary_box_col
-      = $(\".summarise_summary_box_col\")[0]\n\nsummarise_tippy = tippy(summarise_summary_box,
-      {\n  theme: 'light',\n  allowHTML: true,\n  placement: 'bottom',\n  interactive:
-      true,\n  delay: [50, 50],\n  trigger: 'click'\n  /*   triggerTarget: summarise_summary_box
-      */\n});\n/* group_by_tippy.disable(); */\nsummarise_tippy.setContent(\"<strong>Summary</strong>:
+      = $(\".summarise_summary_box_col\")[0]\n \n// setup the callout words\nsummarise_verb_doc
+      = summarise_verb_editor.getDoc();\n // the mapping for callouts is the word
+      and the type of change (e.g. no-change, internal-change, visible-change)\nsummarise_verb_callouts
+      = [\n    {\n      word: \"total\", \n      change: \"visible-change\"\n    }\n]\n/*
+      console.log(summarise_verb_callouts); */\nsummarise_verb_callout_nodes = summarise_verb_callouts.map(callout
+      => \n  callout_code_text(callout, summarise_verb_doc)\n);\n \nsummarise_tippy
+      = tippy(summarise_summary_box, {\n  theme: 'light',\n  allowHTML: true,\n  placement:
+      'bottom',\n  interactive: true,\n  delay: [50, 50],\n  trigger: 'click',\n  onShow(instance)
+      {\n    // when showing tippy, let's callout the code editor's border to draw
+      attention to it\n    summarise_verb_editor_wrapper.style.border = \"2px solid
+      black\";\n    summarise_verb_callout_nodes.map(node => node.className = node.id);\n
+      \ },\n  onHide(instance) {\n    // when hiding tippy, let's remove the border
+      callout\n    summarise_verb_editor_wrapper.style.border = \"1px solid #eee\";\n
+      \   summarise_verb_callout_nodes.map(node => node.className = '');\n  }\n});\n/*
+      group_by_tippy.disable(); */\nsummarise_tippy.setContent(\"<strong>Summary</strong>:
       <code class='code'>summarise</code> changed the dataframe's shape from <span
       class='number'>[1.9M x 5]</span> to <span class='visible-change number'>[276
       x 3]</span>. It calculated the total count for column <code class='code'>n</code>
@@ -212,25 +286,35 @@ example:
       = $(\".pivot_wider_summary_box_row\")[0]\npivot_wider_summary_box_col = $(\".pivot_wider_summary_box_col\")[0]\n\npivot_wider_tippy
       = tippy(pivot_wider_summary_box, {\n  theme: 'light',\n  allowHTML: true,\n
       \ placement: 'bottom',\n  interactive: true,\n  delay: [50, 50],\n  trigger:
-      'click'\n});\npivot_wider_tippy.setContent(\"<strong>Summary</strong>: <code
-      class='code'>pivot_wider</code> changed the dataframe's shape from <span class='number'>[276
-      x 3]</span> to <span class='visible-change number'>[138 x 3]</span>. It pivoted
-      the dataframe from a long form to a wide form by reorganizing columns (<code
-      class='code'>sex</code>, <code class='code'>total</code>) into (<span class='visible-change'>F</span>,
-      <span class='visible-change'>M</span>), where <span class='visible-change'>F</span>
-      and <span class='visible-change'>M</span> columns hold the values from <code
-      class='code'>total</code>.\");\n\nvar mutate_verb_editor = CodeMirror.fromTextArea($('#mutate_verb')[0],
-      {\n  mode: 'r',\n  readOnly: 'nocursor',\n  styleActiveLine: false,\n  lineNumbers:
-      false,\n  gutters: ['mutate_verb_editor_line'],\n  firstLineNumber: 4\n});\nmutate_verb_editor.setSize(null,
-      50);\nmutate_verb_editor_wrapper = mutate_verb_editor.getWrapperElement()\nmutate_glyph
-      = $(\".mutate_glyph\")[0]\nmutate_summary_box = $(\".mutate_summary_box\")[0]\nmutate_summary_box_row
-      = $(\".mutate_summary_box_row\")[0]\nmutate_summary_box_col = $(\".mutate_summary_box_col\")[0]\n\nmutate_tippy
-      = tippy(mutate_summary_box, {\n  theme: 'light',\n  allowHTML: true,\n  placement:
-      'bottom',\n  interactive: true,\n  delay: [50, 50],\n  trigger: 'click'\n});\nmutate_tippy.setContent(\"<strong>Summary</strong>:
-      <code class='code'>mutate</code> changed the dataframe's shape from <span class='number'>[276
-      x 3]</span> to <span class='visible-change number'>[138 x 3]</span>. It inserted
-      a new column <span class='visible-change'>ratio</span>, which was computed using
-      columns <code class='code'>M</code>, and <code class='code'>F</code>.\");\n\nfunction
+      'click',\n  onShow(instance) {\n    // when showing tippy, let's callout the
+      code editor's border to draw attention to it\n    pivot_wider_verb_editor_wrapper.style.border
+      = \"2px solid black\";\n  },\n  onHide(instance) {\n    // when hiding tippy,
+      let's remove the border callout\n    pivot_wider_verb_editor_wrapper.style.border
+      = \"1px solid #eee\";\n  }\n});\npivot_wider_tippy.setContent(\"<strong>Summary</strong>:
+      <code class='code'>pivot_wider</code> changed the dataframe's shape from <span
+      class='number'>[276 x 3]</span> to <span class='visible-change number'>[138
+      x 3]</span>. It pivoted the dataframe from a long form to a wide form by reorganizing
+      columns (<code class='code'>sex</code>, <code class='code'>total</code>) into
+      (<span class='visible-change'>F</span>, <span class='visible-change'>M</span>),
+      where <span class='visible-change'>F</span> and <span class='visible-change'>M</span>
+      columns hold the values from <code class='code'>total</code>.\");\n\nvar mutate_verb_editor
+      = CodeMirror.fromTextArea($('#mutate_verb')[0], {\n  mode: 'r',\n  readOnly:
+      'nocursor',\n  styleActiveLine: false,\n  lineNumbers: false,\n  gutters: ['mutate_verb_editor_line'],\n
+      \ firstLineNumber: 4\n});\nmutate_verb_editor.setSize(null, 50);\nmutate_verb_editor_wrapper
+      = mutate_verb_editor.getWrapperElement()\nmutate_glyph = $(\".mutate_glyph\")[0]\nmutate_summary_box
+      = $(\".mutate_summary_box\")[0]\nmutate_summary_box_row = $(\".mutate_summary_box_row\")[0]\nmutate_summary_box_col
+      = $(\".mutate_summary_box_col\")[0]\n\nmutate_tippy = tippy(mutate_summary_box,
+      {\n  theme: 'light',\n  allowHTML: true,\n  placement: 'bottom',\n  interactive:
+      true,\n  delay: [50, 50],\n  trigger: 'click',\n  onShow(instance) {\n    //
+      when showing tippy, let's callout the code editor's border to draw attention
+      to it\n    mutate_verb_editor_wrapper.style.border = \"2px solid black\";\n
+      \ },\n  onHide(instance) {\n    // when hiding tippy, let's remove the border
+      callout\n    mutate_verb_editor_wrapper.style.border = \"1px solid #eee\";\n
+      \ }\n});\nmutate_tippy.setContent(\"<strong>Summary</strong>: <code class='code'>mutate</code>
+      changed the dataframe's shape from <span class='number'>[276 x 3]</span> to
+      <span class='visible-change number'>[138 x 3]</span>. It inserted a new column
+      <span class='visible-change'>ratio</span>, which was computed using columns
+      <code class='code'>M</code>, and <code class='code'>F</code>.\");\n\n\nfunction
       makeMarker() {\n  const marker = document.createElement('span');\n  marker.className
       = 'glyphicon glyphicon-move';\n  marker.style.paddingLeft = '2px'\n  marker.style.paddingRight
       = '0px'\n  marker.style.color = 'grey';\n  marker.style.cursor = 'move';\n  marker.style.fontSize
