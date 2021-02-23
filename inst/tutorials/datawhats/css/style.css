@@ -1,0 +1,159 @@
+/* CodeMirror */
+
+.CodeMirror {
+  border: 1px solid #eee;
+  height: auto;
+  width: 100%;
+  margin: 0px;
+  padding-top: 10px;
+  /* float: right; */
+}
+
+.CodeMirror-gutters {
+  opacity: 0;
+  border-right: 1px solid #ddd;
+  background-color: #f7f7f7;
+  white-space: wrap;
+}
+
+/* Change css styles */
+
+.internal-change {
+  background: #a2d2e1;
+  border-radius: 0.5rem;
+  padding: 0.1em;
+}
+
+.visible-change {
+  background: #ffefc7;
+  border-radius: 0.5rem;
+  padding: 0.1em;
+}
+
+/* Summary box and ghost summary box */
+
+.blue-square {
+  border: 1px dashed black;
+  width: 2em;
+  height: 2em;
+  background-color: lightblue;
+}
+
+.blue-square:hover{
+  cursor:pointer
+}
+
+.grey-square {
+  border: 1px solid black;
+  width: 2em;
+  height: 2em;
+  background-color: grey;
+}
+
+.grey-square:hover{
+  cursor:pointer
+}
+
+.yellow-square {
+  border: 1px dashed black;
+  width: 2em;
+  height: 2em;
+  background-color: #fff1ce;
+}
+
+.yellow-square:hover{
+  cursor:pointer
+}
+
+.empty-square {
+  width: 3em;
+  height: 2em;
+  /* padding-top: 90%; */
+}
+
+/* Sortable styles */
+
+.glyphicon-move {
+  font-size: 1em;
+  color: #2c3745;
+  cursor: -webkit-grabbing;
+  margin-top: 0.5em;
+  padding-left: 0.5em;
+}
+
+.list-group {
+  width: auto;
+  display: flex;
+  justify-content: center;
+}
+
+.list-group-item {
+  width: 100%;
+  height: auto;
+  /*border: 1px solid #eee;*/
+  padding: 0px;
+  margin: 0px;
+  display: flex;
+  /* align-items: center; */
+}
+
+.list-group-item .disabled {
+  width: 80%;
+  height: 10px;
+  opacity: 0;
+  border: 1px solid #eee;
+  padding: 2px;
+  margin: 2px;
+  display: flex;
+  align-items: center;
+}
+
+#simpleList {
+  margin: 10px;
+}
+
+/* Summary text */
+
+.summary {
+  padding: 1em;
+}
+
+/* Toggle */
+
+.fast .toggle-group { transition: left 0.2s; -webkit-transition: left 0.1s; }
+
+.toggle.ios, .toggle-on.ios, .toggle-off.ios {
+  /* height: 3px; */
+  margin: 0.1em;
+  padding-right: 0.25em;
+  padding-left: 0em;
+  border-radius: 20rem;
+}
+
+.toggle.ios .toggle-handle {
+  padding: 8px;
+  border-radius: 10rem;
+}
+
+/* tippy */
+
+.tippy-box {
+  border-radius: 1.5rem;
+  margin: 1em;
+}
+
+.tippy-content {
+  padding: 1em;
+}
+
+/* misc formatting */
+
+.code {
+  background: #eee;
+  color: black;
+}
+
+.number {
+  font-family: Tahoma;
+}
+
