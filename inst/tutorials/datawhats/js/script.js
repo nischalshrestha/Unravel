@@ -1,4 +1,5 @@
 
+// TODO for the value of each editor maybe include all of its divs (summary box, row/col, glyph etc.)
 var editors = {};
 var sortable = null;
 
@@ -26,12 +27,17 @@ function create_sortable() {
 
 function setup_toggles() {
   // set up the toggle event css listeners
-  $('#data_toggle').change(function() {
+  $('#data-toggle').change(function() {
     //console.log('data_toggle: ' + $(this).prop('checked'));
     editor_wrapper = editors["data"].getWrapperElement();
+    data_glyph = $(".data-glyph")[0]
+    data_summary_box = $(".data-summary-box")[0]
+    console.log(data_glyph);
   	// TODO programmatically grab the tippy, glyph, summary box, box row and col divs
     if ($(this).prop('checked')) {
       editor_wrapper.style.opacity = "1";
+    	data_glyph.style.opacity = "1";
+    	data_summary_box.style.opacity = "1";
     	/*group_by_tippy.enable();
       group_by_glyph.style.opacity = "1";
       group_by_summary_box.style.opacity = "1";
@@ -39,6 +45,8 @@ function setup_toggles() {
       group_by_summary_box_col.style.opacity = "1";*/
     } else {
       editor_wrapper.style.opacity = "0.25";
+      data_glyph.style.opacity = "0.25";
+      data_summary_box.style.opacity = "0";
     	/*group_by_tippy.disable();
       group_by_verb_editor_wrapper.style.opacity = "0.25";
       group_by_glyph.style.opacity = "0.25";
@@ -53,6 +61,8 @@ function setup_toggles() {
     toggle_id = $(this).attr('id')
     console.log("Event on ID: " + toggle_id);
   });
+
+
 }
 
 function send_toggle(message) {
@@ -70,12 +80,12 @@ $(document).ready(function() {
   setup_toggles();
   // set up the toggle one way (JS to R) listener
   // the R side will update the dataframe output, and send info about box, summary box/row/col, and prompt
-  $('#data_toggle').change(function() {
-    Shiny.setInputValue("datawat-data_toggle", $(this).prop('checked'));
+  $('#data-toggle').change(function() {
+    Shiny.setInputValue("datawat-data-toggle", $(this).prop('checked'));
     //console.log('data_toggle: ' + $(this).prop('checked'));
   })
-  Shiny.addCustomMessageHandler('data_toggle', function(message) {
-    console.log("sending data_toggle a message!");
+  Shiny.addCustomMessageHandler('data-toggle', function(message) {
+    console.log("sending data-toggle a message!");
     send_toggle(message);
   });
 

@@ -4,7 +4,7 @@
   border: 1px solid #eee;
   height: auto;
   width: 100%;
-  margin: 0px;
+  margin-left: 0px;
   padding-top: 10px;
   /* float: right; */
 }
@@ -44,7 +44,7 @@
 }
 
 .grey-square {
-  border: 1px solid black;
+  border: 1px dashed black;
   width: 2em;
   height: 2em;
   background-color: grey;
@@ -79,6 +79,7 @@
   cursor: -webkit-grabbing;
   margin-top: 0.5em;
   padding-left: 0.5em;
+  padding-right: 0em;
 }
 
 .list-group {
