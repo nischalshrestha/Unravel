@@ -1,6 +1,6 @@
 library(shiny)
 
-summary_button <- function(ns_id, inputId, lineId, value = 0) {
+summary_button <- function(ns_id, inputId, lineid, change_type, value = 0) {
   ns <- shiny::NS(ns_id)
   # TODO this is just a demonstration that we can make a custom input binding
   # we would need to create such a button for each summary box div
@@ -20,6 +20,7 @@ summary_button <- function(ns_id, inputId, lineId, value = 0) {
             // Raise an event to signal that the value changed
             el.trigger('change');
           });
+
           var incrementBinding{{inputId}} = new Shiny.InputBinding();
           $.extend(incrementBinding{{inputId}}, {
             find: function(scope) {
@@ -27,7 +28,7 @@ summary_button <- function(ns_id, inputId, lineId, value = 0) {
             },
             getValue: function(el) {
               // send back the lineid (number of line), the value is ignored on R side
-              return {lineId: $(el).attr('lineid'), value: parseInt($(el).text())};
+              return {lineid: $(el).attr('lineid'), value: parseInt($(el).text())};
             },
             setValue: function(el, value) {
               $(el).text(value);
@@ -42,13 +43,12 @@ summary_button <- function(ns_id, inputId, lineId, value = 0) {
             }
           });
           Shiny.inputBindings.register(incrementBinding{{inputId}});
-
         ", .open = "{{", .close = "}}"))
       )
     ),
     tags$button(id = ns(inputId),
-                `lineid` = lineId,
-                class = glue::glue("increment{inputId} d-flex grey-square justify-content-center"),
+                `lineid` = lineid,
+                class = glue::glue("increment{inputId} d-flex {change_type}-square justify-content-center"),
                 style = "color:transparent;",
                 type = "button", as.character(value))
   )
@@ -72,16 +72,23 @@ summary_button <- function(ns_id, inputId, lineId, value = 0) {
 #' @export
 #'
 #' @examples
-group_item_div <- function(id, ns_id, code_elements = NULL) {
+group_item_div <- function(line, ns_id) {
+  # browser()
   ns <- shiny::NS(ns_id)
-  # data_id is for SortableJS and is just a number of the line
-  data_id <- id
+  # line_id is for SortableJS and is just a number of the line
+  line_id <- line$lineid
+  line_code <- paste0(line$code, " %>%")
+  if (line_id > 1) {
+    line_code <- paste0("\t", line_code)
+  }
+  change_type <- line$change
+  # line_summary <- line$summary
   # whereas id is for a readable identifier for JS/jquery/CSS
-  id <- paste0("line", id)
+  id <- paste0("line", line$lineid)
   # TODO use ns to namespace the reactive outputs (elements that react to events)
   # to stay consistent with naming the - is used for html ids, _ is used if we need to refer to it
   # by R in Shiny
-  div(class = "d-flex list-group-item", id=id, `data-id` = data_id,
+  div(class = "d-flex list-group-item", id=id, `data-id` = line_id,
     # row div
     div(class = "justify-content-center align-self-baseline",
         div(class = "d-flex justify-content-center align-self-center",
@@ -105,7 +112,7 @@ group_item_div <- function(id, ns_id, code_elements = NULL) {
             )
         ),
         # update element (class of square)
-        summary_button(ns_id, id, data_id)
+        summary_button(ns_id, id, line_id, change_type)
     ),
     # glyphicon
     div(class=glue::glue("{id}-glyph d-flex justify-content-center align-self-center"),
@@ -119,9 +126,10 @@ group_item_div <- function(id, ns_id, code_elements = NULL) {
     fixedPage(
       shiny::tags$textarea(
         # TODO get verb text (dynamically received from argument)
-        "babynames %>%",
+        line_code,
         class = "verb",
-        id = id
+        id = id,
+        lineid = line_id
       )
     ),
     # toggle checkbox
@@ -134,6 +142,7 @@ group_item_div <- function(id, ns_id, code_elements = NULL) {
           type = "checkbox",
           id = glue::glue("{id}-toggle"),
           `toggle-id` = id,
+          `line-id` = line_id,
           `checked` = TRUE,
           `data-toggle`="toggle",
           `data-size`="xs",
@@ -146,7 +155,7 @@ group_item_div <- function(id, ns_id, code_elements = NULL) {
 }
 
 create_group_tags <- function(lines, ns_id) {
-  ataglist <- lapply(seq_len(length(lines)), group_item_div, ns_id = ns_id)
+  ataglist <- lapply(lines, group_item_div, ns_id = ns_id)
   class(ataglist) <- c("shiny.tag.list", "list")
   return(ataglist)
 }
@@ -191,52 +200,64 @@ datawatsUI <- function(id, lines) {
   )
 }
 
-datawatsServer <- function(id) {
+
+datawatsServer <- function(id, summaries, outputs) {
   moduleServer(
     id,
     function(input, output, session) {
 
-      current <- reactiveVal(1)
+      # current line reactive value
+      current <- reactiveVal(length(summary_outputs))
 
-      # demo of render reactable
+      # render a reactable of the current line output
       output$line_table <- reactable::renderReactable({
           value <- as.numeric(current())
-          # TODO according to current() line be able to
-          # get the intermediate dataframe and render it.
-          reactable::reactable(data = mtcars[1:value, ],
+          reactable::reactable(data = outputs[[value]],
                                compact = TRUE,
                                highlight = TRUE,
                                bordered = TRUE,
                                rownames = TRUE)
       })
 
-
-      # TODO While this works in getting the lines, we cannot create these programmatically
-      # it's worth exploring the JS -> R route as well.
-      observeEvent(input$line1, {
-        message(input$line1$lineId)
-        current(input$line1$lineId)
+      # this input is for JS to tell us we're ready to send summary info for data prompts
+      observeEvent(input$ready, {
+        message("ready: ", input$ready)
+        session$sendCustomMessage("ready", summaries)
       })
 
-      observeEvent(input$line2, {
-        message(input$line2$lineId)
-        current(input$line2$lineId)
+      # this input tells us which data to display for a particular line
+      observeEvent(input$square, {
+        message("clicked on a square: ", input$square)
+        current(input$square);
+        session$sendCustomMessage("square", input$square)
       })
 
-      # TODO change this input id to be more general and we can grab value out to
-      # know which line to comment/uncomment
+      # this input even tells us which line to (un)comment
+      # TODO trigger a revaluation of the code of enabled lines
       observeEvent(input$toggle, {
         # this lets us get the boolean value of the toggle from JS side!
-        if (isTRUE(input$toggle)) {
-          session$sendCustomMessage("toggle", "un-commenting line!")
+        if (isTRUE(input$toggle$checked)) {
+          session$sendCustomMessage("toggle", paste0("un-commenting line ", input$toggle$lineid))
         } else {
-          session$sendCustomMessage("toggle", "commenting line!")
+          session$sendCustomMessage("toggle", paste0("commenting line ", input$toggle$lineid))
         }
       })
     }
 
   )
 }
+
+# example that works (save for row/col)
+"diamonds %>%
+  select(carat, cut, color, clarity, price) %>%
+  group_by(color) %>%
+  summarise(n = n(), price = mean(price)) %>%
+  arrange(desc(color))" -> pipeline
+quoted <- rlang::parse_expr(pipeline)
+outputs <- get_dplyr_intermediates(quoted)
+code_info <- lapply(outputs, function(x) list(lineid = x$line, code = x$code, change = x$change))
+summaries <- lapply(outputs, function(x) list(lineid = paste0("line", as.character(x$line)), summary = x$summary))
+outputs <- lapply(outputs, function(x) x$output)
 
 ui <- fluidPage(
   # TODO create a structure that gives us all the info required to create the initial UI
@@ -247,11 +268,12 @@ ui <- fluidPage(
   #   - data row and col dimensions
   #   - change type information (to inform the color of square and textual annotations)
   #   - data prompt
-  datawatsUI("datawat", seq_len(1))
+  datawatsUI("datawat", code_info)
 )
 
 server <- function(input, output, session) {
-  datawatsServer("datawat")
+  datawatsServer("datawat", summaries, outputs)
 }
+
 
 shinyApp(ui, server)

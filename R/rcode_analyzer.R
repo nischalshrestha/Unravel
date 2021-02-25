@@ -34,6 +34,25 @@ recurse_dplyr <- function(dplyr_tree, outputs = list()) {
   )
 }
 
+#' Based on the type of tidyr/dplyr function used return whether or not
+#' the type of change was internal (no visible change), visible, or none.
+#'
+#' @param verb_name
+#'
+#' @return a character
+#' @export
+#'
+#' @examples
+get_change_type <- function(verb_name) {
+  if (verb_name %in% c("group_by", "rowwise")) {
+    return("internal")
+  } else if (verb_name %in% c("select", "filter", "mutate", "summarise", "arrange")) {
+    return("visible")
+  } else {
+    return("none")
+  }
+}
+
 #' Given a quoted dplyr chained code, return a list of intermediate outputs.
 #'
 #' If there is an error, \code{get_dplyr_intermediates} will return outputs up to that
@@ -66,7 +85,17 @@ get_dplyr_intermediates <- function(pipeline) {
   lines <- recurse_dplyr(quoted)
   results <- list()
   for (i in seq_len(length(lines))) {
-    intermediate <- list(line = i)
+    if (i != 1) {
+      verb <- lines[[i]][[3]]
+      verb_name <- rlang::expr_deparse(verb[[1]])
+    } else {
+      verb <- lines[[i]]
+      verb_name <- ""
+    }
+    # get the deparsed character version
+    deparsed <- rlang::expr_deparse(verb)
+    # TODO change should be more intelligent based on data properties that changed or not, and tying into internal changes
+    intermediate <- list(line = i, code = deparsed, change = get_change_type(verb_name))
     err <- NULL
     tryCatch({
         # TODO alter some tidylog verbs to make them more readable
@@ -91,10 +120,10 @@ get_dplyr_intermediates <- function(pipeline) {
         crayon::strip_style(paste0(err))
       )
       intermediate[["err"]] <- msg
-      results <- append(results, intermediate)
+      results <- append(results, list(intermediate))
       return(results)
     }
-    results <- append(results, intermediate)
+    results <- append(results, list(intermediate))
   }
   return(results)
 }

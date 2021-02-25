@@ -5,7 +5,7 @@ var sortable = null;
 
 function setup_editors() {
   $(".verb").each(function(index, element){
-    ID = element.id;
+    let ID = element.id;
   	console.log(index + " " + ID);
   	if (!(ID in lines)) {
       let line_editor = CodeMirror.fromTextArea(element, {
@@ -16,32 +16,13 @@ function setup_editors() {
         firstLineNumber: 1
       });
       line_editor.setSize(null, 50);
-      line_class = "." + ID;
-      line_glyph = $(line_class + "-glyph")[0]
-      line_editor_wrapper = line_editor.getWrapperElement();
-      line_summary_box = $("#datawat-" + ID)[0];
-      line_summary_box_col = $(line_class + "-summary-box-col")[0];
-      line_summary_box_row = $(line_class + "-summary-box-row")[0];
-      // tippy
-      line_tippy = tippy(line_summary_box, {
-        theme: 'light',
-        allowHTML: true,
-        placement: 'bottom',
-        interactive: true,
-        delay: [50, 50],
-        trigger: 'click',
-        onShow(instance) {
-        	//group_by_verb_callout_nodes.map(node => node.className = node.id);
-          // when showing tippy, let's callout the code editor's border to draw attention to it
-          line_editor_wrapper.style.border = "2px solid black";
-        },
-        onHide(instance) {
-        	//group_by_verb_callout_nodes.map(node => node.className = '');
-          // when hiding tippy, let's remove the border callout
-          line_editor_wrapper.style.border = "1px solid #eee";
-        }
-      });
-      line_tippy.setContent("<strong>Summary</strong>: <code class='code'>group_by</code> has no visible change, but we have internally grouped the dataframe by <span class='internal-change'>year</span>, and <span class='internal-change'>sex</span>. Now we can apply operations on these groups using functions like <code class='code'>summarise</code>.");
+      let line_class = "." + ID;
+      let line_glyph = $(line_class + "-glyph")[0]
+      let line_editor_wrapper = line_editor.getWrapperElement();
+      let line_summary_box = $("#datawat-" + ID)[0];
+      let line_summary_box_col = $(line_class + "-summary-box-col")[0];
+      let line_summary_box_row = $(line_class + "-summary-box-row")[0];
+
       // store all line related info in
       lines[ID] = {
         editor: line_editor,
@@ -49,8 +30,7 @@ function setup_editors() {
         glyph: line_glyph,
         summary_box: line_summary_box,
         summary_box_col: line_summary_box_col,
-        summary_box_row: line_summary_box_row,
-        prompt: line_tippy
+        summary_box_row: line_summary_box_row
       };
   	}
   });
@@ -72,7 +52,8 @@ function setup_toggles() {
     line_summary_box_row = lines[ID].summary_box_row;
     line_prompt = lines[ID].prompt;
   	// if checked, we enable the line so make divs opaque
-    if ($(this).prop('checked')) {
+  	checked = $(this).prop('checked')
+    if (checked) {
       line_editor_wrapper.style.opacity = "1";
     	line_glyph.style.opacity = "1";
     	line_summary_box.style.opacity = "1";
@@ -88,6 +69,13 @@ function setup_toggles() {
       line_summary_box_row.style.opacity = "0";
     	line_prompt.disable();
     }
+    Shiny.setInputValue(
+      "datawat-toggle",
+      {
+        lineid: $(this).attr('line-id'),
+        checked: checked
+      }
+    );
   });
 }
 
@@ -102,19 +90,65 @@ $(document).ready(function() {
   setup_editors();
   // set up the sortablejs
   setup_sortable();
-  // set up the toggle listeners
-  setup_toggles();
-  // set up the toggle one way (JS to R) listener
-  // the R side will update the dataframe output, and send info about box, summary box/row/col, and prompt
-  $('#line1-toggle').change(function() {
-    Shiny.setInputValue("datawat-toggle", $(this).prop('checked'));
-  })
+});
+
+// For other JS events we can listen to: https://shiny.rstudio.com/articles/js-events.html
+// We're doing this so that we know shiny is fully initialized before moving on to providing
+// more information to UI from R. JS here will initialize prompts and the summary box event listeners.
+$(document).on("shiny:sessioninitialized", function(event) {
+  Shiny.setInputValue("datawat-ready", "R, do yer thang!");
+  Shiny.addCustomMessageHandler('ready', function(summaries) {
+    // set up the event listener for boxes
+    console.log(summaries);
+    summaries.forEach(e => {
+      console.log(e);
+      let key = e.lineid;
+      let line_tippy = tippy(lines[key].summary_box, {
+        theme: 'light',
+        allowHTML: true,
+        placement: 'bottom',
+        interactive: true,
+        delay: [50, 50],
+        trigger: 'click',
+        onShow(instance) {
+          // when showing tippy, let's callout the code editor's border to draw attention to it
+          lines[key].wrapper.style.border = "2px solid black";
+        },
+        onHide(instance) {
+          // when hiding tippy, let's remove the border callout
+          lines[key].wrapper.style.border = "1px solid #eee";
+        }
+      });
+      line_tippy.setContent(e.summary);
+      lines[key].prompt = line_tippy;
+    });
+    console.log("JS has set prompts!");
+    // set up the toggle listeners
+    setup_toggles();
+  });
+
+  // set up the box event listeners
+  for (const [key, value] of Object.entries(lines)) {
+  	$("#datawat-"+key)[0].addEventListener("click", function() {
+  	  let square = $(this).attr('lineid');
+  	  Shiny.setInputValue("datawat-square", square);
+  	});
+  	// the R side will update the dataframe output, and send info about box, summary box/row/col, and prompt
+    Shiny.addCustomMessageHandler('square', function(message) {
+      console.log("sending square message!");
+      send_toggle(message);
+    });
+  }
+
   Shiny.addCustomMessageHandler('toggle', function(message) {
     console.log("sending toggle a message!");
     send_toggle(message);
   });
 
-  // TODO set up the dialog prompt which requires info from R side (rn it's hardcoded in setup_editors)
-
+  // TODO the R side will have to update the following upon change in events:
+  // - dataframe output,
+  // - type of change summary box,
+  // - summary boxrow/col,
+  // - prompt
 
 });

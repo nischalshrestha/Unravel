@@ -32,36 +32,36 @@
 
 /* Summary box and ghost summary box */
 
-.blue-square {
+.internal-square {
   border: 1px dashed black;
   width: 2em;
   height: 2em;
   background-color: lightblue;
 }
 
-.blue-square:hover{
+.internal-square:hover{
   cursor:pointer
 }
 
-.grey-square {
+.none-square {
   border: 1px dashed black;
   width: 2em;
   height: 2em;
   background-color: grey;
 }
 
-.grey-square:hover{
+.none-square:hover{
   cursor:pointer
 }
 
-.yellow-square {
+.visible-square {
   border: 1px dashed black;
   width: 2em;
   height: 2em;
   background-color: #fff1ce;
 }
 
-.yellow-square:hover{
+.visible-square:hover{
   cursor:pointer
 }
 
