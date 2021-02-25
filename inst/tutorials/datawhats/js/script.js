@@ -25,34 +25,57 @@ function create_sortable() {
   sortable = Sortable.create(simpleList, { });
 }
 
+var line1_summary_box = null;
+var line1_editor_wrapper = null;
+var line1_summary_box_row = null;
+
 function setup_toggles() {
   // set up the toggle event css listeners
-  $('#data-toggle').change(function() {
-    //console.log('data_toggle: ' + $(this).prop('checked'));
-    editor_wrapper = editors["data"].getWrapperElement();
-    data_glyph = $(".data-glyph")[0]
-    data_summary_box = $(".data-summary-box")[0]
-    console.log(data_glyph);
+  line1_glyph = $(".line1-glyph")[0]
+  line1_editor_wrapper = editors["line1"].getWrapperElement();
+  line1_summary_box = $("#datawat-line1")[0];
+  line1_summary_box_col = $(".line1-summary-box-col")[0];
+  line1_summary_box_row = $(".line1-summary-box-row")[0];
+
+  line1_tippy = tippy(line1_summary_box, {
+    theme: 'light',
+    allowHTML: true,
+    placement: 'bottom',
+    interactive: true,
+    delay: [50, 50],
+    trigger: 'click',
+    onShow(instance) {
+    	//group_by_verb_callout_nodes.map(node => node.className = node.id);
+      // when showing tippy, let's callout the code editor's border to draw attention to it
+      line1_editor_wrapper.style.border = "2px solid black";
+    },
+    onHide(instance) {
+    	//group_by_verb_callout_nodes.map(node => node.className = '');
+      // when hiding tippy, let's remove the border callout
+      line1_editor_wrapper.style.border = "1px solid #eee";
+    }
+  });
+
+  line1_tippy.setContent("<strong>Summary</strong>: <code class='code'>group_by</code> has no visible change, but we have internally grouped the dataframe by <span class='internal-change'>year</span>, and <span class='internal-change'>sex</span>. Now we can apply operations on these groups using functions like <code class='code'>summarise</code>.");
+
+  $('#line1-toggle').change(function() {
+    //console.log('line1_toggle: ' + $(this).prop('checked'));
+    console.log(line1_glyph);
   	// TODO programmatically grab the tippy, glyph, summary box, box row and col divs
     if ($(this).prop('checked')) {
-      editor_wrapper.style.opacity = "1";
-    	data_glyph.style.opacity = "1";
-    	data_summary_box.style.opacity = "1";
-    	/*group_by_tippy.enable();
-      group_by_glyph.style.opacity = "1";
-      group_by_summary_box.style.opacity = "1";
-      group_by_summary_box_row.style.opacity = "1";
-      group_by_summary_box_col.style.opacity = "1";*/
+      line1_editor_wrapper.style.opacity = "1";
+    	line1_glyph.style.opacity = "1";
+    	line1_summary_box.style.opacity = "1";
+    	line1_summary_box_col.style.opacity = "1";
+    	line1_summary_box_row.style.opacity = "1";
+    	line1_tippy.enable();
     } else {
-      editor_wrapper.style.opacity = "0.25";
-      data_glyph.style.opacity = "0.25";
-      data_summary_box.style.opacity = "0";
-    	/*group_by_tippy.disable();
-      group_by_verb_editor_wrapper.style.opacity = "0.25";
-      group_by_glyph.style.opacity = "0.25";
-      group_by_summary_box.style.opacity = "0";
-      group_by_summary_box_row.style.opacity = "0";
-      group_by_summary_box_col.style.opacity = "0";*/
+      line1_editor_wrapper.style.opacity = "0.25";
+      line1_glyph.style.opacity = "0.25";
+      line1_summary_box.style.opacity = "0";
+      line1_summary_box_col.style.opacity = "0";
+      line1_summary_box_row.style.opacity = "0";
+    	line1_tippy.disable();
     }
   });
 
@@ -61,7 +84,6 @@ function setup_toggles() {
     toggle_id = $(this).attr('id')
     console.log("Event on ID: " + toggle_id);
   });
-
 
 }
 
@@ -80,15 +102,16 @@ $(document).ready(function() {
   setup_toggles();
   // set up the toggle one way (JS to R) listener
   // the R side will update the dataframe output, and send info about box, summary box/row/col, and prompt
-  $('#data-toggle').change(function() {
-    Shiny.setInputValue("datawat-data-toggle", $(this).prop('checked'));
-    //console.log('data_toggle: ' + $(this).prop('checked'));
+  $('#line1-toggle').change(function() {
+    Shiny.setInputValue("datawat-toggle", $(this).prop('checked'));
   })
-  Shiny.addCustomMessageHandler('data-toggle', function(message) {
-    console.log("sending data-toggle a message!");
+
+  // TODO set up the dialog prompt which requires info from R side
+
+  Shiny.addCustomMessageHandler('toggle', function(message) {
+    console.log("sending toggle a message!");
     send_toggle(message);
   });
 
-  // TODO set up the dialog prompt which requires info from R side
 
 });
