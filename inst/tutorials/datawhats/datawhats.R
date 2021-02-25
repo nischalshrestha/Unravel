@@ -133,6 +133,7 @@ group_item_div <- function(id, ns_id, code_elements = NULL) {
         shiny::tags$input(
           type = "checkbox",
           id = glue::glue("{id}-toggle"),
+          `toggle-id` = id,
           `checked` = TRUE,
           `data-toggle`="toggle",
           `data-size`="xs",
@@ -246,7 +247,7 @@ ui <- fluidPage(
   #   - data row and col dimensions
   #   - change type information (to inform the color of square and textual annotations)
   #   - data prompt
-  datawatsUI("datawat", seq_len(2))
+  datawatsUI("datawat", seq_len(1))
 )
 
 server <- function(input, output, session) {
