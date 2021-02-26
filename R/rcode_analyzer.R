@@ -64,7 +64,6 @@ get_change_type <- function(verb_name) {
 #'   intermediates = list(`tibble`),
 #'   error = character(),
 #' )
-#' @export
 #'
 #' @examples
 #' "diamonds %>%
@@ -74,6 +73,7 @@ get_change_type <- function(verb_name) {
 #'   arrange(desc(color))" -> pipeline
 #' quoted <- rlang::parse_expr(pipeline)
 #' outputs <- get_dplyr_intermediates(quoted)
+#' @noRd
 get_dplyr_intermediates <- function(pipeline) {
   verb_summary <<- ""
   old_verb_summary <<- ""
@@ -82,7 +82,7 @@ get_dplyr_intermediates <- function(pipeline) {
     stop("`pipeline` input is not a pipe call!")
   }
   # first grab all of the lines as a list of of language objects
-  lines <- recurse_dplyr(quoted)
+  lines <- recurse_dplyr(pipeline)
   results <- list()
   for (i in seq_len(length(lines))) {
     if (i != 1) {
@@ -140,7 +140,6 @@ get_dplyr_intermediates <- function(pipeline) {
 #'   1 year        10      13
 #'   2  sex        16      18
 #'
-#' @export
 #' @examples
 #' require(babynames)
 #' "babynames %>%
@@ -150,6 +149,7 @@ get_dplyr_intermediates <- function(pipeline) {
 #'    mutate(percent_male = M / (M + F) * 100, ratio = M / F)" -> pipeline
 #' quoted <- rlang::parse_expr(pipeline)
 #' columns_in_verbs(quoted)
+#' @noRd
 columns_in_verbs <- function(quoted) {
   lines <- recurse_dplyr(quoted)
   outputs <- get_dplyr_intermediates(quoted)
