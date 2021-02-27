@@ -65,7 +65,9 @@ get_change_type <- function(verb_name) {
 #'   error = character(),
 #' )
 #'
+#' @export
 #' @examples
+#' require(tidyverse)
 #' "diamonds %>%
 #'   select(carat, cut, color, clarity, price) %>%
 #'   group_by(color) %>%
@@ -73,7 +75,6 @@ get_change_type <- function(verb_name) {
 #'   arrange(desc(color))" -> pipeline
 #' quoted <- rlang::parse_expr(pipeline)
 #' outputs <- get_dplyr_intermediates(quoted)
-#' @noRd
 get_dplyr_intermediates <- function(pipeline) {
   verb_summary <<- ""
   old_verb_summary <<- ""
@@ -94,6 +95,14 @@ get_dplyr_intermediates <- function(pipeline) {
     }
     # get the deparsed character version
     deparsed <- rlang::expr_deparse(verb)
+    # append a pipe character %>% unless it's the last line
+    if (i < length(lines)) {
+      deparsed <- paste0(deparsed, " %>%")
+    }
+    # also append a tab character if not the first line
+    if (i > 1) {
+      deparsed <- paste0("\t", deparsed)
+    }
     # TODO change should be more intelligent based on data properties that changed or not, and tying into internal changes
     intermediate <- list(line = i, code = deparsed, change = get_change_type(verb_name))
     err <- NULL
@@ -101,6 +110,8 @@ get_dplyr_intermediates <- function(pipeline) {
         # TODO alter some tidylog verbs to make them more readable
         # and annotate them with divs.
         intermediate["output"] <- list(eval(lines[[i]]))
+        intermediate["row"] <- dim(intermediate["output"][[1]])[[1]]
+        intermediate["col"] <- dim(intermediate["output"][[1]])[[2]]
         intermediate["summary"] <- ifelse(identical(verb_summary, old_verb_summary), "", verb_summary)
         old_verb_summary <- verb_summary
       },

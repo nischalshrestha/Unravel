@@ -1,11 +1,13 @@
 library(DataTutor)
 library(shiny)
+library(tidyverse)
+library(babynames)
 
 summary_button <- function(ns_id, inputId, lineid, change_type, value = 0) {
   ns <- shiny::NS(ns_id)
   tags$button(id = ns(inputId),
               `lineid` = lineid,
-              class = glue::glue("d-flex {change_type}-square justify-content-center"),
+              class = glue::glue("d-flex {change_type}-square .noSelect justify-content-center"),
               style = "color:transparent; cursor:pointer;",
               type = "button", as.character(value))
 }
@@ -15,11 +17,11 @@ summary_button <- function(ns_id, inputId, lineid, change_type, value = 0) {
 #' In particular, the unique identifiers make up each item:
 #' - Item ID: <id> for group item: data, verb1, verb2, ... verbn.
 #' "verbN" is better for uniquely identifying since you can have multiple of same verb
-#' - Item Summary ID: <id>_summary_box, <id>_summary_box_row, <id>_summary_box_col
-#' - Item Box Type ID: <change>_square
-#' - Item Glyph ID: <id>_glyph
-#' - Item Toggle ID: <id>_toggle
-#' - Item CodeMirror ID: <id>_code_mirror
+#' - Item Summary ID: <id>-summary-box, <id>-summary-box-row, <id>-summary-box-col
+#' - Item Box Type ID: <change>-square
+#' - Item Glyph ID: <id>-glyph
+#' - Item Toggle ID: <id>-toggle
+#' - Item CodeMirror ID: <id>-code_mirror
 #'
 #' @param id the character id for the particular group item
 #' @param ns_id the character for the Shiny module namespace id
@@ -36,19 +38,11 @@ group_item_div <- function(line, ns_id) {
   # TODO this strategy of adding pipe won't work because we need to know if the line is the last one or not, we could
   # preprocess that info ahead of time
   line_code <- line$code
-  if (!identical(line$code, "arrange(desc(color))")) {
-    line_code <- paste0(line$code, " %>%")
-  }
-  if (line_id > 1) {
-    line_code <- paste0("\t", line_code)
-  }
   change_type <- line$change
-  # line_summary <- line$summary
+  row <- abbrev_num(line$row)
+  col <- abbrev_num(line$col)
   # whereas id is for a readable identifier for JS/jquery/CSS
   id <- paste0("line", line$lineid)
-  # TODO use ns to namespace the reactive outputs (elements that react to events)
-  # to stay consistent with naming the - is used for html ids, _ is used if we need to refer to it
-  # by R in Shiny
   div(class = "d-flex list-group-item", id=id, `data-id` = line_id,
     # row div
     div(class = "justify-content-center align-self-baseline",
@@ -60,7 +54,7 @@ group_item_div <- function(line, ns_id) {
         div(class = glue::glue("{id}-summary-box-row d-flex empty-square justify-content-center"),
             div(class="align-self-center", style="font-size: 0.8em;",
                 # update element
-                HTML("1.9M")
+                HTML(row)
             )
         )
     ),
@@ -69,7 +63,7 @@ group_item_div <- function(line, ns_id) {
         div(class = glue::glue("{id}-summary-box-col d-flex justify-content-center align-self-center"),
             div(class = "row", style = "font-size:0.8em;",
                 # update element
-                HTML("5")
+                HTML(col)
             )
         ),
         # update element (class of square)
@@ -86,8 +80,7 @@ group_item_div <- function(line, ns_id) {
     # codemirror div (gets dynamically created); fixedPage keeps the width=100%
     fixedPage(
       shiny::tags$textarea(
-        # TODO get verb text (dynamically received from argument)
-        line_code,
+        shiny::HTML(line_code),
         class = "verb",
         id = id,
         lineid = line_id
@@ -124,11 +117,16 @@ create_group_item_tags <- function(lines, ns_id) {
 
 datawatsUI <- function(id) {
   # TODO this is a dummy pipeline just so we have an example to run when app starts
-"diamonds %>%
-  select(carat, cut, color, clarity, price) %>%
-  group_by(color) %>%
-  summarise(n = n(), price = mean(price)) %>%
-  arrange(desc(color))" -> default_pipeline
+# "diamonds %>%
+#   select(carat, cut, color, clarity, price) %>%
+#   group_by(color) %>%
+#   summarise(n = n(), price = mean(price)) %>%
+#   arrange(desc(color))" -> default_pipeline
+"babynames %>%
+   group_by(year, sex) %>%
+   summarise(total = sum(n)) %>%
+   spread(sex, total) %>%
+   mutate(percent_male = M / (M + F) * 100, ratio = M / F)" -> default_pipeline
   # namespace for module
   ns <- shiny::NS(id)
   shiny::fixedPage(
@@ -148,7 +146,11 @@ datawatsUI <- function(id) {
       # custom css
       shiny::includeCSS(here::here("inst/tutorials/datawhats/css/style.css")),
       # custom js for exploration of code
-      shiny::includeScript(here::here("inst/tutorials/datawhats/js/explorer.js"))
+      shiny::includeScript(here::here("inst/tutorials/datawhats/js/explorer.js")),
+      # tippy
+      shiny::includeScript(here::here("inst/tutorials/datawhats/js/popper.min.js")),
+      shiny::includeScript(here::here("inst/tutorials/datawhats/js/tippy-bundle.min.js")),
+      shiny::includeCSS(here::here("inst/tutorials/datawhats/css/light.css"))
     ),
     shiny::br(),
     shiny::br(),
@@ -183,9 +185,8 @@ datawatsServer <- function(id) {
     function(input, output, session) {
       # current line reactive value
       current <- reactiveVal(0)
-      code_ready <- reactiveVal(1)
-      data_ready <- reactiveVal(1)
 
+      # these are reactive values related to code editors info, summary prompts, and df outputs
       rv <- reactiveValues()
       rv$code_info <-  NULL
       rv$summaries <- list()
@@ -206,7 +207,9 @@ datawatsServer <- function(id) {
           message(quoted)
           outputs <- get_dplyr_intermediates(quoted)
           # set reactive values
-          rv$code_info <- lapply(outputs, function(x) list(lineid = x$line, code = x$code, change = x$change))
+          rv$code_info <- lapply(outputs, function(x) {
+            list(lineid = x$line, code = x$code, change = x$change, row = x$row, col = x$col)
+          })
           rv$summaries <- lapply(outputs, function(x) list(lineid = paste0("line", as.character(x$line)), summary = x$summary))
           rv$outputs <- lapply(outputs, function(x) x$output)
           # trigger data frame output of the very last line
@@ -226,11 +229,8 @@ datawatsServer <- function(id) {
               shiny::includeCSS(here::here("inst/tutorials/datawhats/css/bootstrap4-toggle.min.css")),
               shiny::includeScript(here::here("inst/tutorials/datawhats/js/bootstrap4-toggle.min.js")),
               shiny::tags$script("setup_toggles();"),
-              shiny::tags$script("setup_box_listeners();"),
-              # tippy
-              shiny::includeScript(here::here("inst/tutorials/datawhats/js/popper.min.js")),
-              shiny::includeScript(here::here("inst/tutorials/datawhats/js/tippy-bundle.min.js")),
-              shiny::includeCSS(here::here("inst/tutorials/datawhats/css/light.css"))
+              shiny::tags$script("setup_box_listeners();")
+
             )
           )
         }
@@ -253,7 +253,13 @@ datawatsServer <- function(id) {
       output$line_table <- reactable::renderReactable({
         value <- as.numeric(current())
         if (value > 0) {
-          reactable::reactable(data = rv$outputs[[value]],
+          # reactable can only efficiently display data of a certain size
+          # if we enter into the 100K range, it starts to slow down
+          final_data <- rv$outputs[[value]]
+          if (dim(final_data)[[1]] > 5e5) {
+            final_data <- final_data[1:5e4, ]
+          }
+          reactable::reactable(data = final_data,
                                compact = TRUE,
                                highlight = TRUE,
                                bordered = TRUE)

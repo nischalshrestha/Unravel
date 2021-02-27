@@ -1,5 +1,25 @@
 library(magrittr)
 
+#' Returns an abbreviated version of a number (K for thousndas and M for millions)
+#'
+#' We won't do more than millions of rows for now.
+#'
+#' @export
+#' @param x a numeric
+#' @return a character
+#' @examples
+#' abbrev_num(1950) # 1.95K
+#' abbrev_num(1950000) # 1.95M
+abbrev_num <- function(x) {
+  if (x >= 1e3 && x < 1e6) {
+    return(paste0(format(round(x / 1e3, 1), trim = TRUE), "K"))
+  }
+  else if (x >= 1e6) {
+    return(paste0(format(round(x / 1e6, 1), trim = TRUE), "M"))
+  }
+  return(x)
+}
+
 #' Debug print if options$debug flag is set to TRUE
 #'
 #' @param options
