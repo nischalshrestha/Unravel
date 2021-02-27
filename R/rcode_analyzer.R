@@ -44,6 +44,9 @@ recurse_dplyr <- function(dplyr_tree, outputs = list()) {
 #'
 #' @examples
 get_change_type <- function(verb_name) {
+  # TODO rn this is just based on function names, but should take into whether
+  # there were any changes from previous df to current df. tidylog could also
+  # help us out here.
   if (verb_name %in% c("group_by", "rowwise")) {
     return("internal")
   } else if (verb_name %in% c("select", "filter", "mutate", "summarise", "arrange")) {
@@ -76,6 +79,9 @@ get_change_type <- function(verb_name) {
 #' quoted <- rlang::parse_expr(pipeline)
 #' outputs <- get_dplyr_intermediates(quoted)
 get_dplyr_intermediates <- function(pipeline) {
+  # TODO be able to handle two more use cases:
+  # - if only the data line was supplied
+  # - if only a verb by itself was supplied (via. data argument)
   verb_summary <<- ""
   old_verb_summary <<- ""
   # if first part of ast is not a %>% just quit

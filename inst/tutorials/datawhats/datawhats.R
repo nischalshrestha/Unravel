@@ -191,6 +191,8 @@ datawatsServer <- function(id) {
       rv$code_info <-  NULL
       rv$summaries <- list()
       rv$outputs <- NULL
+      # relevant value of code text after initial render and during updates on explorer
+      rv$current_code <- NULL
 
       # listen to button click and signal JS to give us code back from input editor
       observeEvent(input$explore, {
@@ -201,6 +203,8 @@ datawatsServer <- function(id) {
       # listen for JS to tell us code is ready for us to be processed
       observeEvent(input$code_ready, {
         message("Receiving code from JS: ", input$code_ready)
+
+        # TODO process lines function?
         # process lines
         if (!is.null(input$code_ready) && length(input$code_ready) > 0) {
           quoted <- rlang::parse_expr(input$code_ready)
@@ -209,6 +213,9 @@ datawatsServer <- function(id) {
           # set reactive values
           rv$code_info <- lapply(outputs, function(x) {
             list(lineid = x$line, code = x$code, change = x$change, row = x$row, col = x$col)
+          })
+          rv$current_code <- lapply(rv$code_info, function(x) {
+            list(lineid = x$line, code = x$code)
           })
           rv$summaries <- lapply(outputs, function(x) list(lineid = paste0("line", as.character(x$line)), summary = x$summary))
           rv$outputs <- lapply(outputs, function(x) x$output)
@@ -230,7 +237,6 @@ datawatsServer <- function(id) {
               shiny::includeScript(here::here("inst/tutorials/datawhats/js/bootstrap4-toggle.min.js")),
               shiny::tags$script("setup_toggles();"),
               shiny::tags$script("setup_box_listeners();")
-
             )
           )
         }
@@ -271,12 +277,52 @@ datawatsServer <- function(id) {
       observeEvent(input$toggle, {
         message("TOGGLE", input$toggle)
         # this lets us get the boolean value of the toggle from JS side!
+        message(typeof(input$toggle$lineid))
         if (isTRUE(input$toggle$checked)) {
           session$sendCustomMessage("toggle", paste0("un-commenting line ", input$toggle$lineid))
         } else {
           session$sendCustomMessage("toggle", paste0("commenting line ", input$toggle$lineid))
         }
+        # TODO either include or exclude the particular line from the current code lines
+        # re-evaluate the code and update: rv$code_info, rv$summaryies, rv$outputs
+        # this will re-trigger the `output$code_explorer` and the JS calls there will re-trigger
+        # the rest of the setup once again which are summary prompts and box listeners.
+        line_id <- as.numeric(input$toggle$lineid)
+        message(length(rv$current_code))
+        new_code <- Filter(
+          function(x) {
+            if (x$lineid == line_id) {
+              if (isTRUE(input$toggle$checked)) {
+                return(TRUE)
+              } else {
+                return(FALSE)
+              }
+            }
+            return(TRUE)
+          },
+          rv$current_code
+        )
+        new_code_source <- lapply(seq_len(length(new_code)), function(i) {
+          if (i == length(new_code)) {
+            new_code[[i]]$code <- unlist(strsplit(new_code[[i]]$code, split = "%>%"))
+          }
+          new_code[[i]]$code
+        })
+        new_code_source <- paste0(new_code_source, collapse = "\n")
+        quoted <- rlang::parse_expr(new_code_source)
+        outputs <- get_dplyr_intermediates(quoted)
+        # TODO keep all of the code_info from before but update summary box related divs according to new results / outputs / error
+        # set reactive values
+        rv$code_info <- lapply(outputs, function(x) {
+          list(lineid = x$line, code = x$code, change = x$change, row = x$row, col = x$col)
+        })
+        str(rv$code_info)
+        rv$summaries <- lapply(outputs, function(x) list(lineid = paste0("line", as.character(x$line)), summary = x$summary))
+        rv$outputs <- lapply(outputs, function(x) x$output)
+        # trigger data frame output of the very last line
+        current(length(rv$outputs))
       })
+
     }
 
   )

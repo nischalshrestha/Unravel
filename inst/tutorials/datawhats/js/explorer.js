@@ -7,10 +7,10 @@ var lines = {};
 var sortable = null;
 
 function setup_editors() {
+  lines = {};
   console.log('setting up editors');
   $('.verb').each(function(index, element){
     let ID = element.id;
-     // $('input[type=checkbox]')[0].getAttribute("toggle-id");
   	console.log(index + " " + ID);
   	if (!(ID in lines)) {
       let line_editor = CodeMirror.fromTextArea(element, {
@@ -43,7 +43,6 @@ function setup_editors() {
 
 function setup_sortable() {
   sortable = Sortable.create(simpleList, { });
-  //Shiny.setInputValue("datawat-ready", "Gimme the prompts, and I'll setup everything else!");
 }
 
 function setup_prompts(summaries) {
@@ -123,7 +122,8 @@ function setup_box_listeners() {
       send_toggle(message);
     });
   }
-  Shiny.setInputValue("datawat-ready", "Gimme the prompts, and I'll setup everything else!");
+  // in order for setInputValue to re-trigger upon update of lines, we add the new lines dictionary length
+  Shiny.setInputValue("datawat-ready", "Gimme the prompts, and I'll setup everything else! " + Object.entries(lines).length);
 }
 
 function send_toggle(message) {
