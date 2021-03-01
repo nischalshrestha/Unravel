@@ -32,6 +32,19 @@
 
 /* Summary box and ghost summary box */
 
+.invisible-square {
+  border: 0px dashed transparent;
+  width: 2em;
+  height: 2em;
+  opacity: 0;
+}
+
+.error-square {
+  width: 2em;
+  height: 2em;
+  background: #fb8072;
+}
+
 .internal-square {
   border: 1px dashed black;
   width: 2em;

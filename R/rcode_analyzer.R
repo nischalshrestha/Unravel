@@ -79,11 +79,29 @@ get_change_type <- function(verb_name) {
 #' quoted <- rlang::parse_expr(pipeline)
 #' outputs <- get_dplyr_intermediates(quoted)
 get_dplyr_intermediates <- function(pipeline) {
+  # browser()
   # TODO be able to handle two more use cases:
   # - if only the data line was supplied
   # - if only a verb by itself was supplied (via. data argument)
   verb_summary <<- ""
   old_verb_summary <<- ""
+
+  # only data line
+  if (inherits(pipeline, "name")) {
+    intermediate <- list(eval(pipeline))
+    return(list(
+      list(
+        line = 1,
+        code = rlang::expr_deparse(pipeline),
+        change = "none",
+        output = intermediate,
+        row = dim(intermediate[[1]])[[1]],
+        col = dim(intermediate[[1]])[[2]],
+        summary = ""
+      )
+    ))
+  }
+
   # if first part of ast is not a %>% just quit
   if (!identical(pipeline[[1]], as.symbol("%>%"))) {
     stop("`pipeline` input is not a pipe call!")
@@ -110,6 +128,8 @@ get_dplyr_intermediates <- function(pipeline) {
       deparsed <- paste0("\t", deparsed)
     }
     # TODO change should be more intelligent based on data properties that changed or not, and tying into internal changes
+    # TODO do not create line id here, remove `line`: this should be created on Shiny server instead for flexibility since
+    # we would dynamically change the code fed into this function on any structural edit.
     intermediate <- list(line = i, code = deparsed, change = get_change_type(verb_name))
     err <- NULL
     tryCatch({
@@ -136,6 +156,7 @@ get_dplyr_intermediates <- function(pipeline) {
         crayon::strip_style(err$message),
         crayon::strip_style(paste0(err))
       )
+      intermediate[["change"]] <- "error"
       intermediate[["err"]] <- msg
       results <- append(results, list(intermediate))
       return(results)

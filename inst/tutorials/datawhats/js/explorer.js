@@ -27,6 +27,8 @@ function setup_editors() {
       let line_summary_box = $('#datawat-' + ID)[0];
       let line_summary_box_col = $(line_class + '-summary-box-col')[0];
       let line_summary_box_row = $(line_class + '-summary-box-row')[0];
+      let line_row_content = $(line_class + "-row-content")[0];
+      let line_col_content = $(line_class + "-col-content")[0];
 
       // store all line related info in
       lines[ID] = {
@@ -35,7 +37,9 @@ function setup_editors() {
         glyph: line_glyph,
         summary_box: line_summary_box,
         summary_box_col: line_summary_box_col,
-        summary_box_row: line_summary_box_row
+        summary_box_row: line_summary_box_row,
+        line_row_content: line_row_content,
+        line_col_content: line_col_content
       };
   	}
   });
@@ -72,6 +76,15 @@ function setup_prompts(summaries) {
   console.log("JS has set prompts!");
 }
 
+function update_prompts(summaries) {
+  console.log("updating prompts...");
+  summaries.forEach(e => {
+    let key = e.lineid;
+    lines[key].prompt.setContent(e.summary);
+  });
+  console.log("JS has updated prompts!");
+}
+
 function setup_toggles() {
   console.log("setting up toggles...");
 
@@ -83,6 +96,7 @@ function setup_toggles() {
     line_summary_box = lines[ID].summary_box;
     line_summary_box_col = lines[ID].summary_box_col;
     line_summary_box_row = lines[ID].summary_box_row;
+    line_prompt = lines[ID].prompt;
   	// if checked, we enable the line so make divs opaque
   	checked = $(this).prop('checked')
     if (checked) {
@@ -91,6 +105,7 @@ function setup_toggles() {
     	line_summary_box.style.opacity = "1";
     	line_summary_box_col.style.opacity = "1";
     	line_summary_box_row.style.opacity = "1";
+    	line_prompt.enable();
     } else {
       // else hide or dim elements
       line_editor_wrapper.style.opacity = "0.25";
@@ -98,6 +113,7 @@ function setup_toggles() {
       line_summary_box.style.opacity = "0";
       line_summary_box_col.style.opacity = "0";
       line_summary_box_row.style.opacity = "0";
+      line_prompt.disable();
     }
     Shiny.setInputValue(
       "datawat-toggle",
@@ -114,6 +130,7 @@ function setup_box_listeners() {
   for (const [key, value] of Object.entries(lines)) {
   	$("#datawat-"+key)[0].addEventListener("click", function() {
   	  let square = $(this).attr('lineid');
+      let toggleId = "#line" + square;
   	  Shiny.setInputValue("datawat-square", square);
   	});
   	// the R side will update the dataframe output, and send info about box, summary box/row/col, and prompt
@@ -151,9 +168,31 @@ $(document).on("shiny:sessioninitialized", function(event) {
     setup_prompts(summaries);
   });
 
+  Shiny.addCustomMessageHandler('update_prompts', function(summaries) {
+    console.log("trying to update the prompts JS")
+    // update the prompts
+    update_prompts(summaries);
+  });
+
   Shiny.addCustomMessageHandler('toggle', function(message) {
     console.log("sending toggle a message!");
     send_toggle(message);
+  });
+
+  // custom handler for updating lines after a toggle update
+  // TODO also handle the ordering
+  Shiny.addCustomMessageHandler('update_line', function(data) {
+    console.log("received update line data!");
+    console.log(data);
+    // for each line, we need to update the summary box change type, the row, and column
+    data.forEach(e => {
+      ID = "line" + e.id;
+      line = lines[ID];
+      new_summary_class = `d-flex noSelect justify-content-center ${e.change}-square`;
+      line.summary_box.className = new_summary_class;
+      line.line_row_content.innerHTML = (e.row == "") ? "&nbsp;" : e.row;
+      line.line_col_content.innerHTML = (e.col == "") ? "&nbsp;" : e.col;
+    });
   });
 
 });
