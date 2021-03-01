@@ -212,6 +212,7 @@ datawatsServer <- function(id) {
           rv$code_info <- lapply(outputs, function(x) {
             list(lineid = x$line, code = x$code, change = x$change, row = abbrev_num(x$row), col = abbrev_num(x$col))
           })
+          # TODO reset current_code_info via a Reset button
           rv$current_code_info <- lapply(outputs, function(x) {
             list(lineid = x$line, code = x$code, change = x$change, row = abbrev_num(x$row), col = abbrev_num(x$col), checked = TRUE)
           })
@@ -234,25 +235,25 @@ datawatsServer <- function(id) {
               shiny::includeCSS(here::here("inst/tutorials/datawhats/css/bootstrap4-toggle.min.css")),
               shiny::includeScript(here::here("inst/tutorials/datawhats/js/bootstrap4-toggle.min.js")),
               shiny::tags$script("setup_toggles();"),
-              shiny::tags$script("setup_box_listeners();"),
-              shiny::br(),
-              # TODO if we want we could also add prompts to the data change scheme color
-              shiny::div(class = "d-flex align-self-center", style = "margin-left: 8em;",
-                         div(class = glue::glue("d-flex none-square-key justify-content-center")),
-                         div(class = glue::glue("d-flex empty-square justify-content-left align-self-center"),
-                             style = "padding-left: 1em; font-size: 0.8em; width: 80px;", "No change"),
-                         div(class = glue::glue("d-flex internal-square-key justify-content-center")),
-                         div(class = glue::glue("d-flex empty-square justify-content-left align-self-center"),
-                             style = "padding-left: 1em; font-size: 0.8em; width: 100px;", "Internal change"),
-                         div(class = glue::glue("d-flex visible-square-key justify-content-center")),
-                         div(class = glue::glue("d-flex empty-square justify-content-left align-self-center"),
-                             style = "padding-left: 1em; font-size: 0.8em; width: 100px;", "Visible change"),
-                         div(class = glue::glue("d-flex error-square-key justify-content-left")),
-                         div(class = glue::glue("d-flex empty-square justify-content-left align-self-center"),
-                             style = "padding-left: 0.5em; font-size: 0.8em; width: 100px;", "Error"),
-              ),
-              shiny::br()
-            )
+              shiny::tags$script("setup_box_listeners();")
+            ),
+            shiny::br(),
+            # TODO if we want we could also add prompts to the data change scheme color
+            shiny::div(class = "d-flex align-self-center", style = "margin-left: 8em;",
+                       div(class = glue::glue("d-flex none-square-key justify-content-center")),
+                       div(class = glue::glue("d-flex empty-square justify-content-left align-self-center"),
+                           style = "padding-left: 1em; font-size: 0.8em; width: 80px;", "No change"),
+                       div(class = glue::glue("d-flex internal-square-key justify-content-center")),
+                       div(class = glue::glue("d-flex empty-square justify-content-left align-self-center"),
+                           style = "padding-left: 1em; font-size: 0.8em; width: 100px;", "Internal change"),
+                       div(class = glue::glue("d-flex visible-square-key justify-content-center")),
+                       div(class = glue::glue("d-flex empty-square justify-content-left align-self-center"),
+                           style = "padding-left: 1em; font-size: 0.8em; width: 100px;", "Visible change"),
+                       div(class = glue::glue("d-flex error-square-key justify-content-left")),
+                       div(class = glue::glue("d-flex empty-square justify-content-left align-self-center"),
+                           style = "padding-left: 0.5em; font-size: 0.8em; width: 100px;", "Error"),
+            ),
+            shiny::br()
           )
         }
       })
@@ -410,6 +411,41 @@ datawatsServer <- function(id) {
         rv$outputs <- lapply(new_rv_code_info, function(x) list(id = x$line, lineid = paste0("line", x$line), output = x$output))
         # update the data display to the last enabled output
         current(tail(outputs, 1)[[1]]$line)
+      })
+
+      observeEvent(input$reorder, {
+        message("REORDER", input$reorder)
+        # this lets us get the boolean value of the toggle from JS side!
+        new_order <- as.numeric(input$reorder)
+        str(new_order)
+        # get the new order from current code stat
+        new_rv_code_info <- rv$current_code_info[new_order]
+        str(new_rv_code_info)
+
+        # now re-evaluate the new order
+        # only grab the checked lines
+        new_code_info <- Filter(
+          function(x) {
+            return(isTRUE(x$checked))
+          },
+          new_rv_code_info
+        )
+        # get new code
+        new_code_info <- lapply(seq_len(length(new_code_info)), function(i) {
+          # update %>%> if it's either the only line or the last line
+          if (i == length(new_code_info) || length(new_code_info) == 1) {
+            new_code_info[[i]]$code <- unlist(strsplit(new_code_info[[i]]$code, split = "%>%"))
+          } else if (i != length(new_code_info) && !grepl("%>%", new_code_info[[i]]$code)) {
+            new_code_info[[i]]$code <- paste(new_code_info[[i]]$code, "%>%")
+          }
+          new_code_info[[i]]
+        })
+
+        new_code_source <- paste0(lapply(new_code_info, function(x) x$code), collapse = "\n")
+        quoted <- rlang::parse_expr(new_code_source)
+        # TODO re-evaluate and get new code info to send to JS to update lines
+
+
       })
 
     }

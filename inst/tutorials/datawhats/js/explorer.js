@@ -4,12 +4,14 @@ This script is used for setting up the editors, prompts, toggles and summary box
 */
 
 var lines = {};
+var snippets = new Map();
+var current_snippets = null;
 var sortable = null;
 
 function setup_editors() {
   lines = {};
   console.log('setting up editors');
-  $('.verb').each(function(index, element){
+  $('.verb').each(function(index, element) {
     let ID = element.id;
   	console.log(index + " " + ID);
   	if (!(ID in lines)) {
@@ -30,6 +32,7 @@ function setup_editors() {
       let line_summary_box_row = $(line_class + '-summary-box-row')[0];
       let line_row_content = $(line_class + "-row-content")[0];
       let line_col_content = $(line_class + "-col-content")[0];
+      snippets.set((index + 1) + "", line_editor.getDoc().getValue());
 
       // store all line related info in
       lines[ID] = {
@@ -44,10 +47,27 @@ function setup_editors() {
       };
   	}
   });
+  current_snippets = new Map(snippets);
 }
 
 function setup_sortable() {
-  sortable = Sortable.create(simpleList, { });
+  sortable = Sortable.create(simpleList, {});
+  /* options */
+  sortable.option("onUpdate", function( /**Event*/ evt) {
+    // same properties as onEnd
+    console.log("reordering");
+    line_id = "#" + evt.item.id;
+    console.log(line_id);
+    order = sortable.toArray();
+    // NOTE: for some reason sortable is keeping extra order items, so we slice it
+    order = order.slice(0, Object.entries(lines).length);
+    order.forEach((value, index) => console.log(index + " " + value));
+    // make new snippet order
+		new_snippets = order.map(o => [o, snippets.get(o)]);
+    current_snippets = new Map(new_snippets);
+    // send R the reorder keys
+    Shiny.setInputValue("datawat-reorder", Array.from(current_snippets.keys()));
+  });
 }
 
 function setup_prompts(summaries) {
