@@ -6,7 +6,6 @@
   width: 100%;
   margin-left: 0px;
   padding-top: 10px;
-  /* float: right; */
 }
 
 .CodeMirror-gutters {
@@ -28,6 +27,52 @@
   background: #ffefc7;
   border-radius: 0.5rem;
   padding: 0.1em;
+}
+
+/* Summary box and ghost summary box keys */
+
+.error-square-key {
+  width: 2em;
+  height: 2em;
+  background: #fb8072;
+  border-radius: 0.5rem;
+}
+
+.error-square-key:hover{
+  cursor:pointer
+}
+
+.none-square-key {
+  width: 2em;
+  height: 2em;
+  background-color: grey;
+  border-radius: 0.5rem;
+}
+
+.none-square-key:hover{
+  cursor:pointer
+}
+
+.internal-square-key {
+  width: 2em;
+  height: 2em;
+  background-color: lightblue;
+  border-radius: 0.5rem;
+}
+
+.internal-square-key:hover{
+  cursor:pointer
+}
+
+.visible-square-key {
+  width: 2em;
+  height: 2em;
+  background-color: #fff1ce;
+  border-radius: 0.5rem;
+}
+
+.visible-square-key:hover{
+  cursor:pointer
 }
 
 /* Summary box and ghost summary box */

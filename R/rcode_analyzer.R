@@ -88,15 +88,15 @@ get_dplyr_intermediates <- function(pipeline) {
 
   # only data line
   if (inherits(pipeline, "name")) {
-    intermediate <- list(eval(pipeline))
+    intermediate <- eval(pipeline)
     return(list(
       list(
         line = 1,
         code = rlang::expr_deparse(pipeline),
         change = "none",
         output = intermediate,
-        row = dim(intermediate[[1]])[[1]],
-        col = dim(intermediate[[1]])[[2]],
+        row = dim(intermediate)[[1]],
+        col = dim(intermediate)[[2]],
         summary = ""
       )
     ))

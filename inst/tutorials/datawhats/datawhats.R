@@ -5,7 +5,6 @@ library(babynames)
 
 summary_button <- function(ns_id, inputId, lineid, change_type, value = 0) {
   ns <- shiny::NS(ns_id)
-
   tags$button(id = ns(inputId),
               `lineid` = lineid,
               class = glue::glue("d-flex {change_type}-square noSelect justify-content-center"),
@@ -79,7 +78,7 @@ group_item_div <- function(line, ns_id) {
         div(class="row", style="font-size: 1em;", HTML("&nbsp;"))
     ),
     # codemirror div (gets dynamically created); fixedPage keeps the width=100%
-    fixedPage(
+    shiny::fixedPage(
       shiny::tags$textarea(
         shiny::HTML(line_code),
         class = "verb",
@@ -235,7 +234,24 @@ datawatsServer <- function(id) {
               shiny::includeCSS(here::here("inst/tutorials/datawhats/css/bootstrap4-toggle.min.css")),
               shiny::includeScript(here::here("inst/tutorials/datawhats/js/bootstrap4-toggle.min.js")),
               shiny::tags$script("setup_toggles();"),
-              shiny::tags$script("setup_box_listeners();")
+              shiny::tags$script("setup_box_listeners();"),
+              shiny::br(),
+              # TODO if we want we could also add prompts to the data change scheme color
+              shiny::div(class = "d-flex align-self-center", style = "margin-left: 8em;",
+                         div(class = glue::glue("d-flex none-square-key justify-content-center")),
+                         div(class = glue::glue("d-flex empty-square justify-content-left align-self-center"),
+                             style = "padding-left: 1em; font-size: 0.8em; width: 80px;", "No change"),
+                         div(class = glue::glue("d-flex internal-square-key justify-content-center")),
+                         div(class = glue::glue("d-flex empty-square justify-content-left align-self-center"),
+                             style = "padding-left: 1em; font-size: 0.8em; width: 100px;", "Internal change"),
+                         div(class = glue::glue("d-flex visible-square-key justify-content-center")),
+                         div(class = glue::glue("d-flex empty-square justify-content-left align-self-center"),
+                             style = "padding-left: 1em; font-size: 0.8em; width: 100px;", "Visible change"),
+                         div(class = glue::glue("d-flex error-square-key justify-content-left")),
+                         div(class = glue::glue("d-flex empty-square justify-content-left align-self-center"),
+                             style = "padding-left: 0.5em; font-size: 0.8em; width: 100px;", "Error"),
+              ),
+              shiny::br()
             )
           )
         }
@@ -267,7 +283,7 @@ datawatsServer <- function(id) {
           # if we enter into the 100K range, it starts to slow down
           message("changed data line output ", value)
           final_data <- rv$outputs[[value]]$output
-          if (!is.null(final_data)) {
+          if (!is.null(final_data) && length(final_data) >= 1) {
             if (dim(final_data)[[1]] > 5e5) {
               final_data <- final_data[1:5e4, ]
             }

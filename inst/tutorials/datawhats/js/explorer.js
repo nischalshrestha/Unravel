@@ -18,7 +18,8 @@ function setup_editors() {
         readOnly: 'nocursor',
         styleActiveLine: false,
         lineNumbers: false,
-        firstLineNumber: 1
+        firstLineNumber: 1,
+        lineWrapping: true
       });
       line_editor.setSize(null, 50);
       let line_class = '.' + ID;
