@@ -122,11 +122,7 @@ datawatsUI <- function(id) {
   group_by(color) %>%
   summarise(n = n(), price = mean(price)) %>%
   arrange(desc(color))" -> default_pipeline
-# "babynames %>%
-#    group_by(year, sex) %>%
-#    summarise(total = sum(n)) %>%
-#    spread(sex, total) %>%
-#    mutate(percent_male = M / (M + F) * 100, ratio = M / F)" -> default_pipeline
+# "babynames" -> default_pipeline
   # namespace for module
   ns <- shiny::NS(id)
   shiny::fixedPage(
@@ -158,9 +154,7 @@ datawatsUI <- function(id) {
         shiny::column(
         10,
         shiny::h4("Enter dplyr code:"),
-        # shiny::h3("Enter dplyr code to explore:", class = "d-flex justify-content-center"),
         shiny::tags$textarea(
-          # TODO get verb text (dynamically received from argument)
           class = "code_input",
           id = id,
           default_pipeline
@@ -296,6 +290,23 @@ datawatsServer <- function(id) {
         }
       })
 
+
+      # helper function for grabbing a particular new code
+      get_code <- function(target, id) {
+        # browser()
+        result <- Filter(function(x) x$lineid == id, target)
+        if (length(result) > 0) {
+          return(result[[1]]$code)
+        } else {
+          return(result)
+        }
+      }
+
+      # helper function for grabbing a particular new output
+      get_output <- function(target, lineid) {
+        Filter(function(x) x$line == lineid, target)
+      }
+
       # this input even tells us which line to (un)comment
       # TODO trigger a revaluation of the code of enabled lines
       observeEvent(input$toggle, {
@@ -317,7 +328,6 @@ datawatsServer <- function(id) {
           }
           x
         })
-
         # grab just the code info that are enabled
         new_code_info <- Filter(
           function(x) {
@@ -328,14 +338,18 @@ datawatsServer <- function(id) {
 
         # get new code
         new_code_info <- lapply(seq_len(length(new_code_info)), function(i) {
-          # update %>%> if it's either the only line or the last line
-          if (i == length(new_code_info) || length(new_code_info) == 1) {
+          if (i > 1 && i < length(new_code_info) && !grepl("%>%", new_code_info[[i]]$code)) {
+            # if in between lines and it doesn't have pipes, add it
+            new_code_info[[i]]$code <- paste(new_code_info[[i]]$code, "%>%")
+          } else if (i == length(new_code_info) && grepl("%>%", new_code_info[[i]]$code)) {
+            # if last line and it contains pipe, remove it
             new_code_info[[i]]$code <- unlist(strsplit(new_code_info[[i]]$code, split = "%>%"))
           }
           new_code_info[[i]]
         })
         new_code_source <- paste0(lapply(new_code_info, function(x) x$code), collapse = "\n")
         quoted <- rlang::parse_expr(new_code_source)
+        str(quoted)
 
         # get new code intermediate info
         outputs <- get_dplyr_intermediates(quoted)
@@ -344,22 +358,6 @@ datawatsServer <- function(id) {
           outputs[[i]]$line <- new_code_info[[i]]$lineid
           outputs[[i]]
         })
-
-        # helper function for grabbing a particular new code
-        get_code <- function(target, id) {
-          # browser()
-          result <- Filter(function(x) x$lineid == id, target)
-          if (length(result) > 0) {
-            return(result[[1]]$code)
-          } else {
-            return(result)
-          }
-        }
-
-        # helper function for grabbing a particular new output
-        get_output <- function(target, lineid) {
-          Filter(function(x) x$line == lineid, target)
-        }
 
         # prep data to send JS about box change type, row, and col
         new_rv_code_info <- lapply(rv$code_info, function(x) {
@@ -417,10 +415,11 @@ datawatsServer <- function(id) {
         message("REORDER", input$reorder)
         # this lets us get the boolean value of the toggle from JS side!
         new_order <- as.numeric(input$reorder)
-        str(new_order)
+        # str(new_order)
         # get the new order from current code stat
         new_rv_code_info <- rv$current_code_info[new_order]
-        str(new_rv_code_info)
+        # update the current code info with the checked flag
+        # str(new_rv_code_info)
 
         # now re-evaluate the new order
         # only grab the checked lines
@@ -430,21 +429,81 @@ datawatsServer <- function(id) {
           },
           new_rv_code_info
         )
+
         # get new code
         new_code_info <- lapply(seq_len(length(new_code_info)), function(i) {
-          # update %>%> if it's either the only line or the last line
-          if (i == length(new_code_info) || length(new_code_info) == 1) {
-            new_code_info[[i]]$code <- unlist(strsplit(new_code_info[[i]]$code, split = "%>%"))
-          } else if (i != length(new_code_info) && !grepl("%>%", new_code_info[[i]]$code)) {
+          if (i > 1 && i < length(new_code_info) && !grepl("%>%", new_code_info[[i]]$code)) {
+            # if in between lines and it doesn't have pipes, add it
             new_code_info[[i]]$code <- paste(new_code_info[[i]]$code, "%>%")
+          } else if (i == length(new_code_info) && grepl("%>%", new_code_info[[i]]$code)) {
+            # if last line and it contains pipe, remove it
+            new_code_info[[i]]$code <- unlist(strsplit(new_code_info[[i]]$code, split = "%>%"))
           }
           new_code_info[[i]]
         })
-
         new_code_source <- paste0(lapply(new_code_info, function(x) x$code), collapse = "\n")
         quoted <- rlang::parse_expr(new_code_source)
+        str(quoted)
         # TODO re-evaluate and get new code info to send to JS to update lines
+        # get new code intermediate info
+        outputs <- get_dplyr_intermediates(quoted)
+        # update the default lineid
+        outputs <- lapply(seq_len(length(outputs)), function(i) {
+          outputs[[i]]$line <- new_code_info[[i]]$lineid
+          outputs[[i]]
+        })
 
+        # prep data to send JS about box change type, row, and col
+        new_rv_code_info <- lapply(rv$code_info, function(x) {
+          out <- get_output(outputs, x$lineid)
+          # error occurred before this line
+          if (length(out) == 0) {
+            # reset states
+            x$change = "invisible"
+            x$row = ""
+            x$col = ""
+            x$summary = ""
+            x$output = NULL
+          } else {
+            # no error before this line
+            new_rv <- out[[1]]
+            # check if we need to update the code text for one of the editors regarding %>%
+            new_code <- get_code(new_code_info, x$lineid)
+            # check for error for this line
+            if (!is.null(new_rv$err)) {
+              # set error states
+              x$code = new_code
+              x$change = new_rv$change
+              x$row = abbrev_num(new_rv$row)
+              x$col = abbrev_num(new_rv$col)
+              x$summary = new_rv$err
+              x$output = NULL
+            } else {
+              # if no error, update states
+              x$code = new_code
+              x$change = new_rv$change
+              x$row = abbrev_num(new_rv$row)
+              x$col = abbrev_num(new_rv$col)
+              x$summary = new_rv$summary
+              x$output = new_rv$output
+            }
+          }
+          x
+        })
+        new_rv_code_info <- new_rv_code_info[new_order]
+        send_js_code_info <- lapply(new_rv_code_info, function(x) {
+          list(id = x$lineid, code = x$code, change = x$change, row = x$row, col = x$col)
+        })
+        # send JS the new summary box, row and col
+        session$sendCustomMessage("update_line", send_js_code_info)
+
+        # update the summaries and outputs as well
+        rv$summaries <- lapply(new_rv_code_info, function(x) list(lineid = paste0("line", x$lineid), summary = x$summary))
+        # send JS the new prompts
+        session$sendCustomMessage("update_prompts", rv$summaries)
+        rv$outputs <- lapply(new_rv_code_info, function(x) list(id = x$line, lineid = paste0("line", x$line), output = x$output))
+        # update the data display to the last enabled output
+        current(tail(outputs, 1)[[1]]$line)
 
       })
 

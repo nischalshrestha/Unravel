@@ -164,6 +164,20 @@ function setup_box_listeners() {
   Shiny.setInputValue("datawat-ready", "Gimme the prompts, and I'll setup everything else! " + Object.entries(lines).length);
 }
 
+function update_box_listeners(ids) {
+  ids.forEach(i => {
+    // for each summary box set a new lineid
+    $("#datawat-" + i)[0].attr('lineid', i);
+    /*
+    $("#datawat-" + i)[0].addEventListener("click", function() {
+  	  let square = $(this).attr('lineid');
+      let toggleId = "#line" + square;
+  	  Shiny.setInputValue("datawat-square", square);
+  	});
+  	*/
+  })
+}
+
 function send_toggle(message) {
   console.log("R received message from JS. " + message);
 }
@@ -206,15 +220,35 @@ $(document).on("shiny:sessioninitialized", function(event) {
     console.log("received update line data!");
     console.log(data);
     // for each line, we need to update the summary box change type, the row, and column
+
+    for (let i = 0; i < data.length; i++) {
+      e = data[i];
+      line = lines["line" + e.id];
+      //console.log(line);
+      console.log(e.code);
+      line.summary_box.setAttribute("lineid", i + 1);
+      console.log(line.summary_box.getAttribute("lineid"));
+      new_summary_class = `d-flex noSelect justify-content-center ${e.change}-square`;
+      line.summary_box.className = new_summary_class;
+      line.line_row_content.innerHTML = (e.row == "") ? "&nbsp;" : e.row;
+      line.line_col_content.innerHTML = (e.col == "") ? "&nbsp;" : e.col;
+      line.editor.getDoc().setValue(e.code);
+    }
+
+    /*
     data.forEach(e => {
       ID = "line" + e.id;
       line = lines[ID];
+      console.log(e.code);
+      line.summary_box.setAttribute("lineid", e.id);
+      console.log(line.summary_box.getAttribute("lineid"));
       new_summary_class = `d-flex noSelect justify-content-center ${e.change}-square`;
       line.summary_box.className = new_summary_class;
       line.line_row_content.innerHTML = (e.row == "") ? "&nbsp;" : e.row;
       line.line_col_content.innerHTML = (e.col == "") ? "&nbsp;" : e.col;
       line.editor.getDoc().setValue(e.code);
     });
+    */
   });
 
 });
