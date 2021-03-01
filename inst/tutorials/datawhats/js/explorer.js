@@ -193,6 +193,7 @@ $(document).on("shiny:sessioninitialized", function(event) {
       line.summary_box.className = new_summary_class;
       line.line_row_content.innerHTML = (e.row == "") ? "&nbsp;" : e.row;
       line.line_col_content.innerHTML = (e.col == "") ? "&nbsp;" : e.col;
+      line.editor.getDoc().setValue(e.code);
     });
   });
 

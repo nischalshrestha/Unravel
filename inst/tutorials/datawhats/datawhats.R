@@ -117,16 +117,16 @@ create_group_item_tags <- function(lines, ns_id) {
 
 datawatsUI <- function(id) {
   # TODO this is a dummy pipeline just so we have an example to run when app starts
-# "diamonds %>%
-#   select(carat, cut, color, clarity, price) %>%
-#   group_by(color) %>%
-#   summarise(n = n(), price = mean(price)) %>%
-#   arrange(desc(color))" -> default_pipeline
-"babynames %>%
-   group_by(year, sex) %>%
-   summarise(total = sum(n)) %>%
-   spread(sex, total) %>%
-   mutate(percent_male = M / (M + F) * 100, ratio = M / F)" -> default_pipeline
+"diamonds %>%
+  select(carat, cut, color, clarity, price) %>%
+  group_by(color) %>%
+  summarise(n = n(), price = mean(price)) %>%
+  arrange(desc(color))" -> default_pipeline
+# "babynames %>%
+#    group_by(year, sex) %>%
+#    summarise(total = sum(n)) %>%
+#    spread(sex, total) %>%
+#    mutate(percent_male = M / (M + F) * 100, ratio = M / F)" -> default_pipeline
   # namespace for module
   ns <- shiny::NS(id)
   shiny::fixedPage(
@@ -326,14 +326,14 @@ datawatsServer <- function(id) {
         )
 
         # get new code
-        new_code_source <- lapply(seq_len(length(new_code_info)), function(i) {
+        new_code_info <- lapply(seq_len(length(new_code_info)), function(i) {
           # update %>%> if it's either the only line or the last line
           if (i == length(new_code_info) || length(new_code_info) == 1) {
             new_code_info[[i]]$code <- unlist(strsplit(new_code_info[[i]]$code, split = "%>%"))
           }
-          new_code_info[[i]]$code
+          new_code_info[[i]]
         })
-        new_code_source <- paste0(new_code_source, collapse = "\n")
+        new_code_source <- paste0(lapply(new_code_info, function(x) x$code), collapse = "\n")
         quoted <- rlang::parse_expr(new_code_source)
 
         # get new code intermediate info
@@ -343,6 +343,18 @@ datawatsServer <- function(id) {
           outputs[[i]]$line <- new_code_info[[i]]$lineid
           outputs[[i]]
         })
+
+        # helper function for grabbing a particular new code
+        get_code <- function(target, id) {
+          # browser()
+          result <- Filter(function(x) x$lineid == id, target)
+          if (length(result) > 0) {
+            return(result[[1]]$code)
+          } else {
+            return(result)
+          }
+        }
+
         # helper function for grabbing a particular new output
         get_output <- function(target, lineid) {
           Filter(function(x) x$line == lineid, target)
@@ -362,9 +374,12 @@ datawatsServer <- function(id) {
           } else {
             # no error before this line
             new_rv <- out[[1]]
+            # check if we need to update the code text for one of the editors regarding %>%
+            new_code <- get_code(new_code_info, x$lineid)
             # check for error for this line
             if (!is.null(new_rv$err)) {
               # set error states
+              x$code = new_code
               x$change = new_rv$change
               x$row = abbrev_num(new_rv$row)
               x$col = abbrev_num(new_rv$col)
@@ -372,7 +387,7 @@ datawatsServer <- function(id) {
               x$output = NULL
             } else {
               # if no error, update states
-              x$code = new_rv$code
+              x$code = new_code
               x$change = new_rv$change
               x$row = abbrev_num(new_rv$row)
               x$col = abbrev_num(new_rv$col)
@@ -383,7 +398,7 @@ datawatsServer <- function(id) {
           x
         })
         send_js_code_info <- lapply(new_rv_code_info, function(x) {
-          list(id = x$lineid, change = x$change, row = x$row, col = x$col)
+          list(id = x$lineid, code = x$code, change = x$change, row = x$row, col = x$col)
         })
         # send JS the new summary box, row and col
         session$sendCustomMessage("update_line", send_js_code_info)
