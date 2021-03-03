@@ -20,7 +20,8 @@ Imports:
     shiny,
     reticulate,
     tidyverse,
-    flair
+    flair,
+    tidylog
 Suggests: 
     learnr
 RoxygenNote: 7.1.1

@@ -1,18 +1,3 @@
-library(tidyverse)
-library(tidylog)
-
-# this is a quick way to store a tidylog summary instead of `message`ing it.
-verb_summary <- ""
-store_message <- function(m) {
-  # we would have the same summary when tidylog does not support a certain
-  # verb, so let's set it to empty string if that's the case
-  if (identical(as.character(m), verb_summary)) {
-    verb_summary <<- ""
-  } else {
-    verb_summary <<- as.character(m)
-  }
-}
-options("tidylog.display" = list(store_message))
 
 #' Given a quoted dplyr chain code, return a list of intermediate expressions, including
 #' the dataframe name expression.
@@ -79,13 +64,10 @@ get_change_type <- function(verb_name) {
 #' quoted <- rlang::parse_expr(pipeline)
 #' outputs <- get_dplyr_intermediates(quoted)
 get_dplyr_intermediates <- function(pipeline) {
-  # browser()
+  clear_verb_summary()
   # TODO be able to handle two more use cases:
-  # - if only the data line was supplied
   # - if only a verb by itself was supplied (via. data argument)
-  verb_summary <<- ""
-  old_verb_summary <<- ""
-
+  old_verb_summary <- ""
   # only data line
   if (inherits(pipeline, "name")) {
     intermediate <- eval(pipeline)
@@ -138,7 +120,8 @@ get_dplyr_intermediates <- function(pipeline) {
         intermediate["output"] <- list(eval(lines[[i]]))
         intermediate["row"] <- dim(intermediate["output"][[1]])[[1]]
         intermediate["col"] <- dim(intermediate["output"][[1]])[[2]]
-        intermediate["summary"] <- ifelse(identical(verb_summary, old_verb_summary), "", verb_summary)
+        verb_summary <- get_verb_summary()
+        intermediate["summary"] <- ifelse(is.null(verb_summary) || identical(verb_summary, old_verb_summary), "", verb_summary)
         old_verb_summary <- verb_summary
       },
       error = function(e) {
@@ -163,6 +146,7 @@ get_dplyr_intermediates <- function(pipeline) {
     }
     results <- append(results, list(intermediate))
   }
+
   return(results)
 }
 
