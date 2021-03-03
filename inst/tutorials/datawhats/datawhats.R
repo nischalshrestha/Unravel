@@ -77,6 +77,7 @@ datawatsUI <- function(id) {
 #' @examples
 datawatsServer <- function(id) {
   require(tidyverse)
+  require(DataTutor)
   moduleServer(
     id,
     function(input, output, session) {
@@ -105,6 +106,7 @@ datawatsServer <- function(id) {
           quoted <- rlang::parse_expr(input$code_ready)
           message(quoted)
           outputs <- get_dplyr_intermediates(quoted)
+          str(outputs)
           # set reactive values
           rv$code_info <- lapply(outputs, function(x) {
             list(lineid = x$line, code = x$code, change = x$change, row = abbrev_num(x$row), col = abbrev_num(x$col))
@@ -114,7 +116,6 @@ datawatsServer <- function(id) {
             list(lineid = x$line, code = x$code, change = x$change, row = abbrev_num(x$row), col = abbrev_num(x$col), checked = TRUE)
           })
           attr(rv$current_code_info, "order") <- seq_len(length(outputs))
-          str(outputs)
           rv$summaries <- lapply(outputs, function(x) list(lineid = paste0("line", x$line), summary = x$summary))
           rv$outputs <- lapply(outputs, function(x) list(lineid = paste0("line", x$line), output = x$output))
           # trigger data frame output of the very last line

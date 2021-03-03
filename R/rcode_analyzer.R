@@ -121,6 +121,9 @@ get_dplyr_intermediates <- function(pipeline) {
         verb_summary <- get_verb_summary()
         # we would have the same summary when tidylog does not support a certain
         # verb, so let's set it to empty string if that's the case.
+        verb_summary <- ifelse(is.null(verb_summary), "", verb_summary)
+        message("verb_summary: ", verb_summary)
+        message("old_verb_summary: ", old_verb_summary)
         intermediate["summary"] <-
           ifelse(is.null(verb_summary) || identical(verb_summary, old_verb_summary), "", verb_summary)
         old_verb_summary <- verb_summary
