@@ -1,0 +1,12 @@
+name: datawhats
+title: datawhats
+username:
+account: nischal-shrestha
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3726519
+bundleId: 4293661
+url: https://nischal-shrestha.shinyapps.io/datawhats/
+when: 1614749927.97648
+asMultiple: FALSE
+asStatic: FALSE

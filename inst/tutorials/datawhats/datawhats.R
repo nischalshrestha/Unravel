@@ -23,24 +23,24 @@ datawatsUI <- function(id) {
     # TODO: make sure these resources load in properly; you may have to have these in the tutorial folder
     shiny::tags$body(
       # bootstrap stuff
-      shiny::includeCSS(here::here("inst/tutorials/datawhats/css/bootstrap.min.css")),
-      shiny::includeCSS(here::here("inst/tutorials/datawhats/css/bootstrap3.min.css")),
+      shiny::includeCSS("css/bootstrap.min.css"),
+      shiny::includeCSS("css/bootstrap3.min.css"),
       # codemirror stuff
-      shiny::includeScript(here::here("inst/tutorials/datawhats/js/codemirror.js")),
-      shiny::includeCSS(here::here("inst/tutorials/datawhats/css/codemirror.css")),
-      shiny::includeScript(here::here("inst/tutorials/datawhats/js/r.js")),
+      shiny::includeScript("js/codemirror.js"),
+      shiny::includeCSS("css/codemirror.css"),
+      shiny::includeScript("js/r.js"),
       # fontawesome (for glyphicon for move)
-      shiny::includeCSS(here::here("inst/tutorials/datawhats/css/all.css")),
+      shiny::includeCSS("css/all.css"),
       # Sortable.js
-      shiny::includeScript(here::here("inst/tutorials/datawhats/js/Sortable.js")),
+      shiny::includeScript("js/Sortable.js"),
       # custom css
-      shiny::includeCSS(here::here("inst/tutorials/datawhats/css/style.css")),
+      shiny::includeCSS("css/style.css"),
       # custom js for exploration of code
-      shiny::includeScript(here::here("inst/tutorials/datawhats/js/explorer.js")),
+      shiny::includeScript("js/explorer.js"),
       # tippy
-      shiny::includeScript(here::here("inst/tutorials/datawhats/js/popper.min.js")),
-      shiny::includeScript(here::here("inst/tutorials/datawhats/js/tippy-bundle.min.js")),
-      shiny::includeCSS(here::here("inst/tutorials/datawhats/css/light.css"))
+      shiny::includeScript("js/popper.min.js"),
+      shiny::includeScript("js/tippy-bundle.min.js"),
+      shiny::includeCSS("css/light.css"),
     ),
     shiny::br(),
     shiny::br(),
@@ -53,7 +53,7 @@ datawatsUI <- function(id) {
           id = id,
           default_pipeline
         ),
-        shiny::includeScript(here::here("inst/tutorials/datawhats/js/script.js"))
+        shiny::includeScript("js/script.js")
       )
     ),
     shiny::br(),
@@ -76,6 +76,7 @@ datawatsUI <- function(id) {
 #'
 #' @examples
 datawatsServer <- function(id) {
+  require(tidyverse)
   moduleServer(
     id,
     function(input, output, session) {
@@ -130,8 +131,8 @@ datawatsServer <- function(id) {
               shiny::tags$script("setup_editors();"),
               shiny::tags$script("setup_sortable();"),
               # toggle
-              shiny::includeCSS(here::here("inst/tutorials/datawhats/css/bootstrap4-toggle.min.css")),
-              shiny::includeScript(here::here("inst/tutorials/datawhats/js/bootstrap4-toggle.min.js")),
+              shiny::includeCSS("css/bootstrap4-toggle.min.css"),
+              shiny::includeScript("js/bootstrap4-toggle.min.js"),
               shiny::tags$script("setup_toggles();"),
               shiny::tags$script("setup_box_listeners();")
             ),

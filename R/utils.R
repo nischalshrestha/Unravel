@@ -5,18 +5,7 @@ tidylog_cache <- new.env(parent=emptyenv())
 
 # this is a quick way to store a tidylog summary instead of `message`ing it.
 store_verb_summary <- function(m) {
-  # we would have the same summary when tidylog does not support a certain
-  # verb, so let's set it to empty string if that's the case
-  old_summary <- NULL
-  if (exists("verb_summary", envir = tidylog_cache)) {
-    old_summary <- get("verb_summary", envir = tidylog_cache)
-  }
-  # print(as.character(m))
-  if (identical(as.character(m), old_summary)) {
-    assign("verb_summary", "", envir = tidylog_cache)
-  } else {
-    assign("verb_summary", as.character(m), envir = tidylog_cache)
-  }
+  assign("verb_summary", as.character(m), envir = tidylog_cache)
 }
 
 # helper function to get the current verb summary out of tidy log

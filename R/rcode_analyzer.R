@@ -110,8 +110,6 @@ get_dplyr_intermediates <- function(pipeline) {
       deparsed <- paste0("\t", deparsed)
     }
     # TODO change should be more intelligent based on data properties that changed or not, and tying into internal changes
-    # TODO do not create line id here, remove `line`: this should be created on Shiny server instead for flexibility since
-    # we would dynamically change the code fed into this function on any structural edit.
     intermediate <- list(line = i, code = deparsed, change = get_change_type(verb_name))
     err <- NULL
     tryCatch({
@@ -121,7 +119,10 @@ get_dplyr_intermediates <- function(pipeline) {
         intermediate["row"] <- dim(intermediate["output"][[1]])[[1]]
         intermediate["col"] <- dim(intermediate["output"][[1]])[[2]]
         verb_summary <- get_verb_summary()
-        intermediate["summary"] <- ifelse(is.null(verb_summary) || identical(verb_summary, old_verb_summary), "", verb_summary)
+        # we would have the same summary when tidylog does not support a certain
+        # verb, so let's set it to empty string if that's the case.
+        intermediate["summary"] <-
+          ifelse(is.null(verb_summary) || identical(verb_summary, old_verb_summary), "", verb_summary)
         old_verb_summary <- verb_summary
       },
       error = function(e) {
