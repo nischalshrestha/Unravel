@@ -1,5 +1,4 @@
 library(tidyverse)
-library(tidylog)
 
 tidylog_cache <- new.env(parent=emptyenv())
 
@@ -24,8 +23,6 @@ clear_verb_summary <- function(){
   message("clearing tidylog messages")
   rm(list=ls(tidylog_cache, all.names=TRUE), envir=tidylog_cache)
 }
-
-options("tidylog.display" = list(store_verb_summary))
 
 #' Returns an abbreviated version of a number (K for thousndas and M for millions)
 #'

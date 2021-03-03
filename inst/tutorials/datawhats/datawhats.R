@@ -76,8 +76,12 @@ datawatsUI <- function(id) {
 #'
 #' @examples
 datawatsServer <- function(id) {
-  require(tidyverse)
+  # load and attach packages
   require(DataTutor)
+  require(tidyverse)
+  require(tidylog)
+  # set tidylog messages to re-route to our tidylog_cache environment so we can access it
+  options("tidylog.display" = list(DataTutor:::store_verb_summary))
   moduleServer(
     id,
     function(input, output, session) {

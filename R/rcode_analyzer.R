@@ -34,7 +34,7 @@ get_change_type <- function(verb_name) {
   # help us out here.
   if (verb_name %in% c("group_by", "rowwise")) {
     return("internal")
-  } else if (verb_name %in% c("select", "filter", "mutate", "summarise", "arrange")) {
+  } else if (verb_name %in% c("select", "filter", "mutate", "summarise", "arrange", "spread")) {
     return("visible")
   } else {
     return("none")
