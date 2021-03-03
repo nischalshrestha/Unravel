@@ -58,7 +58,14 @@ datawatsUI <- function(id) {
     ),
     shiny::br(),
     div(class = "d-flex justify-content-center align-self-center",
-      shiny::actionButton(inputId = ns("explore"), label = "Unravel", icon = shiny::icon("fas fa-layer-group"))
+      shiny::actionButton(inputId = ns("explore"), label = "Unravel", icon = shiny::icon("fas fa-layer-group"),style = "margin: 1em;"),
+      shiny::actionButton(
+        inputId = ns("feedback"),
+        label = "Please click to provide us feedback!",
+        icon = shiny::icon("fas fa-clipboard"),
+        onclick = "window.open('https://bit.ly/2PsA7w9', '_blank')",
+        style = "margin: 1em;"
+      )
     ),
     shiny::htmlOutput(ns("code_explorer")),
     shiny::fixedPage(class="list-group",
@@ -103,7 +110,6 @@ datawatsServer <- function(id) {
       # listen for JS to tell us code is ready for us to be processed
       observeEvent(input$code_ready, {
         message("Receiving code from JS: ", input$code_ready)
-
         # TODO process lines function?
         # process lines
         if (!is.null(input$code_ready) && length(input$code_ready) > 0) {
@@ -131,6 +137,9 @@ datawatsServer <- function(id) {
       output$code_explorer <- renderUI({
         if (!is.null(rv$code_info)) {
           shiny::tagList(
+            shiny::br(),
+            shiny::p("You can click on a summary box to the left to view the summary and dataframe output at each step of the dplyr pipeline. Click on the toggles to the right to enable/disable certain lines for re-evaluation. You can also click and drag the particular line on the move icon to rearrange lines for re-evaluation."),
+            shiny::br(),
             shiny::fixedPage(id = "simpleList", class="list-group",
               create_group_item_tags(rv$code_info, id),
               shiny::tags$script("setup_editors();"),
@@ -143,19 +152,21 @@ datawatsServer <- function(id) {
             ),
             shiny::br(),
             # TODO if we want we could also add prompts to the data change scheme color
-            shiny::div(class = "d-flex align-self-center", style = "margin-left: 8em;",
-                       div(class = glue::glue("d-flex none-square-key justify-content-center")),
-                       div(class = glue::glue("d-flex empty-square justify-content-left align-self-center"),
-                           style = "padding-left: 1em; font-size: 0.8em; width: 80px;", "No change"),
-                       div(class = glue::glue("d-flex internal-square-key justify-content-center")),
-                       div(class = glue::glue("d-flex empty-square justify-content-left align-self-center"),
-                           style = "padding-left: 1em; font-size: 0.8em; width: 100px;", "Internal change"),
-                       div(class = glue::glue("d-flex visible-square-key justify-content-center")),
-                       div(class = glue::glue("d-flex empty-square justify-content-left align-self-center"),
-                           style = "padding-left: 1em; font-size: 0.8em; width: 100px;", "Visible change"),
-                       div(class = glue::glue("d-flex error-square-key justify-content-left")),
-                       div(class = glue::glue("d-flex empty-square justify-content-left align-self-center"),
-                           style = "padding-left: 0.5em; font-size: 0.8em; width: 100px;", "Error"),
+            shiny::div(class ="d-flex justify-content-center",
+              shiny::div(class = "d-flex align-self-center", style = "margin-left: 8em;",
+                         div(class = glue::glue("d-flex none-square-key justify-content-center")),
+                         div(class = glue::glue("d-flex empty-square justify-content-left align-self-center"),
+                             style = "padding-left: 1em; font-size: 0.8em; width: 80px;", "No change"),
+                         div(class = glue::glue("d-flex internal-square-key justify-content-center")),
+                         div(class = glue::glue("d-flex empty-square justify-content-left align-self-center"),
+                             style = "padding-left: 1em; font-size: 0.8em; width: 100px;", "Internal change"),
+                         div(class = glue::glue("d-flex visible-square-key justify-content-center")),
+                         div(class = glue::glue("d-flex empty-square justify-content-left align-self-center"),
+                             style = "padding-left: 1em; font-size: 0.8em; width: 100px;", "Visible change"),
+                         div(class = glue::glue("d-flex error-square-key justify-content-left")),
+                         div(class = glue::glue("d-flex empty-square justify-content-left align-self-center"),
+                             style = "padding-left: 0.5em; font-size: 0.8em; width: 100px;", "Error"),
+              )
             ),
             shiny::br()
           )
@@ -181,7 +192,7 @@ datawatsServer <- function(id) {
       # render a reactable of the current line output
       output$line_table <- reactable::renderReactable({
         value <- as.numeric(current())
-        if (value > 0) {
+        if (value > 0 && length(rv$outputs) > 0) {
           # reactable can only efficiently display data of a certain size
           # if we enter into the 100K range, it starts to slow down
           message("changed data line output ", value)
@@ -219,7 +230,6 @@ datawatsServer <- function(id) {
       observeEvent(input$toggle, {
         message("TOGGLE", input$toggle)
         # this lets us get the boolean value of the toggle from JS side!
-        message(typeof(input$toggle$lineid))
         if (isTRUE(input$toggle$checked)) {
           session$sendCustomMessage("toggle", paste0("un-commenting line ", input$toggle$lineid))
         } else {
@@ -251,10 +261,14 @@ datawatsServer <- function(id) {
           new_code_info
         )
 
+        if (length(new_code_info) == 0) {
+          rv$outputs <- list()
+          return()
+        }
+
         # get new code
         new_code_info <- lapply(seq_len(length(new_code_info)), function(i) {
           # message(new_code_info[[i]]$code)
-          # message("needs pipe? ", (i < length(new_code_info) && !grepl("%>%", new_code_info[[i]]$code)))
           if (i < length(new_code_info) && !grepl("%>%", new_code_info[[i]]$code)) {
             message("adding pipe to ", new_code_info[[i]]$code)
             # if in between lines and it doesn't have pipes, add it

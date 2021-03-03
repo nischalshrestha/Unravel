@@ -4,7 +4,7 @@ tidylog_cache <- new.env(parent=emptyenv())
 
 # this is a quick way to store a tidylog summary instead of `message`ing it.
 store_verb_summary <- function(m) {
-  message("assigning tidylog message: ", m)
+  # message("assigning tidylog message: ", m)
   assign("verb_summary", as.character(m), envir = tidylog_cache)
 }
 
@@ -12,7 +12,7 @@ store_verb_summary <- function(m) {
 get_verb_summary <- function() {
   if (exists("verb_summary", envir = tidylog_cache)) {
     m <- get("verb_summary", envir = tidylog_cache)
-    message("getting tidylog message", m)
+    # message("getting tidylog message", m)
     return(m)
   }
   return(NULL)
@@ -20,7 +20,7 @@ get_verb_summary <- function() {
 
 # helper function to clear the tidylog_cache envir
 clear_verb_summary <- function(){
-  message("clearing tidylog messages")
+  # message("clearing tidylog messages")
   rm(list=ls(tidylog_cache, all.names=TRUE), envir=tidylog_cache)
 }
 
