@@ -146,36 +146,27 @@ function setup_toggles() {
   });
 }
 
+// handler to be used for each summary box click event
+function signal_square_clicked(e) {
+  let square = $(this).attr('lineid');
+  Shiny.setInputValue("datawat-square", square);
+}
+
+// this sets up the summary box click event listeners
 function setup_box_listeners() {
   console.log("setting up box listeners...");
   for (const [key, value] of Object.entries(lines)) {
-  	$("#datawat-"+key)[0].addEventListener("click", function() {
-  	  let square = $(this).attr('lineid');
-      let toggleId = "#line" + square;
-  	  Shiny.setInputValue("datawat-square", square);
-  	});
-  	// the R side will update the dataframe output, and send info about box, summary box/row/col, and prompt
-    Shiny.addCustomMessageHandler('square', function(message) {
-      console.log("sending square message!");
-      send_toggle(message);
-    });
+    line = lines[key];
+    // if there was already an event listener for click, remove the listener
+    line.summary_box.removeEventListener("click", signal_square_clicked);
+    line.summary_box.addEventListener("click", signal_square_clicked);
   }
+  Shiny.addCustomMessageHandler('square', function(message) {
+    console.log("sending square message!");
+    send_toggle(message);
+  });
   // in order for setInputValue to re-trigger upon update of lines, we add the new lines dictionary length
   Shiny.setInputValue("datawat-ready", "Gimme the prompts, and I'll setup everything else! " + Object.entries(lines).length);
-}
-
-function update_box_listeners(ids) {
-  ids.forEach(i => {
-    // for each summary box set a new lineid
-    $("#datawat-" + i)[0].attr('lineid', i);
-    /*
-    $("#datawat-" + i)[0].addEventListener("click", function() {
-  	  let square = $(this).attr('lineid');
-      let toggleId = "#line" + square;
-  	  Shiny.setInputValue("datawat-square", square);
-  	});
-  	*/
-  })
 }
 
 function send_toggle(message) {
@@ -220,35 +211,30 @@ $(document).on("shiny:sessioninitialized", function(event) {
     console.log("received update line data!");
     console.log(data);
     // for each line, we need to update the summary box change type, the row, and column
-
+    let j = 1;
     for (let i = 0; i < data.length; i++) {
       e = data[i];
+      console.log(e.id)
       line = lines["line" + e.id];
-      //console.log(line);
+      console.log(line);
       console.log(e.code);
-      line.summary_box.setAttribute("lineid", i + 1);
-      console.log(line.summary_box.getAttribute("lineid"));
+      console.log(e.change);
+      if (e.change != "invisible") {
+        line.summary_box.setAttribute("lineid", j);
+        console.log(line.summary_box.getAttribute("lineid"));
+        j++;
+      } else {
+        line.summary_box.setAttribute("lineid", null);
+      }
       new_summary_class = `d-flex noSelect justify-content-center ${e.change}-square`;
       line.summary_box.className = new_summary_class;
       line.line_row_content.innerHTML = (e.row == "") ? "&nbsp;" : e.row;
       line.line_col_content.innerHTML = (e.col == "") ? "&nbsp;" : e.col;
       line.editor.getDoc().setValue(e.code);
     }
-
-    /*
-    data.forEach(e => {
-      ID = "line" + e.id;
-      line = lines[ID];
-      console.log(e.code);
-      line.summary_box.setAttribute("lineid", e.id);
-      console.log(line.summary_box.getAttribute("lineid"));
-      new_summary_class = `d-flex noSelect justify-content-center ${e.change}-square`;
-      line.summary_box.className = new_summary_class;
-      line.line_row_content.innerHTML = (e.row == "") ? "&nbsp;" : e.row;
-      line.line_col_content.innerHTML = (e.col == "") ? "&nbsp;" : e.col;
-      line.editor.getDoc().setValue(e.code);
-    });
-    */
+    // setup summary box event listeners again because the lineids have been updated
+    // this is important so that R knows to display the right output
+    setup_box_listeners();
   });
 
 });

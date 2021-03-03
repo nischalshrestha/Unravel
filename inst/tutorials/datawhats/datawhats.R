@@ -210,6 +210,7 @@ datawatsServer <- function(id) {
           rv$current_code_info <- lapply(outputs, function(x) {
             list(lineid = x$line, code = x$code, change = x$change, row = abbrev_num(x$row), col = abbrev_num(x$col), checked = TRUE)
           })
+          attr(rv$current_code_info, "order") <- seq_len(length(outputs))
           rv$summaries <- lapply(outputs, function(x) list(lineid = paste0("line", x$line), summary = x$summary))
           rv$outputs <- lapply(outputs, function(x) list(lineid = paste0("line", x$line), output = x$output))
           # trigger data frame output of the very last line
@@ -262,9 +263,7 @@ datawatsServer <- function(id) {
       observeEvent(input$square, {
         message("clicked on a square: ", input$square)
         # make sure to only change current if the current code info has the line marked as enabled
-        any_output <- Filter(function(x) { x$lineid == input$square && x$checked }, rv$current_code_info)
-        # message(length(any_output))
-        if (length(any_output) > 0) {
+        if (!is.null(input$square)) {
           current(input$square);
           session$sendCustomMessage("square", input$square)
         }
@@ -321,6 +320,8 @@ datawatsServer <- function(id) {
         line_id <- as.numeric(input$toggle$lineid)
         checked <- input$toggle$checked
 
+        # set the current order of lines
+        order <- attr(rv$current_code_info, "order")
         # update the current code info with the checked flag
         rv$current_code_info <- lapply(rv$current_code_info, function(x) {
           if (x$lineid == line_id) {
@@ -328,17 +329,26 @@ datawatsServer <- function(id) {
           }
           x
         })
+        attr(rv$current_code_info, "order") <- order
+
+        # get the current order of the code info lines
+        new_code_info <-  rv$current_code_info[order]
+        # str(new_code_info)
+
         # grab just the code info that are enabled
         new_code_info <- Filter(
           function(x) {
             return(isTRUE(x$checked))
           },
-          rv$current_code_info
+          new_code_info
         )
 
         # get new code
         new_code_info <- lapply(seq_len(length(new_code_info)), function(i) {
-          if (i > 1 && i < length(new_code_info) && !grepl("%>%", new_code_info[[i]]$code)) {
+          # message(new_code_info[[i]]$code)
+          # message("needs pipe? ", (i < length(new_code_info) && !grepl("%>%", new_code_info[[i]]$code)))
+          if (i < length(new_code_info) && !grepl("%>%", new_code_info[[i]]$code)) {
+            message("adding pipe to ", new_code_info[[i]]$code)
             # if in between lines and it doesn't have pipes, add it
             new_code_info[[i]]$code <- paste(new_code_info[[i]]$code, "%>%")
           } else if (i == length(new_code_info) && grepl("%>%", new_code_info[[i]]$code)) {
@@ -347,6 +357,7 @@ datawatsServer <- function(id) {
           }
           new_code_info[[i]]
         })
+
         new_code_source <- paste0(lapply(new_code_info, function(x) x$code), collapse = "\n")
         quoted <- rlang::parse_expr(new_code_source)
         str(quoted)
@@ -396,6 +407,7 @@ datawatsServer <- function(id) {
           }
           x
         })
+        new_rv_code_info <-  new_rv_code_info[order]
         send_js_code_info <- lapply(new_rv_code_info, function(x) {
           list(id = x$lineid, code = x$code, change = x$change, row = x$row, col = x$col)
         })
@@ -406,9 +418,9 @@ datawatsServer <- function(id) {
         rv$summaries <- lapply(new_rv_code_info, function(x) list(lineid = paste0("line", x$lineid), summary = x$summary))
         # send JS the new prompts
         session$sendCustomMessage("update_prompts", rv$summaries)
-        rv$outputs <- lapply(new_rv_code_info, function(x) list(id = x$line, lineid = paste0("line", x$line), output = x$output))
+        rv$outputs <- lapply(outputs, function(x) list(id = x$line, lineid = paste0("line", x$line), output = x$output))
         # update the data display to the last enabled output
-        current(tail(outputs, 1)[[1]]$line)
+        current(length(rv$outputs))
       })
 
       observeEvent(input$reorder, {
@@ -417,9 +429,11 @@ datawatsServer <- function(id) {
         new_order <- as.numeric(input$reorder)
         # str(new_order)
         # get the new order from current code stat
+        str(new_order)
+        attr(rv$current_code_info, "order") <- new_order
+
         new_rv_code_info <- rv$current_code_info[new_order]
         # update the current code info with the checked flag
-        # str(new_rv_code_info)
 
         # now re-evaluate the new order
         # only grab the checked lines
@@ -432,7 +446,7 @@ datawatsServer <- function(id) {
 
         # get new code
         new_code_info <- lapply(seq_len(length(new_code_info)), function(i) {
-          if (i > 1 && i < length(new_code_info) && !grepl("%>%", new_code_info[[i]]$code)) {
+          if (i < length(new_code_info) && !grepl("%>%", new_code_info[[i]]$code)) {
             # if in between lines and it doesn't have pipes, add it
             new_code_info[[i]]$code <- paste(new_code_info[[i]]$code, "%>%")
           } else if (i == length(new_code_info) && grepl("%>%", new_code_info[[i]]$code)) {
@@ -501,10 +515,9 @@ datawatsServer <- function(id) {
         rv$summaries <- lapply(new_rv_code_info, function(x) list(lineid = paste0("line", x$lineid), summary = x$summary))
         # send JS the new prompts
         session$sendCustomMessage("update_prompts", rv$summaries)
-        rv$outputs <- lapply(new_rv_code_info, function(x) list(id = x$line, lineid = paste0("line", x$line), output = x$output))
+        rv$outputs <- lapply(outputs, function(x) list(id = x$line, lineid = paste0("line", x$line), output = x$output))
         # update the data display to the last enabled output
-        current(tail(outputs, 1)[[1]]$line)
-
+        current(length(rv$outputs))
       })
 
     }
