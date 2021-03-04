@@ -133,6 +133,7 @@ get_dplyr_intermediates <- function(pipeline) {
         message("old_verb_summary: ", old_verb_summary)
         intermediate["summary"] <-
           ifelse(is.null(verb_summary) || identical(verb_summary, old_verb_summary), "", verb_summary)
+        intermediate["change"] <- ifelse(grepl("no changes", verb_summary), "none", intermediate["change"])
         old_verb_summary <- verb_summary
       },
       error = function(e) {
