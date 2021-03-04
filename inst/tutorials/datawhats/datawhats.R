@@ -74,6 +74,88 @@ datawatsUI <- function(id) {
   )
 }
 
+# helper function for grabbing a particular new code
+get_code <- function(target, id) {
+  # browser()
+  result <- Filter(function(x) x$lineid == id, target)
+  if (length(result) > 0) {
+    return(result[[1]]$code)
+  } else {
+    return(result)
+  }
+}
+
+# helper function for grabbing a particular new output
+get_output <- function(target, lineid) {
+  Filter(function(x) x$line == lineid, target)
+}
+
+#' Helper function that updates line information for R Shiny
+#' reactive values and sends UI information to the JS side.
+#'
+#' @param order A numeric vector
+#' @param outputs A list of outputs from `get_dplyr_intermediates`
+#' @param current_code_info The current code info list structure
+#' @param new_code_info The new code info list structure
+#' @param session The Shiny session
+#'
+#' @return
+#'
+#' @noRd
+update_lines <- function(order, outputs, current_code_info, new_code_info, rv, session) {
+  # prep data to send JS about box change type, row, and col
+  new_rv_code_info <- lapply(current_code_info, function(x) {
+    out <- get_output(outputs, x$lineid)
+    # error occurred before this line
+    if (length(out) == 0) {
+      # reset states
+      x$change = "invisible"
+      x$row = ""
+      x$col = ""
+      x$summary = ""
+      x$output = NULL
+    } else {
+      # no error before this line
+      new_rv <- out[[1]]
+      # check if we need to update the code text for one of the editors regarding %>%
+      new_code <- get_code(new_code_info, x$lineid)
+      # check for error for this line
+      if (!is.null(new_rv$err)) {
+        # set error states
+        x$code = new_code
+        x$change = new_rv$change
+        x$row = abbrev_num(new_rv$row)
+        x$col = abbrev_num(new_rv$col)
+        x$summary = new_rv$err
+        x$output = NULL
+      } else {
+        # if no error, update states
+        x$code = new_code
+        x$change = new_rv$change
+        x$row = abbrev_num(new_rv$row)
+        x$col = abbrev_num(new_rv$col)
+        x$summary = new_rv$summary
+        x$output = new_rv$output
+      }
+    }
+    x
+  })
+  new_rv_code_info <- new_rv_code_info[order]
+  send_js_code_info <- lapply(new_rv_code_info, function(x) {
+    list(id = x$lineid, code = x$code, change = x$change, row = x$row, col = x$col)
+  })
+  # send JS the new summary box, row and col
+  session$sendCustomMessage("update_line", send_js_code_info)
+
+  # update the summaries and outputs as well
+  rv$summaries <- lapply(new_rv_code_info, function(x) list(lineid = paste0("line", x$lineid), summary = x$summary))
+  # send JS the new prompts
+  session$sendCustomMessage("update_prompts", rv$summaries)
+  rv$outputs <- lapply(outputs, function(x) list(id = x$line, lineid = paste0("line", x$line), output = x$output))
+  # update the data display to the last enabled output
+  rv$current <- length(rv$outputs)
+}
+
 #' Datawats server
 #'
 #' @param id
@@ -92,11 +174,9 @@ datawatsServer <- function(id) {
   moduleServer(
     id,
     function(input, output, session) {
-      # current line reactive value
-      current <- reactiveVal(0)
-
-      # these are reactive values related to code editors info, summary prompts, and df outputs
+      # these are reactive values related to current line, code info of all lines, summary prompts, and df outputs
       rv <- reactiveValues()
+      rv$current <- 0
       rv$code_info <-  NULL
       rv$summaries <- list()
       rv$outputs <- NULL
@@ -129,7 +209,7 @@ datawatsServer <- function(id) {
           rv$summaries <- lapply(outputs, function(x) list(lineid = paste0("line", x$line), summary = x$summary))
           rv$outputs <- lapply(outputs, function(x) list(lineid = paste0("line", x$line), output = x$output))
           # trigger data frame output of the very last line
-          current(length(rv$outputs))
+          rv$current <- length(rv$outputs)
         }
       });
 
@@ -184,14 +264,14 @@ datawatsServer <- function(id) {
         message("clicked on a square: ", input$square)
         # make sure to only change current if the current code info has the line marked as enabled
         if (!is.null(input$square)) {
-          current(input$square);
+          rv$current <- input$square;
           session$sendCustomMessage("square", input$square)
         }
       })
 
       # render a reactable of the current line output
       output$line_table <- reactable::renderReactable({
-        value <- as.numeric(current())
+        value <- as.numeric(rv$current)
         if (value > 0 && length(rv$outputs) > 0) {
           # reactable can only efficiently display data of a certain size
           # if we enter into the 100K range, it starts to slow down
@@ -208,22 +288,6 @@ datawatsServer <- function(id) {
           }
         }
       })
-
-      # helper function for grabbing a particular new code
-      get_code <- function(target, id) {
-        # browser()
-        result <- Filter(function(x) x$lineid == id, target)
-        if (length(result) > 0) {
-          return(result[[1]]$code)
-        } else {
-          return(result)
-        }
-      }
-
-      # helper function for grabbing a particular new output
-      get_output <- function(target, lineid) {
-        Filter(function(x) x$line == lineid, target)
-      }
 
       # this input even tells us which line to (un)comment
       # TODO trigger a revaluation of the code of enabled lines
@@ -261,6 +325,7 @@ datawatsServer <- function(id) {
           new_code_info
         )
 
+        # if no lines are enabled return early
         if (length(new_code_info) == 0) {
           rv$outputs <- list()
           return()
@@ -268,7 +333,6 @@ datawatsServer <- function(id) {
 
         # get new code
         new_code_info <- lapply(seq_len(length(new_code_info)), function(i) {
-          # message(new_code_info[[i]]$code)
           if (i < length(new_code_info) && !grepl("%>%", new_code_info[[i]]$code)) {
             message("adding pipe to ", new_code_info[[i]]$code)
             # if in between lines and it doesn't have pipes, add it
@@ -292,70 +356,18 @@ datawatsServer <- function(id) {
           outputs[[i]]
         })
 
-        # prep data to send JS about box change type, row, and col
-        new_rv_code_info <- lapply(rv$code_info, function(x) {
-          out <- get_output(outputs, x$lineid)
-          # error occurred before this line
-          if (length(out) == 0) {
-            # reset states
-            x$change = "invisible"
-            x$row = ""
-            x$col = ""
-            x$summary = ""
-            x$output = NULL
-          } else {
-            # no error before this line
-            new_rv <- out[[1]]
-            # check if we need to update the code text for one of the editors regarding %>%
-            new_code <- get_code(new_code_info, x$lineid)
-            # check for error for this line
-            if (!is.null(new_rv$err)) {
-              # set error states
-              x$code = new_code
-              x$change = new_rv$change
-              x$row = abbrev_num(new_rv$row)
-              x$col = abbrev_num(new_rv$col)
-              x$summary = new_rv$err
-              x$output = NULL
-            } else {
-              # if no error, update states
-              x$code = new_code
-              x$change = new_rv$change
-              x$row = abbrev_num(new_rv$row)
-              x$col = abbrev_num(new_rv$col)
-              x$summary = new_rv$summary
-              x$output = new_rv$output
-            }
-          }
-          x
-        })
-        new_rv_code_info <-  new_rv_code_info[order]
-        send_js_code_info <- lapply(new_rv_code_info, function(x) {
-          list(id = x$lineid, code = x$code, change = x$change, row = x$row, col = x$col)
-        })
-        # send JS the new summary box, row and col
-        session$sendCustomMessage("update_line", send_js_code_info)
-
-        # update the summaries and outputs as well
-        rv$summaries <- lapply(new_rv_code_info, function(x) list(lineid = paste0("line", x$lineid), summary = x$summary))
-        # send JS the new prompts
-        session$sendCustomMessage("update_prompts", rv$summaries)
-        rv$outputs <- lapply(outputs, function(x) list(id = x$line, lineid = paste0("line", x$line), output = x$output))
-        # update the data display to the last enabled output
-        current(length(rv$outputs))
+        # update line information for both R and JS
+        update_lines(order, outputs, rv$code_info, new_code_info, rv, session)
       })
 
       observeEvent(input$reorder, {
         message("REORDER", input$reorder)
         # this lets us get the boolean value of the toggle from JS side!
-        new_order <- as.numeric(input$reorder)
-        # str(new_order)
-        # get the new order from current code stat
-        str(new_order)
-        attr(rv$current_code_info, "order") <- new_order
-
-        new_rv_code_info <- rv$current_code_info[new_order]
-        # update the current code info with the checked flag
+        order <- as.numeric(input$reorder)
+        str(order)
+        # set and get the new order from current code stat
+        attr(rv$current_code_info, "order") <- order
+        new_rv_code_info <- rv$current_code_info[order]
 
         # now re-evaluate the new order
         # only grab the checked lines
@@ -365,6 +377,12 @@ datawatsServer <- function(id) {
           },
           new_rv_code_info
         )
+
+        # if no lines are enabled return early
+        if (length(new_code_info) == 0) {
+          rv$outputs <- list()
+          return()
+        }
 
         # get new code
         new_code_info <- lapply(seq_len(length(new_code_info)), function(i) {
@@ -389,57 +407,8 @@ datawatsServer <- function(id) {
           outputs[[i]]
         })
 
-        # prep data to send JS about box change type, row, and col
-        new_rv_code_info <- lapply(rv$code_info, function(x) {
-          out <- get_output(outputs, x$lineid)
-          # error occurred before this line
-          if (length(out) == 0) {
-            # reset states
-            x$change = "invisible"
-            x$row = ""
-            x$col = ""
-            x$summary = ""
-            x$output = NULL
-          } else {
-            # no error before this line
-            new_rv <- out[[1]]
-            # check if we need to update the code text for one of the editors regarding %>%
-            new_code <- get_code(new_code_info, x$lineid)
-            # check for error for this line
-            if (!is.null(new_rv$err)) {
-              # set error states
-              x$code = new_code
-              x$change = new_rv$change
-              x$row = abbrev_num(new_rv$row)
-              x$col = abbrev_num(new_rv$col)
-              x$summary = new_rv$err
-              x$output = NULL
-            } else {
-              # if no error, update states
-              x$code = new_code
-              x$change = new_rv$change
-              x$row = abbrev_num(new_rv$row)
-              x$col = abbrev_num(new_rv$col)
-              x$summary = new_rv$summary
-              x$output = new_rv$output
-            }
-          }
-          x
-        })
-        new_rv_code_info <- new_rv_code_info[new_order]
-        send_js_code_info <- lapply(new_rv_code_info, function(x) {
-          list(id = x$lineid, code = x$code, change = x$change, row = x$row, col = x$col)
-        })
-        # send JS the new summary box, row and col
-        session$sendCustomMessage("update_line", send_js_code_info)
-
-        # update the summaries and outputs as well
-        rv$summaries <- lapply(new_rv_code_info, function(x) list(lineid = paste0("line", x$lineid), summary = x$summary))
-        # send JS the new prompts
-        session$sendCustomMessage("update_prompts", rv$summaries)
-        rv$outputs <- lapply(outputs, function(x) list(id = x$line, lineid = paste0("line", x$line), output = x$output))
-        # update the data display to the last enabled output
-        current(length(rv$outputs))
+        # update line information for both R and JS
+        update_lines(order, outputs, rv$code_info, new_code_info, rv, session)
       })
 
     }
