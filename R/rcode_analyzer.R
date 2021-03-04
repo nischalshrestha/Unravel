@@ -32,9 +32,16 @@ get_change_type <- function(verb_name) {
   # TODO rn this is just based on function names, but should take into whether
   # there were any changes from previous df to current df. tidylog could also
   # help us out here.
-  if (verb_name %in% c("group_by", "rowwise")) {
+  internal_verbs <- c(
+    "group_by", "rowwise"
+  )
+  visible_verbs <- c(
+    "select", "filter", "mutate", "transmute", "summarise", "summarize", "arrange", "rename", "rename_with", "distinct",
+    "spread", "gather", "pivot_wider", "pivot_longer",  "distinct", "nest", "unnest"," hoist", "unnest_longer", "unnest_wider"
+  )
+  if (verb_name %in% internal_verbs) {
     return("internal")
-  } else if (verb_name %in% c("select", "filter", "mutate", "summarise", "arrange", "spread")) {
+  } else if (verb_name %in% visible_verbs) {
     return("visible")
   } else {
     return("none")
