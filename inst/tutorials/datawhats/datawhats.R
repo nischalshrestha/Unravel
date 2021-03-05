@@ -266,6 +266,14 @@ generate_code_info_outputs <- function(order, rv) {
 
   # get new code intermediate info
   outputs <- get_dplyr_intermediates(quoted)
+  # we might run across an error while processing an invalid pipeline, for
+  # this case we will get back the error message, a character, so we do this
+  # silly check for now so that we return early and the UI does not know any better
+  # it will just show the last error'd line
+  if (!inherits(outputs, "list")) {
+    return(NULL)
+  }
+
   # update the default lineid
   outputs <- lapply(seq_len(length(outputs)), function(i) {
     outputs[[i]]$line <- new_code_info[[i]]$lineid

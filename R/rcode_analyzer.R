@@ -14,6 +14,9 @@ recurse_dplyr <- function(dplyr_tree, outputs = list()) {
   }
   # get the output of the quoted expression so far
   base <- append(list(dplyr_tree), outputs)
+  if (length(dplyr_tree) < 2) {
+    stop("Error: Detected a verb in pipeline that is not a function call for:<br><pre><code>", rlang::expr_deparse(dplyr_tree), "</code></pre>")
+  }
   return(
     append(recurse_dplyr(dplyr_tree[[2]]), base)
   )
@@ -72,8 +75,6 @@ get_change_type <- function(verb_name) {
 #' outputs <- get_dplyr_intermediates(quoted)
 get_dplyr_intermediates <- function(pipeline) {
   clear_verb_summary()
-  # TODO be able to handle two more use cases:
-  # - if only a verb by itself was supplied (via. data argument)
   old_verb_summary <- ""
   # only data line
   if (inherits(pipeline, "name")) {
@@ -92,6 +93,7 @@ get_dplyr_intermediates <- function(pipeline) {
   }
 
   # if first part of ast is not a %>% just quit
+  # or if only a verb by itself was supplied (via. data argument)
   if (!identical(pipeline[[1]], as.symbol("%>%"))) {
     message("`pipeline` input is not a pipe call!")
     return(list(
@@ -107,8 +109,22 @@ get_dplyr_intermediates <- function(pipeline) {
     ))
   }
 
+  lines <- NULL
   # first grab all of the lines as a list of of language objects
-  lines <- recurse_dplyr(pipeline)
+  # potentially we could error out when trying to recursive invalid pipelines (for e.g. bad order of lines)
+  err <- NULL
+  tryCatch({
+      lines <- recurse_dplyr(pipeline)
+    },
+    error = function(e) {
+      err <<- e$message
+    }
+  )
+  # if so, just return with error message (currently not being used in front-end)
+  if (!is.null(err)) {
+    return(err)
+  }
+
   results <- list()
   for (i in seq_len(length(lines))) {
     if (i != 1) {
