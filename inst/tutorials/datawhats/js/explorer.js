@@ -101,6 +101,7 @@ function update_prompts(summaries) {
   console.log("updating prompts...");
   summaries.forEach(e => {
     let key = e.lineid;
+    //let line = lines[key];
     lines[key].prompt.setContent(e.summary);
   });
   console.log("JS has updated prompts!");
@@ -219,11 +220,13 @@ $(document).on("shiny:sessioninitialized", function(event) {
       console.log(line);
       console.log(e.code);
       console.log(e.change);
-      if (e.change != "invisible") {
+      if (e.change != "invisible" && e.change != "invalid") {
         line.summary_box.setAttribute("lineid", j);
         console.log(line.summary_box.getAttribute("lineid"));
         j++;
+        line.prompt.enable();
       } else {
+        line.prompt.disable();
         line.summary_box.setAttribute("lineid", null);
       }
       new_summary_class = `d-flex noSelect justify-content-center ${e.change}-square`;

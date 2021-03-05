@@ -1,6 +1,139 @@
 library(DataTutor)
 library(shiny)
 
+#' Creates a summary button
+#'
+#' @param ns_id
+#' @param inputId
+#' @param lineid
+#' @param change_type
+#' @param value
+#'
+#' @return
+#' @export
+#'
+#' @examples
+summary_button <- function(ns_id, inputId, lineid, change_type, value = 0) {
+  ns <- shiny::NS(ns_id)
+  tags$button(id = ns(inputId),
+              `lineid` = lineid,
+              class = glue::glue("d-flex {change_type}-square noSelect justify-content-center"),
+              style = "color:transparent; cursor:pointer;",
+              type = "button", as.character(value))
+}
+
+#' A helper function that creates a div for a group item for SortableJS
+#'
+#' In particular, the unique identifiers make up each item:
+#' - Item ID: <id> for group item: data, verb1, verb2, ... verbn.
+#' "verbN" is better for uniquely identifying since you can have multiple of same verb
+#' - Item Summary ID: <id>-summary-box, <id>-summary-box-row, <id>-summary-box-col
+#' - Item Box Type ID: <change>-square
+#' - Item Glyph ID: <id>-glyph
+#' - Item Toggle ID: <id>-toggle
+#' - Item CodeMirror ID: <id>-code_mirror
+#'
+#' @param id the character id for the particular group item
+#' @param ns_id the character for the Shiny module namespace id
+#'
+#' @return a shiny::div
+#' @export
+#'
+#' @examples
+group_item_div <- function(line, ns_id) {
+  # browser()
+  ns <- shiny::NS(ns_id)
+  # line_id is for SortableJS and is just a number of the line
+  line_id <- line$lineid
+  # TODO this strategy of adding pipe won't work because we need to know if the line is the last one or not, we could
+  # preprocess that info ahead of time
+  line_code <- line$code
+  change_type <- line$change
+  row <- line$row
+  col <- line$col
+  # whereas id is for a readable identifier for JS/jquery/CSS
+  id <- paste0("line", line$lineid)
+  div(class = "d-flex list-group-item", id=id, `data-id` = line_id,
+      # row div
+      div(class = "justify-content-center align-self-baseline",
+          div(class = "d-flex justify-content-center align-self-center",
+              div(class = "row", style = "font-size:0.8em;",
+                  HTML("&nbsp;")
+              )
+          ),
+          div(class = glue::glue("{id}-summary-box-row d-flex empty-square justify-content-center"),
+              div(class=glue::glue("{id}-row-content align-self-center"), style="font-size: 0.8em;",
+                  # update element
+                  HTML(row)
+              )
+          )
+      ),
+      # column div + square div
+      div(class = "justify-content-center align-self-baseline",
+          div(class = glue::glue("{id}-summary-box-col d-flex justify-content-center align-self-center"),
+              div(class = glue::glue("{id}-col-content row"), style = "font-size:0.8em;",
+                  # update element
+                  HTML(col)
+              )
+          ),
+          # update element (class of square)
+          summary_button(ns_id, id, line_id, change_type)
+      ),
+      # glyphicon
+      div(class=glue::glue("{id}-glyph d-flex justify-content-center align-self-center"),
+          span(class="glyphicon glyphicon-move", style="opacity:1;")
+      ),
+      # codemirror empty div above
+      div(class="d-flex justify-content-center align-self-center", style="padding:0.5em;",
+          div(class="row", style="font-size: 1em;", HTML("&nbsp;"))
+      ),
+      # codemirror div (gets dynamically created); fixedPage keeps the width=100%
+      shiny::fixedPage(
+        shiny::tags$textarea(
+          shiny::HTML(line_code),
+          class = "verb",
+          id = id,
+          lineid = line_id
+        )
+      ),
+      # toggle checkbox
+      div(style="opacity:1; padding-right:0.25em;",
+          div(class="d-flex justify-content-center align-self-center",
+              div(style="font-size: 0.8em;", HTML("&nbsp;"))
+          ),
+          # the value of `checked` is not meaningful, the existence of attribute turns on toggle by default
+          shiny::tags$input(
+            type = "checkbox",
+            id = glue::glue("{id}-toggle"),
+            `toggle-id` = id,
+            `line-id` = line_id,
+            `checked` = TRUE,
+            `data-toggle`="toggle",
+            `data-size`="xs",
+            `data-height`="20", `data-width`="30",
+            `data-on`=" ", `data-off`=" ",
+            `data-style`="ios fast", `data-onstyle`="success", `data-offstyle`="secondary"
+          )
+      )
+  )
+}
+
+
+#' Helper function to create a group item div for SortableJS
+#'
+#' @param lines
+#' @param ns_id
+#'
+#' @return
+#' @export
+#'
+#' @examples
+create_group_item_tags <- function(lines, ns_id) {
+  ataglist <- lapply(lines, group_item_div, ns_id = ns_id)
+  class(ataglist) <- c("shiny.tag.list", "list")
+  return(ataglist)
+}
+
 #' Datawats UI
 #'
 #' @param id
@@ -90,6 +223,58 @@ get_output <- function(target, lineid) {
   Filter(function(x) x$line == lineid, target)
 }
 
+#' Given line order, and the reactive values, generate
+#'
+#' @param order
+#' @param rv
+#'
+#' @return
+#' @export
+#'
+#' @examples
+generate_code_info_outputs <- function(order, rv) {
+  new_code_info <- rv$current_code_info[order]
+  # only grab the enabled lines
+  new_code_info <- Filter(
+    function(x) {
+      return(isTRUE(x$checked))
+    },
+    new_code_info
+  )
+
+  # if no lines are enabled return early
+  if (length(new_code_info) == 0) {
+    rv$outputs <- list()
+    return(NULL)
+  }
+
+  # get new code
+  new_code_info <- lapply(seq_len(length(new_code_info)), function(i) {
+    if (i < length(new_code_info) && !grepl("%>%", new_code_info[[i]]$code)) {
+      # if in between lines and it doesn't have pipes, add it
+      new_code_info[[i]]$code <- paste(new_code_info[[i]]$code, "%>%")
+    } else if (i == length(new_code_info) && grepl("%>%", new_code_info[[i]]$code)) {
+      # if last line and it contains pipe, remove it
+      new_code_info[[i]]$code <- unlist(strsplit(new_code_info[[i]]$code, split = "%>%"))
+    }
+    new_code_info[[i]]
+  })
+  new_code_source <- paste0(lapply(new_code_info, function(x) x$code), collapse = "\n")
+  quoted <- rlang::parse_expr(new_code_source)
+  message("quoted code:")
+  str(quoted)
+
+  # get new code intermediate info
+  outputs <- get_dplyr_intermediates(quoted)
+  # update the default lineid
+  outputs <- lapply(seq_len(length(outputs)), function(i) {
+    outputs[[i]]$line <- new_code_info[[i]]$lineid
+    outputs[[i]]
+  })
+
+  list(new_code_info = new_code_info, outputs = outputs)
+}
+
 #' Helper function that updates line information for R Shiny
 #' reactive values and sends UI information to the JS side.
 #'
@@ -109,7 +294,7 @@ update_lines <- function(order, outputs, current_code_info, new_code_info, rv, s
     # error occurred before this line
     if (length(out) == 0) {
       # reset states
-      x$change = "invisible"
+      x$change = "invalid" # this is different from error, so we'll call it invalid
       x$row = ""
       x$col = ""
       x$summary = ""
@@ -272,7 +457,7 @@ datawatsServer <- function(id) {
       # render a reactable of the current line output
       output$line_table <- reactable::renderReactable({
         value <- as.numeric(rv$current)
-        if (value > 0 && length(rv$outputs) > 0) {
+        if (!is.null(value) && length(rv$outputs) > 0) {
           # reactable can only efficiently display data of a certain size
           # if we enter into the 100K range, it starts to slow down
           message("changed data line output ", value)
@@ -313,48 +498,15 @@ datawatsServer <- function(id) {
         })
         attr(rv$current_code_info, "order") <- order
 
-        # get the current order of the code info lines
-        new_code_info <-  rv$current_code_info[order]
-        # str(new_code_info)
-
-        # grab just the code info that are enabled
-        new_code_info <- Filter(
-          function(x) {
-            return(isTRUE(x$checked))
-          },
-          new_code_info
-        )
-
-        # if no lines are enabled return early
-        if (length(new_code_info) == 0) {
-          rv$outputs <- list()
+        # generate new code info and dataframe outputs
+        code_info_outputs <- generate_code_info_outputs(order, rv)
+        # quit early when no lines are enabled
+        if (is.null(code_info_outputs)) {
           return()
         }
 
-        # get new code
-        new_code_info <- lapply(seq_len(length(new_code_info)), function(i) {
-          if (i < length(new_code_info) && !grepl("%>%", new_code_info[[i]]$code)) {
-            message("adding pipe to ", new_code_info[[i]]$code)
-            # if in between lines and it doesn't have pipes, add it
-            new_code_info[[i]]$code <- paste(new_code_info[[i]]$code, "%>%")
-          } else if (i == length(new_code_info) && grepl("%>%", new_code_info[[i]]$code)) {
-            # if last line and it contains pipe, remove it
-            new_code_info[[i]]$code <- unlist(strsplit(new_code_info[[i]]$code, split = "%>%"))
-          }
-          new_code_info[[i]]
-        })
-
-        new_code_source <- paste0(lapply(new_code_info, function(x) x$code), collapse = "\n")
-        quoted <- rlang::parse_expr(new_code_source)
-        str(quoted)
-
-        # get new code intermediate info
-        outputs <- get_dplyr_intermediates(quoted)
-        # update the default lineid
-        outputs <- lapply(seq_len(length(outputs)), function(i) {
-          outputs[[i]]$line <- new_code_info[[i]]$lineid
-          outputs[[i]]
-        })
+        new_code_info <- code_info_outputs$new_code_info
+        outputs <- code_info_outputs$outputs
 
         # update line information for both R and JS
         update_lines(order, outputs, rv$code_info, new_code_info, rv, session)
@@ -364,48 +516,19 @@ datawatsServer <- function(id) {
         message("REORDER", input$reorder)
         # this lets us get the boolean value of the toggle from JS side!
         order <- as.numeric(input$reorder)
-        str(order)
+
         # set and get the new order from current code stat
         attr(rv$current_code_info, "order") <- order
-        new_rv_code_info <- rv$current_code_info[order]
 
-        # now re-evaluate the new order
-        # only grab the checked lines
-        new_code_info <- Filter(
-          function(x) {
-            return(isTRUE(x$checked))
-          },
-          new_rv_code_info
-        )
-
-        # if no lines are enabled return early
-        if (length(new_code_info) == 0) {
-          rv$outputs <- list()
+        # generate new code info and dataframe outputs
+        code_info_outputs <- generate_code_info_outputs(order, rv)
+        # quit early when no lines are enabled
+        if (is.null(code_info_outputs)) {
           return()
         }
 
-        # get new code
-        new_code_info <- lapply(seq_len(length(new_code_info)), function(i) {
-          if (i < length(new_code_info) && !grepl("%>%", new_code_info[[i]]$code)) {
-            # if in between lines and it doesn't have pipes, add it
-            new_code_info[[i]]$code <- paste(new_code_info[[i]]$code, "%>%")
-          } else if (i == length(new_code_info) && grepl("%>%", new_code_info[[i]]$code)) {
-            # if last line and it contains pipe, remove it
-            new_code_info[[i]]$code <- unlist(strsplit(new_code_info[[i]]$code, split = "%>%"))
-          }
-          new_code_info[[i]]
-        })
-        new_code_source <- paste0(lapply(new_code_info, function(x) x$code), collapse = "\n")
-        quoted <- rlang::parse_expr(new_code_source)
-        str(quoted)
-        # TODO re-evaluate and get new code info to send to JS to update lines
-        # get new code intermediate info
-        outputs <- get_dplyr_intermediates(quoted)
-        # update the default lineid
-        outputs <- lapply(seq_len(length(outputs)), function(i) {
-          outputs[[i]]$line <- new_code_info[[i]]$lineid
-          outputs[[i]]
-        })
+        new_code_info <- code_info_outputs$new_code_info
+        outputs <- code_info_outputs$outputs
 
         # update line information for both R and JS
         update_lines(order, outputs, rv$code_info, new_code_info, rv, session)

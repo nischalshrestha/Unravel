@@ -93,8 +93,20 @@ get_dplyr_intermediates <- function(pipeline) {
 
   # if first part of ast is not a %>% just quit
   if (!identical(pipeline[[1]], as.symbol("%>%"))) {
-    stop("`pipeline` input is not a pipe call!")
+    message("`pipeline` input is not a pipe call!")
+    return(list(
+      list(
+        line = 1,
+        code = rlang::expr_deparse(pipeline),
+        change = "error",
+        output = list(),
+        row = "",
+        col = "",
+        summary = "<strong>Summary:</strong> Invalid line! Are you missing a .data parameter for this call?"
+      )
+    ))
   }
+
   # first grab all of the lines as a list of of language objects
   lines <- recurse_dplyr(pipeline)
   results <- list()
@@ -132,7 +144,7 @@ get_dplyr_intermediates <- function(pipeline) {
         message("verb_summary: ", verb_summary)
         message("old_verb_summary: ", old_verb_summary)
         intermediate["summary"] <-
-          ifelse(is.null(verb_summary) || identical(verb_summary, old_verb_summary), "", verb_summary)
+          ifelse(is.null(verb_summary) || identical(verb_summary, old_verb_summary), "", paste("<strong>Summary:</strong>", verb_summary))
         intermediate["change"] <- ifelse(grepl("no changes", verb_summary), "none", intermediate["change"])
         old_verb_summary <- verb_summary
       },
@@ -152,7 +164,7 @@ get_dplyr_intermediates <- function(pipeline) {
         crayon::strip_style(paste0(err))
       )
       intermediate[["change"]] <- "error"
-      intermediate[["err"]] <- msg
+      intermediate[["err"]] <- ifelse(!grepl("Error", msg), paste("<strong>Error:</strong>", msg), msg)
       results <- append(results, list(intermediate))
       return(results)
     }

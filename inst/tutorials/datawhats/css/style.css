@@ -81,7 +81,16 @@
   border: 0px dashed transparent;
   width: 2em;
   height: 2em;
-  opacity: 0;
+  color: transparent;
+  background-color: transparent;
+}
+
+.invalid-square {
+  border: 0px dashed transparent;
+  width: 2em;
+  height: 2em;
+  color: transparent;
+  background-color: transparent;
 }
 
 .error-square {
