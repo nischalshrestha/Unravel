@@ -21,8 +21,9 @@ Imports:
     reticulate,
     tidyverse,
     flair,
-    tidylog,
     here
+Remotes:
+    nischalshrestha/tidylog
 Suggests: 
     learnr
 RoxygenNote: 7.1.1
