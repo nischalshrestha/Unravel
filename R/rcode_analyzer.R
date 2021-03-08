@@ -78,16 +78,16 @@ get_dplyr_intermediates <- function(pipeline) {
   old_verb_summary <- ""
   # only data line
   if (inherits(pipeline, "name")) {
-    intermediate <- eval(pipeline)
+    output <- eval(pipeline)
     return(list(
       list(
         line = 1,
         code = rlang::expr_deparse(pipeline),
         change = "none",
-        output = intermediate,
-        row = dim(intermediate)[[1]],
-        col = dim(intermediate)[[2]],
-        summary = ""
+        output = output,
+        row = dim(output)[[1]],
+        col = dim(output)[[2]],
+        summary = paste("<strong>Summary:</strong>", tidylog::get_data_summary(output))
       )
     ))
   }
@@ -149,6 +149,8 @@ get_dplyr_intermediates <- function(pipeline) {
     err <- NULL
     tryCatch({
         # TODO alter some tidylog verbs to make them more readable
+        # TODO for the first line, we have to explicitly call the `tidylog` function on the data so we can
+        # at least get a summary like the data shape for the prompt
         # and annotate them with divs.
         intermediate["output"] <- list(eval(lines[[i]]))
         intermediate["row"] <- dim(intermediate["output"][[1]])[[1]]
@@ -159,6 +161,9 @@ get_dplyr_intermediates <- function(pipeline) {
         verb_summary <- ifelse(is.null(verb_summary), "", verb_summary)
         message("verb_summary: ", verb_summary)
         message("old_verb_summary: ", old_verb_summary)
+        if (i == 1) {
+          verb_summary <- tidylog::get_data_summary(intermediate["output"][[1]])
+        }
         intermediate["summary"] <-
           ifelse(is.null(verb_summary) || identical(verb_summary, old_verb_summary), "", paste("<strong>Summary:</strong>", verb_summary))
         intermediate["change"] <- ifelse(grepl("no changes", verb_summary), "none", intermediate["change"])
