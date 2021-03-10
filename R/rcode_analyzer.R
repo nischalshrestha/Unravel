@@ -75,6 +75,7 @@ get_change_type <- function(verb_name) {
 #' outputs <- get_dplyr_intermediates(quoted)
 get_dplyr_intermediates <- function(pipeline) {
   clear_verb_summary()
+  clear_callouts()
   old_verb_summary <- ""
   # only data line
   if (inherits(pipeline, "name")) {

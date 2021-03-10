@@ -86,6 +86,7 @@ function setup_prompts(summaries) {
         // when showing tippy, let's callout the code editor's border to draw attention to it
         lines[key].wrapper.style.border = "2px solid black";
         // TODO: enable the callout words, e.g:
+        lines[key].callout_nodes.map(node => node.className = node.id);
       	// group_by_verb_callout_nodes.map(node => node.className = node.id);
       	// but probably more like:
       	// lines[key].callout_nodes.map(node => node.className = node.id);
@@ -94,6 +95,7 @@ function setup_prompts(summaries) {
         // when hiding tippy, let's remove the border callout
         lines[key].wrapper.style.border = "1px solid #eee";
         // TODO: disable the callout words, e.g:
+        lines[key].callout_nodes.map(node => node.className = "");
       	// group_by_verb_callout_nodes.map(node => node.className = '');
       	// but probably more like:
       	// lines[key].callout_nodes.map(node => node.className = '');
@@ -178,7 +180,6 @@ function setup_box_listeners() {
   Shiny.setInputValue("datawat-need_callouts", "Gimme the callouts! " + Object.entries(lines).length);
 }
 
-/*
 // helper function to callout parts of the code snippet
 function callout_code_text(callout, verb_doc) {
   // this marks the specific snippet within a verb document
@@ -186,8 +187,9 @@ function callout_code_text(callout, verb_doc) {
   let snippet = callout.word;
   var lineNumber = 0;
   var charNumber = verb_doc.getValue().indexOf(snippet);
-  console.log(verb_doc.getValue());
-  console.log(charNumber);
+  // console.log(verb_doc.getValue());
+  // console.log(charNumber);
+  console.log("callout in callout_code_text " + JSON.stringify(callout));
 
   var callout_html_node = document.createElement("span");
   callout_html_node.innerHTML = snippet;
@@ -199,40 +201,39 @@ function callout_code_text(callout, verb_doc) {
   )
   return callout_html_node;
 }
-*/
-
-
 
 function setup_callouts(callouts) {
   console.log("got the callouts in JS! " + JSON.stringify(callouts));
+  // for each lineid, add a the callout words field
+  // containing a list like: [{word: "foo", change: "internal-change"}, ...]
+  callouts.forEach(e => {
+    let line = lines[e.lineid];
+    let line_doc = line.editor.getDoc();
+    let line_callouts = e.callouts;
+    let line_callout_nodes = [];
+    if (line_callouts != null) {
+      line_callout_nodes = line_callouts.map(callout => callout_code_text(callout, line_doc));
+    }
+    line.callout_nodes = line_callout_nodes;
+  })
+  Shiny.setInputValue("datawat-need_prompts", "we need the prompts now " + callouts.length);
+}
 
-  // TODO for each lineid, add a the callout words field, e.g.: [{word: "foo", change: "internal-change"}, ...]
-
-  /*
-  // TODO get the verb document by id in lines
-  group_by_verb_doc = group_by_verb_editor.getDoc();
-  // the mapping for callouts is the word and the type of change (e.g. no-change, internal-change, visible-change)
-  // TODO this is our callouts list structure we get from R
-  // this list will then be used in our setup or update callout words function
-  group_by_verb_callouts = [
-    	{
-      	word: "year",
-        change: "internal-change"
-    	},
-      {
-      	word: "sex",
-        change: "internal-change"
-      }
-  ]
-  // TODO in our setup_callouts function, we will do this logic where we mark and create
-  // the html nodes which we can refer to later on
-  // we probably want to assign the nodes to another field in the particular lines[key]
-  // e.g. lines[key].callouts = nodes;
-  group_by_verb_callout_nodes = group_by_verb_callouts.map(callout =>
-    callout_code_text(callout, group_by_verb_doc)
-  );
-  */
-
+function update_callouts(callouts) {
+  console.log("updating callouts...");
+  // NOTE: this is pretty much identical to setup_callouts but naming it different for conveying
+  // update operation
+  callouts.forEach(e => {
+    let line = lines[e.lineid];
+    let line_doc = line.editor.getDoc();
+    let line_callouts = e.callouts;
+    let line_callout_nodes = [];
+    if (line_callouts != null) {
+      line_callout_nodes = line_callouts.map(callout => callout_code_text(callout, line_doc));
+    }
+    line.callout_nodes = line_callout_nodes;
+  })
+  console.log("JS has updated callouts!");
   Shiny.setInputValue("datawat-need_prompts", "we need the prompts now " + callouts.length);
 }
 
@@ -264,6 +265,12 @@ $(document).on("shiny:sessioninitialized", function(event) {
     setup_callouts(callouts);
   });
 
+  Shiny.addCustomMessageHandler('update_callouts', function(callouts) {
+    console.log("trying to update the callouts in JS")
+    // update the prompts
+    update_callouts(callouts);
+  });
+
   Shiny.addCustomMessageHandler('prompts', function(summaries) {
     console.log("trying to setup the prompts in JS")
     // set up the event listener for boxes
@@ -271,7 +278,7 @@ $(document).on("shiny:sessioninitialized", function(event) {
   });
 
   Shiny.addCustomMessageHandler('update_prompts', function(summaries) {
-    console.log("trying to update the prompts JS")
+    console.log("trying to update the prompts in JS")
     // update the prompts
     update_prompts(summaries);
   });

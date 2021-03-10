@@ -307,6 +307,7 @@ update_lines <- function(order, outputs, current_code_info, new_code_info, rv, s
       x$col = ""
       x$summary = ""
       x$output = NULL
+      x$callouts = NULL
     } else {
       # no error before this line
       new_rv <- out[[1]]
@@ -321,6 +322,7 @@ update_lines <- function(order, outputs, current_code_info, new_code_info, rv, s
         x$col = abbrev_num(new_rv$col)
         x$summary = new_rv$err
         x$output = NULL
+        x$callouts = NULL
       } else {
         # if no error, update states
         x$code = new_code
@@ -329,6 +331,7 @@ update_lines <- function(order, outputs, current_code_info, new_code_info, rv, s
         x$col = abbrev_num(new_rv$col)
         x$summary = new_rv$summary
         x$output = new_rv$output
+        x$callouts = new_rv$callouts
       }
     }
     x
@@ -340,9 +343,11 @@ update_lines <- function(order, outputs, current_code_info, new_code_info, rv, s
   # send JS the new summary box, row and col
   session$sendCustomMessage("update_line", send_js_code_info)
 
-  # update the summaries and outputs as well
+  # update the summaries, callouts, and outputs as well
   rv$summaries <- lapply(new_rv_code_info, function(x) list(lineid = paste0("line", x$lineid), summary = x$summary))
+  rv$callouts <- lapply(new_rv_code_info, function(x) list(lineid = paste0("line", x$lineid), callouts = x$callouts))
   # send JS the new prompts
+  session$sendCustomMessage("update_callouts", rv$callouts)
   session$sendCustomMessage("update_prompts", rv$summaries)
   rv$outputs <- lapply(outputs, function(x) list(id = x$line, lineid = paste0("line", x$line), output = x$output))
   # update the data display to the last enabled output
