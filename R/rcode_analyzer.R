@@ -161,6 +161,8 @@ get_dplyr_intermediates <- function(pipeline) {
         verb_summary <- ifelse(is.null(verb_summary), "", verb_summary)
         message("verb_summary: ", verb_summary)
         message("old_verb_summary: ", old_verb_summary)
+        message("verb_callouts: ", get_line_callouts())
+        intermediate["callouts"] <- list(get_line_callouts())
         if (i == 1) {
           verb_summary <- tidylog::get_data_summary(intermediate["output"][[1]])
         }

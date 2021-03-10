@@ -1,12 +1,8 @@
 library(tidyverse)
 
-tidylog_cache <- new.env(parent=emptyenv())
+### Verb summary
 
-# this is a quick way to store a tidylog summary instead of `message`ing it.
-store_verb_summary <- function(m) {
-  # message("assigning tidylog message: ", m)
-  assign("verb_summary", as.character(m), envir = tidylog_cache)
-}
+tidylog_cache <- new.env(parent=emptyenv())
 
 # helper function to get the current verb summary out of tidy log
 get_verb_summary <- function() {
@@ -18,10 +14,43 @@ get_verb_summary <- function() {
   return(NULL)
 }
 
+# this is a quick way to store a tidylog summary instead of `message`ing it.
+store_verb_summary <- function(m) {
+  # message("assigning tidylog message: ", m)
+  assign("verb_summary", as.character(m), envir = tidylog_cache)
+}
+
 # helper function to clear the tidylog_cache envir
 clear_verb_summary <- function(){
   # message("clearing tidylog messages")
   rm(list=ls(tidylog_cache, all.names=TRUE), envir=tidylog_cache)
+}
+
+### Callouts
+
+# callout cache for highlighting code text
+callout_cache <- new.env(parent=emptyenv())
+
+# helper function to get the current callout words as set by tidylog
+get_line_callouts <- function() {
+  if (exists("callouts", envir = callout_cache)) {
+    callouts <- get("callouts", envir = callout_cache)
+    message("getting callouts ", callouts)
+    return(callouts)
+  }
+  return(NULL)
+}
+
+# helper function to store callout words from tidylog
+store_line_callouts <- function(callouts) {
+  message("storing callouts ", callouts)
+  assign("callouts", callouts, envir = callout_cache)
+}
+
+# helper function to clear the callout_cache envir
+clear_callouts <- function() {
+  message("clearing callouts")
+  rm(list=ls(callout_cache, all.names=TRUE), envir=callout_cache)
 }
 
 #' Returns an abbreviated version of a number (K for thousndas and M for millions)

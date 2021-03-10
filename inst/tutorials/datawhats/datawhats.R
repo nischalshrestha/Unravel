@@ -363,7 +363,10 @@ datawatsServer <- function(id) {
   require(tidyverse)
   require(tidylog)
   # set tidylog messages to re-route to our tidylog_cache environment so we can access it
-  options("tidylog.display" = list(DataTutor:::store_verb_summary))
+  options(
+    "tidylog.display" = list(DataTutor:::store_verb_summary),
+    "tidylog.callouts" = DataTutor:::store_line_callouts
+  )
   moduleServer(
     id,
     function(input, output, session) {
@@ -396,9 +399,17 @@ datawatsServer <- function(id) {
           })
           # TODO reset current_code_info via a Reset button
           rv$current_code_info <- lapply(outputs, function(x) {
-            list(lineid = x$line, code = x$code, change = x$change, row = abbrev_num(x$row), col = abbrev_num(x$col), checked = TRUE)
+            list(
+              lineid = x$line,
+              code = x$code,
+              change = x$change,
+              row = abbrev_num(x$row),
+              col = abbrev_num(x$col),
+              checked = TRUE
+            )
           })
           attr(rv$current_code_info, "order") <- seq_len(length(outputs))
+          rv$callouts <- lapply(outputs, function(x) list(lineid = paste0("line", x$line), callouts = x$callouts))
           rv$summaries <- lapply(outputs, function(x) list(lineid = paste0("line", x$line), summary = x$summary))
           rv$outputs <- lapply(outputs, function(x) list(lineid = paste0("line", x$line), output = x$output))
           # trigger data frame output of the very last line
@@ -446,9 +457,15 @@ datawatsServer <- function(id) {
         }
       })
 
+      # list for a trigger message input from JS input so we can send callout info for each line
+      observeEvent(input$need_callouts, {
+        message("JS is ready for callouts: ", input$need_callouts)
+        session$sendCustomMessage("callouts", rv$callouts)
+      })
+
       # list for a trigger message input from JS input so we can send summary info for data prompts
-      observeEvent(input$ready, {
-        message("ready: ", input$ready)
+      observeEvent(input$need_prompts, {
+        message("JS is ready for prompts: ", input$need_prompts)
         session$sendCustomMessage("prompts", rv$summaries)
       })
 

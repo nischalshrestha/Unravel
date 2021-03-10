@@ -85,10 +85,18 @@ function setup_prompts(summaries) {
       onShow(instance) {
         // when showing tippy, let's callout the code editor's border to draw attention to it
         lines[key].wrapper.style.border = "2px solid black";
+        // TODO: enable the callout words, e.g:
+      	// group_by_verb_callout_nodes.map(node => node.className = node.id);
+      	// but probably more like:
+      	// lines[key].callout_nodes.map(node => node.className = node.id);
       },
       onHide(instance) {
         // when hiding tippy, let's remove the border callout
         lines[key].wrapper.style.border = "1px solid #eee";
+        // TODO: disable the callout words, e.g:
+      	// group_by_verb_callout_nodes.map(node => node.className = '');
+      	// but probably more like:
+      	// lines[key].callout_nodes.map(node => node.className = '');
       }
     });
     line_tippy.setContent(e.summary);
@@ -167,7 +175,65 @@ function setup_box_listeners() {
     send_toggle(message);
   });
   // in order for setInputValue to re-trigger upon update of lines, we add the new lines dictionary length
-  Shiny.setInputValue("datawat-ready", "Gimme the prompts, and I'll setup everything else! " + Object.entries(lines).length);
+  Shiny.setInputValue("datawat-need_callouts", "Gimme the callouts! " + Object.entries(lines).length);
+}
+
+/*
+// helper function to callout parts of the code snippet
+function callout_code_text(callout, verb_doc) {
+  // this marks the specific snippet within a verb document
+  // such that we can refer to it later to enable or disable the span for callout highlights
+  let snippet = callout.word;
+  var lineNumber = 0;
+  var charNumber = verb_doc.getValue().indexOf(snippet);
+  console.log(verb_doc.getValue());
+  console.log(charNumber);
+
+  var callout_html_node = document.createElement("span");
+  callout_html_node.innerHTML = snippet;
+  callout_html_node.id = callout.change;
+  verb_doc.markText(
+    {line: lineNumber, ch: charNumber},
+    {line: lineNumber, ch: charNumber + snippet.length},
+    {replacedWith: callout_html_node}
+  )
+  return callout_html_node;
+}
+*/
+
+
+
+function setup_callouts(callouts) {
+  console.log("got the callouts in JS! " + JSON.stringify(callouts));
+
+  // TODO for each lineid, add a the callout words field, e.g.: [{word: "foo", change: "internal-change"}, ...]
+
+  /*
+  // TODO get the verb document by id in lines
+  group_by_verb_doc = group_by_verb_editor.getDoc();
+  // the mapping for callouts is the word and the type of change (e.g. no-change, internal-change, visible-change)
+  // TODO this is our callouts list structure we get from R
+  // this list will then be used in our setup or update callout words function
+  group_by_verb_callouts = [
+    	{
+      	word: "year",
+        change: "internal-change"
+    	},
+      {
+      	word: "sex",
+        change: "internal-change"
+      }
+  ]
+  // TODO in our setup_callouts function, we will do this logic where we mark and create
+  // the html nodes which we can refer to later on
+  // we probably want to assign the nodes to another field in the particular lines[key]
+  // e.g. lines[key].callouts = nodes;
+  group_by_verb_callout_nodes = group_by_verb_callouts.map(callout =>
+    callout_code_text(callout, group_by_verb_doc)
+  );
+  */
+
+  Shiny.setInputValue("datawat-need_prompts", "we need the prompts now " + callouts.length);
 }
 
 function send_toggle(message) {
@@ -189,8 +255,17 @@ $(document).on("shiny:sessioninitialized", function(event) {
     Shiny.setInputValue("datawat-explorer_ready", "explorer ready!");
   });
 
+  // NOTE: callouts have to be setup before the prompts because we are relying
+  // on the tippy prompts to show and hide the callouts, i.e. we need to reference them
+  // while we set up the onShow/onHide listener functions
+  Shiny.addCustomMessageHandler('callouts', function(callouts) {
+    console.log("trying to setup the callouts in JS")
+    // set up the callouts
+    setup_callouts(callouts);
+  });
+
   Shiny.addCustomMessageHandler('prompts', function(summaries) {
-    console.log("trying to setup the rest in JS")
+    console.log("trying to setup the prompts in JS")
     // set up the event listener for boxes
     setup_prompts(summaries);
   });
