@@ -34,6 +34,9 @@ function setup_editors() {
       let line_col_content = $(line_class + "-col-content")[0];
       snippets.set((index + 1) + "", line_editor.getDoc().getValue());
 
+      line_row_content.innerHTML = (line_row_content.innerHTML == "") ? "&nbsp;" : line_row_content.innerHTML
+      line_col_content.innerHTML = (line_col_content.innerHTML == "") ? "&nbsp;" : line_col_content.innerHTML;
+
       // store all line related info in
       lines[ID] = {
         editor: line_editor,

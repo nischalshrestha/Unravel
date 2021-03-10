@@ -41,7 +41,6 @@ summary_button <- function(ns_id, inputId, lineid, change_type, value = 0) {
 #'
 #' @examples
 group_item_div <- function(line, ns_id) {
-  # browser()
   ns <- shiny::NS(ns_id)
   # line_id is for SortableJS and is just a number of the line
   line_id <- line$lineid
@@ -209,7 +208,6 @@ datawatsUI <- function(id) {
 
 # helper function for grabbing a particular new code
 get_code <- function(target, id) {
-  # browser()
   result <- Filter(function(x) x$lineid == id, target)
   if (length(result) > 0) {
     return(result[[1]]$code)
@@ -400,7 +398,7 @@ datawatsServer <- function(id) {
           str(outputs)
           # set reactive values
           rv$code_info <- lapply(outputs, function(x) {
-            list(lineid = x$line, code = x$code, change = x$change, row = abbrev_num(x$row), col = abbrev_num(x$col))
+            list(lineid = x$line, code = x$code, change = x$change, row = abbrev_num(x$row), col = abbrev_num(x$col), err = x$err)
           })
           # TODO reset current_code_info via a Reset button
           rv$current_code_info <- lapply(outputs, function(x) {
@@ -410,12 +408,18 @@ datawatsServer <- function(id) {
               change = x$change,
               row = abbrev_num(x$row),
               col = abbrev_num(x$col),
+              err = x$err,
               checked = TRUE
             )
           })
           attr(rv$current_code_info, "order") <- seq_len(length(outputs))
           rv$callouts <- lapply(outputs, function(x) list(lineid = paste0("line", x$line), callouts = x$callouts))
-          rv$summaries <- lapply(outputs, function(x) list(lineid = paste0("line", x$line), summary = x$summary))
+          rv$summaries <- lapply(outputs, function(x) {
+            if (!is.null(x$err)) {
+              x$summary <- x$err
+            }
+            list(lineid = paste0("line", x$line), summary = x$summary)
+          })
           rv$outputs <- lapply(outputs, function(x) list(lineid = paste0("line", x$line), output = x$output))
           # trigger data frame output of the very last line
           rv$current <- length(rv$outputs)
