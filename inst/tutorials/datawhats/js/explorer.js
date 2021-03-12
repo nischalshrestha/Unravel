@@ -32,6 +32,8 @@ function setup_editors() {
       let line_id = index + 1;
       let line_glyph = $(line_class + '-glyph')[0];
       let line_editor_wrapper = line_editor.getWrapperElement();
+      line_editor_wrapper.setAttribute("lineid", line_id);
+      line_editor_wrapper.setAttribute("squareid", line_id);
       let line_summary_box = $('#datawat-' + ID)[0];
       let line_summary_box_col = $(line_class + '-summary-box-col')[0];
       let line_summary_box_row = $(line_class + '-summary-box-row')[0];
@@ -47,6 +49,7 @@ function setup_editors() {
         id: line_id,
         editor: line_editor,
         wrapper: line_editor_wrapper,
+        checked: true,
         glyph: line_glyph,
         summary_box: line_summary_box,
         summary_box_col: line_summary_box_col,
@@ -144,14 +147,16 @@ function setup_toggles() {
   $('input[type=checkbox]').change(function() {
     ID = $(this).attr('toggle-id');
     console.log("Event on ID: " + ID);
-    line_editor_wrapper = lines[ID].wrapper;
-    line_glyph = lines[ID].glyph;
-    line_summary_box = lines[ID].summary_box;
-    line_summary_box_col = lines[ID].summary_box_col;
-    line_summary_box_row = lines[ID].summary_box_row;
-    line_prompt = lines[ID].prompt;
+    let line = lines[ID];
+    line_editor_wrapper = line.wrapper;
+    line_glyph = line.glyph;
+    line_summary_box = line.summary_box;
+    line_summary_box_col = line.summary_box_col;
+    line_summary_box_row = line.summary_box_row;
+    line_prompt = line.prompt;
   	// if checked, we enable the line so make divs opaque
   	checked = $(this).prop('checked');
+    line.checked = checked;
   	// whenever we toggle, let's hide the last line wrapper
     hide_line_wrapper();
     if (checked) {
@@ -186,6 +191,26 @@ function signal_square_clicked(e) {
   Shiny.setInputValue("datawat-square", square);
 }
 
+// handler to be used for each line click event
+function signal_line_clicked(e) {
+  let square = $(this).attr('squareid');
+  let line_id = $(this).attr('lineid');
+  let line = lines["line" + line_id];
+  // only if the line is enabled should we try to focus on it and let R know to display data
+  if (line.checked) {
+    hide_line_wrapper();
+    hide_callout_nodes();
+    // when showing tippy, let's callout the code editor's border to draw attention to it
+    line.wrapper.style.border = "2px solid black";
+    // enable the callout words, e.g:
+    line.callout_nodes.map(node => node.className = node.id);
+    // the last line wrapper and callout nodes will be set here when setting up listeners
+    last_line_wrapper = line.wrapper;
+    last_callout_nodes = line.callout_nodes;
+    Shiny.setInputValue("datawat-square", square);
+  }
+}
+
 // this sets up the summary box click event listeners
 function setup_box_listeners() {
   console.log("setting up box listeners...");
@@ -195,23 +220,8 @@ function setup_box_listeners() {
     line.summary_box.removeEventListener("click", signal_square_clicked);
     line.summary_box.addEventListener("click", signal_square_clicked);
     // this is for the line wrapper so we can click on line itself to invoke data display
-    line.wrapper.removeEventListener("click", function(e) {
-      Shiny.setInputValue("datawat-square", line.id);
-    });
-    line.wrapper.addEventListener("click", function(e) {
-      // TODO wrap this logic in a function as we use it in the tippy onShow() as well
-      // hide the last line wrapper and callout nodes
-      hide_line_wrapper();
-      hide_callout_nodes();
-      // when showing tippy, let's callout the code editor's border to draw attention to it
-      line.wrapper.style.border = "2px solid black";
-      // enable the callout words, e.g:
-      line.callout_nodes.map(node => node.className = node.id);
-      // the last line wrapper and callout nodes will be set here when setting up listeners
-      last_line_wrapper = line.wrapper;
-      last_callout_nodes = line.callout_nodes;
-      Shiny.setInputValue("datawat-square", line.id);
-    });
+    line.wrapper.removeEventListener("click", signal_line_clicked);
+    line.wrapper.addEventListener("click", signal_line_clicked);
   }
   Shiny.addCustomMessageHandler('square', function(message) {
     console.log("sending square message!");
@@ -345,14 +355,16 @@ $(document).on("shiny:sessioninitialized", function(event) {
       console.log(e.change);
       if (e.change != "invisible" && e.change != "invalid") {
         line.summary_box.setAttribute("lineid", j);
+        line.wrapper.setAttribute("squareid", j);
         console.log(line.summary_box.getAttribute("lineid"));
-        j++;
         line.prompt.enable();
         // set the line wrapper for an enabled line
-        last_line_wrapper = lines["line" + e.id].wrapper;
+        last_line_wrapper = line.wrapper;
+        j++;
       } else {
         line.prompt.disable();
         line.summary_box.setAttribute("lineid", null);
+        line.wrapper.setAttribute("squareid", null);
       }
       new_summary_class = `d-flex noSelect justify-content-center ${e.change}-square`;
       line.summary_box.className = new_summary_class;
