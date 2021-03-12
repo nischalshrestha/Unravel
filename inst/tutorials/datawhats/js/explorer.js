@@ -7,6 +7,10 @@ var lines = {};
 var snippets = new Map();
 var current_snippets = null;
 var sortable = null;
+// the last editor border to callout when clicking a summary box or the last line by default
+var last_line_wrapper = null;
+// the last line's callout nodes
+var last_callout_nodes = null;
 
 function setup_editors() {
   lines = {};
@@ -73,6 +77,20 @@ function setup_sortable() {
   });
 }
 
+function hide_line_wrapper() {
+  if (last_line_wrapper != null) {
+    console.log("hiding line wrapper");
+    last_line_wrapper.style.border = "1px solid #eee";
+  }
+}
+
+function hide_callout_nodes() {
+  if (last_callout_nodes != null) {
+    console.log("hiding line callout nodes");
+    last_callout_nodes.map(node => node.className = "");
+  }
+}
+
 function setup_prompts(summaries) {
   console.log("setting up prompts...");
   summaries.forEach(e => {
@@ -86,22 +104,19 @@ function setup_prompts(summaries) {
       delay: [50, 50],
       trigger: 'click',
       onShow(instance) {
+        // hide the last line wrapper and callout nodes
+        hide_line_wrapper();
+        hide_callout_nodes();
         // when showing tippy, let's callout the code editor's border to draw attention to it
         lines[key].wrapper.style.border = "2px solid black";
-        // TODO: enable the callout words, e.g:
+        // enable the callout words, e.g:
         lines[key].callout_nodes.map(node => node.className = node.id);
-      	// group_by_verb_callout_nodes.map(node => node.className = node.id);
-      	// but probably more like:
-      	// lines[key].callout_nodes.map(node => node.className = node.id);
+        // the last line wrapper and callout nodes will be set here when setting up listeners
+        last_line_wrapper = lines[key].wrapper;
+        last_callout_nodes = lines[key].callout_nodes;
       },
       onHide(instance) {
-        // when hiding tippy, let's remove the border callout
-        lines[key].wrapper.style.border = "1px solid #eee";
-        // TODO: disable the callout words, e.g:
-        lines[key].callout_nodes.map(node => node.className = "");
-      	// group_by_verb_callout_nodes.map(node => node.className = '');
-      	// but probably more like:
-      	// lines[key].callout_nodes.map(node => node.className = '');
+        // we won't disable anything for now but keeping this in case
       }
     });
     line_tippy.setContent(e.summary);
@@ -114,7 +129,6 @@ function update_prompts(summaries) {
   console.log("updating prompts...");
   summaries.forEach(e => {
     let key = e.lineid;
-    //let line = lines[key];
     lines[key].prompt.setContent(e.summary);
   });
   console.log("JS has updated prompts!");
@@ -122,7 +136,6 @@ function update_prompts(summaries) {
 
 function setup_toggles() {
   console.log("setting up toggles...");
-
   $('input[type=checkbox]').change(function() {
     ID = $(this).attr('toggle-id')
     console.log("Event on ID: " + ID);
@@ -134,6 +147,7 @@ function setup_toggles() {
     line_prompt = lines[ID].prompt;
   	// if checked, we enable the line so make divs opaque
   	checked = $(this).prop('checked')
+    hide_line_wrapper();
     if (checked) {
       line_editor_wrapper.style.opacity = "1";
     	line_glyph.style.opacity = "1";
@@ -190,8 +204,6 @@ function callout_code_text(callout, verb_doc) {
   let snippet = callout.word;
   var lineNumber = 0;
   var charNumber = verb_doc.getValue().indexOf(snippet);
-  // console.log(verb_doc.getValue());
-  // console.log(charNumber);
   console.log("callout in callout_code_text " + JSON.stringify(callout));
 
   var callout_html_node = document.createElement("span");
@@ -296,6 +308,8 @@ $(document).on("shiny:sessioninitialized", function(event) {
   Shiny.addCustomMessageHandler('update_line', function(data) {
     console.log("received update line data!");
     console.log(data);
+    // hide the last line wrapper
+    hide_line_wrapper();
     // for each line, we need to update the summary box change type, the row, and column
     let j = 1;
     for (let i = 0; i < data.length; i++) {
@@ -310,6 +324,8 @@ $(document).on("shiny:sessioninitialized", function(event) {
         console.log(line.summary_box.getAttribute("lineid"));
         j++;
         line.prompt.enable();
+        // set the line wrapper for an enabled line
+        last_line_wrapper = lines["line" + e.id].wrapper;
       } else {
         line.prompt.disable();
         line.summary_box.setAttribute("lineid", null);
@@ -320,6 +336,8 @@ $(document).on("shiny:sessioninitialized", function(event) {
       line.line_col_content.innerHTML = (e.col == "") ? "&nbsp;" : e.col;
       line.editor.getDoc().setValue(e.code);
     }
+    // update the last line wrapper to be the "selected" one
+    last_line_wrapper.style.border = "2px solid black";
     // setup summary box event listeners again because the lineids have been updated
     // this is important so that R knows to display the right output
     setup_box_listeners();
