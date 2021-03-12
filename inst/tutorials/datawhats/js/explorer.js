@@ -29,7 +29,8 @@ function setup_editors() {
       });
       line_editor.setSize(null, 50);
       let line_class = '.' + ID;
-      let line_glyph = $(line_class + '-glyph')[0]
+      let line_id = index + 1;
+      let line_glyph = $(line_class + '-glyph')[0];
       let line_editor_wrapper = line_editor.getWrapperElement();
       let line_summary_box = $('#datawat-' + ID)[0];
       let line_summary_box_col = $(line_class + '-summary-box-col')[0];
@@ -37,12 +38,13 @@ function setup_editors() {
       let line_row_content = $(line_class + "-row-content")[0];
       let line_col_content = $(line_class + "-col-content")[0];
       snippets.set((index + 1) + "", line_editor.getDoc().getValue());
-
-      line_row_content.innerHTML = (line_row_content.innerHTML == "") ? "&nbsp;" : line_row_content.innerHTML
-      line_col_content.innerHTML = (line_col_content.innerHTML == "") ? "&nbsp;" : line_col_content.innerHTML;
+      // on initial setup, the row and col content might be empty string so make sure to add an html space
+      line_row_content.innerHTML = (line_row_content.innerHTML === "") ? "&nbsp;" : line_row_content.innerHTML;
+      line_col_content.innerHTML = (line_col_content.innerHTML === "") ? "&nbsp;" : line_col_content.innerHTML;
 
       // store all line related info in
       lines[ID] = {
+        id: line_id,
         editor: line_editor,
         wrapper: line_editor_wrapper,
         glyph: line_glyph,
@@ -63,14 +65,14 @@ function setup_sortable() {
   sortable.option("onUpdate", function( /**Event*/ evt) {
     // same properties as onEnd
     console.log("reordering");
-    line_id = "#" + evt.item.id;
+    let line_id = "#" + evt.item.id;
     console.log(line_id);
-    order = sortable.toArray();
+    let order = sortable.toArray();
     // NOTE: for some reason sortable is keeping extra order items, so we slice it
     order = order.slice(0, Object.entries(lines).length);
     order.forEach((value, index) => console.log(index + " " + value));
     // make new snippet order
-		new_snippets = order.map(o => [o, snippets.get(o)]);
+		let new_snippets = order.map(o => [o, snippets.get(o)]);
     current_snippets = new Map(new_snippets);
     // send R the reorder keys
     Shiny.setInputValue("datawat-reorder", Array.from(current_snippets.keys()));
@@ -78,14 +80,14 @@ function setup_sortable() {
 }
 
 function hide_line_wrapper() {
-  if (last_line_wrapper != null) {
+  if (last_line_wrapper !== null) {
     console.log("hiding line wrapper");
     last_line_wrapper.style.border = "1px solid #eee";
   }
 }
 
 function hide_callout_nodes() {
-  if (last_callout_nodes != null) {
+  if (last_callout_nodes !== null) {
     console.log("hiding line callout nodes");
     last_callout_nodes.map(node => node.className = "");
   }
@@ -122,7 +124,7 @@ function setup_prompts(summaries) {
     line_tippy.setContent(e.summary);
     lines[key].prompt = line_tippy;
   });
-  last_line_wrapper = lines["line" + summaries.length].wrapper
+  last_line_wrapper = lines["line" + summaries.length].wrapper;
   last_callout_nodes = lines["line" + summaries.length].callout_nodes;
   last_line_wrapper.style.border = "2px solid black";
   console.log("JS has set prompts! " + last_line_wrapper);
@@ -140,7 +142,7 @@ function update_prompts(summaries) {
 function setup_toggles() {
   console.log("setting up toggles...");
   $('input[type=checkbox]').change(function() {
-    ID = $(this).attr('toggle-id')
+    ID = $(this).attr('toggle-id');
     console.log("Event on ID: " + ID);
     line_editor_wrapper = lines[ID].wrapper;
     line_glyph = lines[ID].glyph;
@@ -149,7 +151,8 @@ function setup_toggles() {
     line_summary_box_row = lines[ID].summary_box_row;
     line_prompt = lines[ID].prompt;
   	// if checked, we enable the line so make divs opaque
-  	checked = $(this).prop('checked')
+  	checked = $(this).prop('checked');
+  	// whenever we toggle, let's hide the last line wrapper
     hide_line_wrapper();
     if (checked) {
       line_editor_wrapper.style.opacity = "1";
@@ -187,10 +190,28 @@ function signal_square_clicked(e) {
 function setup_box_listeners() {
   console.log("setting up box listeners...");
   for (const [key, value] of Object.entries(lines)) {
-    line = lines[key];
+    let line = lines[key];
     // if there was already an event listener for click, remove the listener
     line.summary_box.removeEventListener("click", signal_square_clicked);
     line.summary_box.addEventListener("click", signal_square_clicked);
+    // this is for the line wrapper so we can click on line itself to invoke data display
+    line.wrapper.removeEventListener("click", function(e) {
+      Shiny.setInputValue("datawat-square", line.id);
+    });
+    line.wrapper.addEventListener("click", function(e) {
+      // TODO wrap this logic in a function as we use it in the tippy onShow() as well
+      // hide the last line wrapper and callout nodes
+      hide_line_wrapper();
+      hide_callout_nodes();
+      // when showing tippy, let's callout the code editor's border to draw attention to it
+      line.wrapper.style.border = "2px solid black";
+      // enable the callout words, e.g:
+      line.callout_nodes.map(node => node.className = node.id);
+      // the last line wrapper and callout nodes will be set here when setting up listeners
+      last_line_wrapper = line.wrapper;
+      last_callout_nodes = line.callout_nodes;
+      Shiny.setInputValue("datawat-square", line.id);
+    });
   }
   Shiny.addCustomMessageHandler('square', function(message) {
     console.log("sending square message!");
@@ -205,10 +226,10 @@ function callout_code_text(callout, verb_doc) {
   // this marks the specific snippet within a verb document
   // such that we can refer to it later to enable or disable the span for callout highlights
   let snippet = callout.word;
-  var lineNumber = 0;
-  var charNumber = verb_doc.getValue().indexOf(snippet);
+  let lineNumber = 0;
+  let charNumber = verb_doc.getValue().indexOf(snippet);
   console.log("callout in callout_code_text " + JSON.stringify(callout));
-  var callout_html_node = document.createElement("span");
+  let callout_html_node = document.createElement("span");
   callout_html_node.innerHTML = snippet;
   callout_html_node.id = callout.change;
   verb_doc.markText(
@@ -284,7 +305,7 @@ $(document).on("shiny:sessioninitialized", function(event) {
 
   Shiny.addCustomMessageHandler('update_callouts', function(callouts) {
     console.log("trying to update the callouts in JS")
-    // update the prompts
+    // update the callouts
     update_callouts(callouts);
   });
 
@@ -313,6 +334,7 @@ $(document).on("shiny:sessioninitialized", function(event) {
     // hide the last line wrapper
     hide_line_wrapper();
     // for each line, we need to update the summary box change type, the row, and column
+    // this j counter is for setting the correct lineid for summary boxes
     let j = 1;
     for (let i = 0; i < data.length; i++) {
       e = data[i];

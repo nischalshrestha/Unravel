@@ -8,13 +8,21 @@
   padding-top: 10px;
 }
 
+
+.CodeMirror-line:hover{
+  cursor:pointer
+}
+
+.CodeMirror-lines:hover{
+  cursor:pointer
+}
+
 .CodeMirror-gutters {
   opacity: 0;
   border-right: 1px solid #ddd;
   background-color: #f7f7f7;
   white-space: wrap;
 }
-
 
 /* Summary box and ghost summary box keys */
 
@@ -150,6 +158,10 @@
   margin: 0px;
   display: flex;
   /* align-items: center; */
+}
+
+.list-group-item:hover {
+  cursor:pointer;
 }
 
 .list-group-item .disabled {
