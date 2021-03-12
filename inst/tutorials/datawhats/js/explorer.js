@@ -122,7 +122,10 @@ function setup_prompts(summaries) {
     line_tippy.setContent(e.summary);
     lines[key].prompt = line_tippy;
   });
-  console.log("JS has set prompts!");
+  last_line_wrapper = lines["line" + summaries.length].wrapper
+  last_callout_nodes = lines["line" + summaries.length].callout_nodes;
+  last_line_wrapper.style.border = "2px solid black";
+  console.log("JS has set prompts! " + last_line_wrapper);
 }
 
 function update_prompts(summaries) {
@@ -205,7 +208,6 @@ function callout_code_text(callout, verb_doc) {
   var lineNumber = 0;
   var charNumber = verb_doc.getValue().indexOf(snippet);
   console.log("callout in callout_code_text " + JSON.stringify(callout));
-
   var callout_html_node = document.createElement("span");
   callout_html_node.innerHTML = snippet;
   callout_html_node.id = callout.change;
