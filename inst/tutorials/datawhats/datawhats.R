@@ -414,6 +414,7 @@ datawatsServer <- function(id) {
           })
           attr(rv$current_code_info, "order") <- seq_len(length(outputs))
           rv$callouts <- lapply(outputs, function(x) list(lineid = paste0("line", x$line), callouts = x$callouts))
+          rv$cur_callouts <- lapply(outputs, function(x) x$callouts)
           rv$summaries <- lapply(outputs, function(x) {
             if (!is.null(x$err)) {
               x$summary <- x$err
@@ -500,10 +501,21 @@ datawatsServer <- function(id) {
             if (dim(final_data)[[1]] > 5e5) {
               final_data <- final_data[1:5e4, ]
             }
-            reactable::reactable(data = final_data,
-                                 compact = TRUE,
-                                 highlight = TRUE,
-                                 bordered = TRUE)
+            # if we have a grouped dataframe, to facilitate understanding let's rearrange columns such that
+            # the grouped variables appear to the very left
+            if (is_grouped_df(final_data)) {
+              reactable::reactable(data = select(.data = final_data, group_vars(final_data), everything()),
+                                   compact = TRUE,
+                                   highlight = TRUE,
+                                   bordered = TRUE,
+                                   columns = get_column_css(final_data, rv$cur_callouts[[value]]))
+            } else {
+              reactable::reactable(data = final_data,
+                                   compact = TRUE,
+                                   highlight = TRUE,
+                                   bordered = TRUE,
+                                   columns = get_column_css(final_data, rv$cur_callouts[[value]]))
+            }
           }
         }
       })
