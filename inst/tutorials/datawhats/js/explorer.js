@@ -117,6 +117,8 @@ function setup_prompts(summaries) {
         lines[key].wrapper.style.border = "2px solid black";
         // enable the callout words, e.g:
         lines[key].callout_nodes.map(node => node.className = node.id);
+        last_line_wrapper = lines[key].wrapper;
+        last_callout_nodes = lines[key].callout_nodes;
       },
       onHide(instance) {
         // we won't disable anything for now but keeping this in case
