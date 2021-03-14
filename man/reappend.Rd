@@ -19,3 +19,6 @@ Takes a number of lists and appends them into a single list.
 Instead of doing nested append calls, this will automate that
 by doing the series of append calls for you.
 }
+\examples{
+reappend(list(a = 1), list(b = 2))
+}

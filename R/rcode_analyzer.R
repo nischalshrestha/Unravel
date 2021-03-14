@@ -8,6 +8,7 @@
 #' @return [`language`]
 #'
 #' @examples
+#' recurse_dplyr(rlang::parse_expr("mtcars %>% select(cyl)"))
 recurse_dplyr <- function(dplyr_tree, outputs = list()) {
   if (inherits(dplyr_tree, "name")) {
     return(list(dplyr_tree))
@@ -31,6 +32,7 @@ recurse_dplyr <- function(dplyr_tree, outputs = list()) {
 #' @export
 #'
 #' @examples
+#' get_change_type("group_by")
 get_change_type <- function(verb_name) {
   # TODO rn this is just based on function names, but should take into whether
   # there were any changes from previous df to current df. tidylog could also
@@ -139,6 +141,15 @@ get_dplyr_intermediates <- function(pipeline) {
     # NOTE: rlang::expr_deparse breaks apart long strings into multiple character vector
     # we collapse it before further processing to avoid extra \t
     deparsed <- paste0(rlang::expr_deparse(verb), collapse = "")
+
+    # TODO: try to autolink the verb to its doc in future iterations
+    # if (length(verb) > 1) {
+    #   link_verb <- downlit::autolink_url(paste0("dplyr::", verb[[1]]))
+    #   url_deparsed <- paste0("dplyr::", deparsed)
+    #   deparsed <- gsub(as.character(verb[[1]]), paste0("<a href=", link_verb, ">", verb[[1]], "</a>"), url_deparsed)
+    #   deparsed <- gsub("dplyr::", "", deparsed)
+    # }
+
     # append a pipe character %>% unless it's the last line
     if (i < length(lines)) {
       deparsed <- paste0(deparsed, " %>%")
@@ -195,6 +206,15 @@ get_dplyr_intermediates <- function(pipeline) {
 
   return(results)
 }
+#
+# require(tidyverse)
+# "diamonds %>%
+#   select(carat, cut, color, clarity, price) %>%
+#   group_by(color) %>%
+#   summarise(n = n(), price = mean(price)) %>%
+#   arrange(desc(color))" -> pipeline
+# quoted <- rlang::parse_expr(pipeline)
+# outputs <- get_dplyr_intermediates(quoted)
 
 #' Given a quoted dplyr code, return a list of <expression, columns used> pairs.
 #'

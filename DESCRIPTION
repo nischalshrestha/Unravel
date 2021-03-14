@@ -1,29 +1,20 @@
 Package: DataTutor
-Title: What the Package Does (One Line, Title Case)
+Title: DataTutor: An Ecosystem of Data Science Code Comprehension Tools.
 Version: 0.0.0.9000
 Authors@R: 
     person(given = "Nischal",
            family = "Shrestha",
            role = c("aut", "cre"),
            email = "nsrocker92@gmail.com")
-Description: What the package does (one paragraph).
-License: What license it uses
+Description: DataTutor provides a set of tools to facilitate comprehension and debugging R code for Data Science.
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-Imports: 
-    rmarkdown,
-    knitr,
-    xfun,
-    kableExtra,
-    formattable,
-    lubridate,
-    shiny,
-    reticulate,
+Imports:
+    magrittr,
     tidyverse,
-    flair,
+    shiny,
     here
 Remotes:
     nischalshrestha/tidylog
-Suggests: 
-    learnr
 RoxygenNote: 7.1.1

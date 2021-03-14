@@ -1,5 +1,4 @@
-library(DataTutor)
-library(shiny)
+
 
 #' Creates a summary button
 #'
@@ -10,8 +9,9 @@ library(shiny)
 #' @param value
 #'
 #' @return
+#' @export
 #'
-#' @noRd
+#' @examples
 summary_button <- function(ns_id, inputId, lineid, change_type, value = 0) {
   ns <- shiny::NS(ns_id)
   tags$button(id = ns(inputId),
@@ -36,8 +36,9 @@ summary_button <- function(ns_id, inputId, lineid, change_type, value = 0) {
 #' @param ns_id the character for the Shiny module namespace id
 #'
 #' @return a shiny::div
+#' @export
 #'
-#' @noRd
+#' @examples
 group_item_div <- function(line, ns_id) {
   ns <- shiny::NS(ns_id)
   # line_id is for SortableJS and is just a number of the line
@@ -115,15 +116,15 @@ group_item_div <- function(line, ns_id) {
   )
 }
 
-
 #' Helper function to create a group item div for SortableJS
 #'
 #' @param lines
 #' @param ns_id
 #'
 #' @return
+#' @export
 #'
-#' @noRd
+#' @examples
 create_group_item_tags <- function(lines, ns_id) {
   ataglist <- lapply(lines, group_item_div, ns_id = ns_id)
   class(ataglist) <- c("shiny.tag.list", "list")
@@ -144,38 +145,34 @@ create_group_item_tags <- function(lines, ns_id) {
 #' @param dplyr_code A character
 #'
 #' @return
+#' @export
 #'
-#' @noRd
+#' @examples
 datawatsUI <- function(id, code) {
-  # "babynames %>%
-  #   group_by(year, sex) %>%
-  #   summarise(total = sum(n)) %>%
-  #   spread(sex, total) %>%
-  #   mutate(percent_male = M / (M + F) * 100, ratio = M / F)" -> code
   # namespace for module
   ns <- shiny::NS(id)
   shiny::fixedPage(
     # TODO: make sure these resources load in properly; you may have to have these in the tutorial folder
     shiny::tags$body(
       # bootstrap stuff
-      shiny::includeCSS("css/bootstrap.min.css"),
-      shiny::includeCSS("css/bootstrap3.min.css"),
+      shiny::includeCSS(here::here("inst/css/bootstrap.min.css")),
+      shiny::includeCSS(here::here("inst/css/bootstrap3.min.css")),
       # codemirror stuff
-      shiny::includeScript("js/codemirror.js"),
-      shiny::includeCSS("css/codemirror.css"),
-      shiny::includeScript("js/r.js"),
+      shiny::includeScript(here::here("inst/js/codemirror.js")),
+      shiny::includeCSS(here::here("inst/css/codemirror.css")),
+      shiny::includeScript(here::here("inst/js/r.js")),
       # fontawesome (for glyphicon for move)
-      shiny::includeCSS("css/all.css"),
+      shiny::includeCSS(here::here("inst/css/all.css")),
       # Sortable.js
-      shiny::includeScript("js/Sortable.js"),
+      shiny::includeScript(here::here("inst/js/Sortable.js")),
       # custom css
-      shiny::includeCSS("css/style.css"),
+      shiny::includeCSS(here::here("inst/css/style.css")),
       # custom js for exploration of code
-      shiny::includeScript("js/explorer.js"),
+      shiny::includeScript(here::here("inst/js/explorer.js")),
       # tippy
-      shiny::includeScript("js/popper.min.js"),
-      shiny::includeScript("js/tippy-bundle.min.js"),
-      shiny::includeCSS("css/light.css"),
+      shiny::includeScript(here::here("inst/js/popper.min.js")),
+      shiny::includeScript(here::here("inst/js/tippy-bundle.min.js")),
+      shiny::includeCSS(here::here("inst/css/light.css")),
     ),
     shiny::br(),
     shiny::br(),
@@ -188,7 +185,7 @@ datawatsUI <- function(id, code) {
             id = id,
             code
           ),
-          shiny::includeScript("js/script.js")
+          shiny::includeScript(here::here("inst/js/script.js"))
         )
     ),
     shiny::br(),
@@ -230,8 +227,9 @@ get_output <- function(target, lineid) {
 #' @param rv
 #'
 #' @return
+#' @export
 #'
-#' @noRd
+#' @examples
 generate_code_info_outputs <- function(order, rv) {
   new_code_info <- rv$current_code_info[order]
   # only grab the enabled lines
@@ -360,8 +358,9 @@ update_lines <- function(order, outputs, current_code_info, new_code_info, rv, s
 #' @param id
 #'
 #' @return
+#' @export
 #'
-#' @noRd
+#' @examples
 datawatsServer <- function(id) {
   # load and attach packages
   require(DataTutor)
@@ -443,8 +442,8 @@ datawatsServer <- function(id) {
               shiny::tags$script("setup_editors();"),
               shiny::tags$script("setup_sortable();"),
               # toggle
-              shiny::includeCSS("css/bootstrap4-toggle.min.css"),
-              shiny::includeScript("js/bootstrap4-toggle.min.js"),
+              shiny::includeCSS(here::here("inst/css/bootstrap4-toggle.min.css")),
+              shiny::includeScript(here::here("inst/js/bootstrap4-toggle.min.js")),
               shiny::tags$script("setup_toggles();"),
               shiny::tags$script("setup_box_listeners();")
             ),
@@ -611,13 +610,13 @@ datawatsServer <- function(id) {
 
   )
 }
-
-ui <- fluidPage(
-  datawatsUI("datawat")
-)
-
-server <- function(input, output, session) {
-  datawatsServer("datawat")
-}
-
-shinyApp(ui, server)
+#
+# ui <- fluidPage(
+#   datawatsUI("datawat")
+# )
+#
+# server <- function(input, output, session) {
+#   datawatsServer("datawat")
+# }
+#
+# shinyApp(ui, server)

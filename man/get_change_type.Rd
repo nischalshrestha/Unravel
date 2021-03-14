@@ -17,3 +17,6 @@ a character
 Based on the type of tidyr/dplyr function used return whether or not
 the type of change was internal (no visible change), visible, or none.
 }
+\examples{
+get_change_type("group_by")
+}

@@ -19,3 +19,6 @@ recurse_dplyr(dplyr_tree, outputs = list())
 Given a quoted dplyr chain code, return a list of intermediate expressions, including
 the dataframe name expression.
 }
+\examples{
+recurse_dplyr(rlang::parse_expr("mtcars \%>\% select(cyl)"))
+}

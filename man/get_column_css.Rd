@@ -18,3 +18,6 @@ a list structure to supply for reactable(columns = ...)
 \description{
 Helper function that reutnrs the column, css pairs for callout words given data
 }
+\examples{
+get_column_css(mtcars \%>\% group_by(cyl), list(word = "cyl", change = "internal-change"))
+}

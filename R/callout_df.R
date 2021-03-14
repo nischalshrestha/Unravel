@@ -24,6 +24,7 @@ get_change_css <- function(change) {
 #' @export
 #'
 #' @examples
+#' get_column_css(mtcars %>% group_by(cyl), list(word = "cyl", change = "internal-change"))
 get_column_css <- function(data, callout_words) {
   if (length(callout_words) < 1) {
     return(list())
