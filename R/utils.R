@@ -44,12 +44,7 @@ get_line_callouts <- function() {
 # helper function to store callout words from tidylog
 store_line_callouts <- function(callouts) {
   message("storing callouts ", callouts)
-  old_callouts <- get_line_callouts
-  if (identical(old_callouts, callouts)) {
-    assign("callouts", list(), envir = callout_cache)
-  } else {
-    assign("callouts", callouts, envir = callout_cache)
-  }
+  assign("callouts", callouts, envir = callout_cache)
 }
 
 # helper function to clear the callout_cache envir

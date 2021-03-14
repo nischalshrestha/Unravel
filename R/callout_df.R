@@ -30,12 +30,11 @@ get_column_css <- function(data, callout_words) {
   }
 
   columns <- names(data)
-  callout_vars <- unlist(lapply(callout_words, function(x) x$word))
   column_positions <- seq_len(length(columns))
 
   callout_words <- Map(
     function(i, x) {
-      x[["pos"]] <- column_positions[names(diamonds) %in% x$word]
+      x[["pos"]] <- column_positions[columns %in% x$word]
       x
     },
     seq_along(callout_words),
