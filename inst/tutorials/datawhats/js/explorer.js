@@ -24,8 +24,7 @@ function setup_editors() {
         readOnly: 'nocursor',
         styleActiveLine: false,
         lineNumbers: false,
-        firstLineNumber: 1,
-        lineWrapping: true
+        firstLineNumber: 1
       });
       line_editor.setSize(null, 50);
       let line_class = '.' + ID;
@@ -240,16 +239,28 @@ function callout_code_text(callout, verb_doc) {
   // such that we can refer to it later to enable or disable the span for callout highlights
   let snippet = callout.word;
   let lineNumber = 0;
-  let charNumber = verb_doc.getValue().indexOf(snippet);
+  // regex the boundary word
+  const re = new RegExp("(\\b" + snippet + "\\b)", 'g');
+  const matches = verb_doc.getValue().matchAll(re);
+  // for now, going to assume variable is mentioned once in a verb line
+  let m = matches.next();
   console.log("callout in callout_code_text " + JSON.stringify(callout));
+  // construct an html span element
   let callout_html_node = document.createElement("span");
   callout_html_node.innerHTML = snippet;
   callout_html_node.id = callout.change;
-  verb_doc.markText(
-    {line: lineNumber, ch: charNumber},
-    {line: lineNumber, ch: charNumber + snippet.length},
-    {replacedWith: callout_html_node}
-  )
+  // if we did have a match, mark the text
+  if (m.value !== undefined && m.value !== null) {
+    let charNumber = m.value.index;
+    verb_doc.markText(
+      {line: lineNumber, ch: charNumber},
+      {line: lineNumber, ch: charNumber + snippet.length},
+      {replacedWith: callout_html_node}
+    )
+  } else {
+    // otherwise, set id to "" so that we don't call out any code text
+    callout_html_node.id = "";
+  }
   return callout_html_node;
 }
 

@@ -87,14 +87,14 @@ group_item_div <- function(line, ns_id) {
           div(class="row", style="font-size: 1em;", HTML("&nbsp;"))
       ),
       # codemirror div (gets dynamically created); fixedPage keeps the width=100%
-      shiny::fixedPage(
-        shiny::tags$textarea(
-          shiny::HTML(line_code),
-          class = "verb",
-          id = id,
-          lineid = line_id
-        )
+      # shiny::fixedPage(
+      shiny::tags$textarea(
+        shiny::HTML(line_code),
+        class = "verb",
+        id = id,
+        lineid = line_id
       ),
+      # ),
       # toggle checkbox
       div(style="opacity:1; padding-right:0.25em;",
           div(class="d-flex justify-content-center align-self-center",
@@ -148,7 +148,11 @@ datawatsUI <- function(id) {
   group_by(color) %>%
   summarise(n = n(), price = mean(price)) %>%
   arrange(desc(color))" -> default_pipeline
-# "babynames" -> default_pipeline
+# "babynames %>%
+#   group_by(year, sex) %>%
+#   summarise(total = sum(n)) %>%
+#   spread(sex, total) %>%
+#   mutate(percent_male = M / (M + F) * 100, ratio = M / F)" -> default_pipeline
   # namespace for module
   ns <- shiny::NS(id)
   shiny::fixedPage(
@@ -365,6 +369,7 @@ datawatsServer <- function(id) {
   # load and attach packages
   require(DataTutor)
   require(tidyverse)
+  require(babynames)
   require(tidylog)
   # set tidylog messages to re-route to our tidylog_cache environment so we can access it
   options(
@@ -515,7 +520,7 @@ datawatsServer <- function(id) {
             # if we have a grouped dataframe, to facilitate understanding let's rearrange columns such that
             # the grouped variables appear to the very left
             if (is_grouped_df(final_data)) {
-              reactable::reactable(data = select(.data = final_data, group_vars(final_data), everything()),
+              reactable::reactable(data = select(.data = final_data, group_vars(final_data), everything()) %>% as.data.frame(),
                                    compact = TRUE,
                                    highlight = TRUE,
                                    bordered = TRUE,
@@ -530,7 +535,7 @@ datawatsServer <- function(id) {
               if (inherits(final_data, "rowwise_df")) {
                 rowname_background <- list(`background-color` = "lightblue");
               }
-              reactable::reactable(data = final_data,
+              reactable::reactable(data = final_data %>% as.data.frame(),
                                    compact = TRUE,
                                    highlight = TRUE,
                                    bordered = TRUE,

@@ -136,7 +136,9 @@ get_dplyr_intermediates <- function(pipeline) {
       verb_name <- ""
     }
     # get the deparsed character version
-    deparsed <- rlang::expr_deparse(verb)
+    # NOTE: rlang::expr_deparse breaks apart long strings into multiple character vector
+    # we collapse it before further processing to avoid extra \t
+    deparsed <- paste0(rlang::expr_deparse(verb), collapse = "")
     # append a pipe character %>% unless it's the last line
     if (i < length(lines)) {
       deparsed <- paste0(deparsed, " %>%")
@@ -149,10 +151,6 @@ get_dplyr_intermediates <- function(pipeline) {
     intermediate <- list(line = i, code = deparsed, change = get_change_type(verb_name))
     err <- NULL
     tryCatch({
-        # TODO alter some tidylog verbs to make them more readable
-        # TODO for the first line, we have to explicitly call the `tidylog` function on the data so we can
-        # at least get a summary like the data shape for the prompt
-        # and annotate them with divs.
         intermediate["output"] <- list(eval(lines[[i]]))
         intermediate["row"] <- dim(intermediate["output"][[1]])[[1]]
         intermediate["col"] <- dim(intermediate["output"][[1]])[[2]]

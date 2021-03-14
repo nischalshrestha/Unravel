@@ -190,7 +190,7 @@
 
 .toggle.ios, .toggle-on.ios, .toggle-off.ios {
   /* height: 3px; */
-  margin: 0.1em;
+  margin: 0.5em;
   padding-right: 0.25em;
   padding-left: 0em;
   border-radius: 20rem;
@@ -237,7 +237,6 @@
   border-radius: 0.5rem;
   padding: 0.1em;
 }
-
 
 .noSelect {
     -webkit-touch-callout: none;
