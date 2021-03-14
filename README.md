@@ -1,5 +1,9 @@
-# DataTutor
+<!-- badges: start -->
+[![lifecycle](https://img.shields.io/badge/lifecycle-experimental-blue.svg)](https://www.tidyverse.org/lifecycle/#experimental)
+<!-- badges: end -->
 
-A project that uses learnr, custom knitr engines, and Shiny for interactive teaching. 
+# DataTutor: Data Science Code Comprehension Tools.
 
-**NOTE:** This is not for public use for now, but more of a personal repository where I need to stash working code and ideas.
+A project that uses Shiny interactive apps for facilitating Data Science code comprehension using R. 
+
+**NOTE:** This is not yet ready for public use, and is undergoing development.
