@@ -519,13 +519,27 @@ datawatsServer <- function(id) {
                                    compact = TRUE,
                                    highlight = TRUE,
                                    bordered = TRUE,
-                                   columns = get_column_css(final_data, rv$cur_callouts[[value]]))
+                                   rownames = TRUE,
+                                   # we can do a custom thing for a particular column
+                                   columns = DataTutor:::reappend(
+                                     list(.rownames = colDef(style = list(textAlign = "left"), maxWidth = 80)),
+                                     get_column_css(final_data, rv$cur_callouts[[value]]))
+                                   )
             } else {
+              rowname_background <- list()
+              if (inherits(final_data, "rowwise_df")) {
+                rowname_background <- list(`background-color` = "lightblue");
+              }
               reactable::reactable(data = final_data,
                                    compact = TRUE,
                                    highlight = TRUE,
                                    bordered = TRUE,
-                                   columns = get_column_css(final_data, rv$cur_callouts[[value]]))
+                                   rownames = TRUE,
+                                   # we can do a custom thing for a particular column
+                                   columns = DataTutor:::reappend(
+                                     list(.rownames = colDef(style = append(list(textAlign = "left"), rowname_background), maxWidth = 80)),
+                                     get_column_css(final_data, rv$cur_callouts[[value]]))
+                                   )
             }
           }
         }

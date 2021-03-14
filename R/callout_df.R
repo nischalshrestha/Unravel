@@ -53,7 +53,12 @@ get_column_css <- function(data, callout_words) {
     }
     # construct the css
     change_css <-
-      glue::glue("{border_left_css}", "border-right: 1px dashed black;", "{get_change_css(c$change)}", .sep = "\n")
+      glue::glue(
+        "{border_left_css}",
+        "border-right: 1px dashed black;",
+        "{get_change_css(c$change)}",
+        .sep = "\n"
+      )
     # construct the column css info
     cur_column[[c$word]] <- colDef(
       headerStyle = paste0(change_css, "border-top: 1px dashed black;", collapse = "\n"),
@@ -66,23 +71,26 @@ get_column_css <- function(data, callout_words) {
   columns_css
 }
 
-
 # final_data <- diamonds %>% group_by(color)
 # col_defs <- get_column_css(
 #   data = final_data,
 #   callout_words = list(
 #     # list(word = "carat", change = "internal-change"),
-#     list(word = "color", change = "internal-change"),
-#     list(word = "cut", change = "internal-change")
+#     list(word = "color", change = "internal-change")
+#     # list(word = "cut", change = "internal-change")
 #   )
 # )
 #
 # # we should automatically rearrange data if grouping
 # if (is_grouped_df(final_data)) {
 #   reactable(
-#     data = select(.data = final_data, group_vars(final_data), everything()),
+#     data = select(.data = final_data, group_vars(final_data), everything()) %>% as.data.frame(),
+#     rownames = TRUE,
 #     # we can do a custom thing for a particular column
-#     columns = col_defs
+#     columns = DataTutor:::reappend(
+#       list(.rownames = colDef(style = list(textAlign = "left"), maxWidth = 80)),
+#       col_defs
+#     )
 #   )
 # } else {
 #   reactable(
