@@ -348,6 +348,7 @@ update_lines <- function(order, outputs, current_code_info, new_code_info, rv, s
   session$sendCustomMessage("update_callouts", rv$callouts)
   session$sendCustomMessage("update_prompts", rv$summaries)
   rv$outputs <- lapply(outputs, function(x) list(id = x$line, lineid = paste0("line", x$line), output = x$output))
+  rv$cur_callouts <- lapply(outputs, function(x) x$callouts)
   # update the data display to the last enabled output
   rv$current <- length(rv$outputs)
 }
@@ -370,6 +371,7 @@ datawatsServer <- function(id) {
     "tidylog.display" = list(DataTutor:::store_verb_summary),
     "tidylog.callouts" = DataTutor:::store_line_callouts
   )
+  require(reactable)
   moduleServer(
     id,
     function(input, output, session) {
@@ -486,6 +488,15 @@ datawatsServer <- function(id) {
         if (!is.null(input$square)) {
           rv$current <- input$square;
           session$sendCustomMessage("square", input$square)
+        }
+      })
+
+      observeEvent(input$line, {
+        message("clicked on a line: ", input$line)
+        # make sure to only change current if the current code info has the line marked as enabled
+        if (!is.null(input$line)) {
+          rv$current <- input$line;
+          session$sendCustomMessage("line", input$line)
         }
       })
 

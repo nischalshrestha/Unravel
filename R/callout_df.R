@@ -1,5 +1,3 @@
-# library(tidyverse)
-# library(reactable)
 
 # global definition of change type css
 none_change_css <- "background-color: white;"
@@ -27,7 +25,6 @@ get_change_css <- function(change) {
 #'
 #' @examples
 get_column_css <- function(data, callout_words) {
-
   if (length(callout_words) < 1) {
     return(list())
   }
@@ -70,18 +67,18 @@ get_column_css <- function(data, callout_words) {
   columns_css
 }
 
+
+# final_data <- diamonds %>% group_by(color)
 # col_defs <- get_column_css(
-#   data = diamonds,
+#   data = final_data,
 #   callout_words = list(
 #     # list(word = "carat", change = "internal-change"),
-#     # list(word = "cut", change = "internal-change"),
-#     list(word = "color", change = "internal-change")
+#     list(word = "color", change = "internal-change"),
+#     list(word = "cut", change = "internal-change")
 #   )
 # )
-
-# we should automatically rearrange data if grouping
-
-# final_data <- diamonds
+#
+# # we should automatically rearrange data if grouping
 # if (is_grouped_df(final_data)) {
 #   reactable(
 #     data = select(.data = final_data, group_vars(final_data), everything()),
@@ -95,4 +92,3 @@ get_column_css <- function(data, callout_words) {
 #     columns = col_defs
 #   )
 # }
-

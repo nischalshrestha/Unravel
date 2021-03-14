@@ -32,8 +32,10 @@ function setup_editors() {
       let line_id = index + 1;
       let line_glyph = $(line_class + '-glyph')[0];
       let line_editor_wrapper = line_editor.getWrapperElement();
+      // this is for the line wrapper so we can click on line itself to invoke data display
       line_editor_wrapper.setAttribute("lineid", line_id);
       line_editor_wrapper.setAttribute("squareid", line_id);
+      // setup summary box and row/col content elements
       let line_summary_box = $('#datawat-' + ID)[0];
       let line_summary_box_col = $(line_class + '-summary-box-col')[0];
       let line_summary_box_row = $(line_class + '-summary-box-row')[0];
@@ -116,9 +118,6 @@ function setup_prompts(summaries) {
         lines[key].wrapper.style.border = "2px solid black";
         // enable the callout words, e.g:
         lines[key].callout_nodes.map(node => node.className = node.id);
-        // the last line wrapper and callout nodes will be set here when setting up listeners
-        last_line_wrapper = lines[key].wrapper;
-        last_callout_nodes = lines[key].callout_nodes;
       },
       onHide(instance) {
         // we won't disable anything for now but keeping this in case
@@ -127,6 +126,7 @@ function setup_prompts(summaries) {
     line_tippy.setContent(e.summary);
     lines[key].prompt = line_tippy;
   });
+  // the last line wrapper and callout nodes will be set here when setting up listeners
   last_line_wrapper = lines["line" + summaries.length].wrapper;
   last_callout_nodes = lines["line" + summaries.length].callout_nodes;
   last_line_wrapper.style.border = "2px solid black";
@@ -139,6 +139,8 @@ function update_prompts(summaries) {
     let key = e.lineid;
     lines[key].prompt.setContent(e.summary);
   });
+  // simulate a click on the last line so both the square and the callout code text is displayed
+  last_line_wrapper.click();
   console.log("JS has updated prompts!");
 }
 
@@ -198,6 +200,7 @@ function signal_line_clicked(e) {
   let line = lines["line" + line_id];
   // only if the line is enabled should we try to focus on it and let R know to display data
   if (line.checked) {
+    console.log('updating line and callouts in signal_line_clicked ');
     hide_line_wrapper();
     hide_callout_nodes();
     // when showing tippy, let's callout the code editor's border to draw attention to it
@@ -207,7 +210,7 @@ function signal_line_clicked(e) {
     // the last line wrapper and callout nodes will be set here when setting up listeners
     last_line_wrapper = line.wrapper;
     last_callout_nodes = line.callout_nodes;
-    Shiny.setInputValue("datawat-square", square);
+    Shiny.setInputValue("datawat-line", square);
   }
 }
 
@@ -219,7 +222,6 @@ function setup_box_listeners() {
     // if there was already an event listener for click, remove the listener
     line.summary_box.removeEventListener("click", signal_square_clicked);
     line.summary_box.addEventListener("click", signal_square_clicked);
-    // this is for the line wrapper so we can click on line itself to invoke data display
     line.wrapper.removeEventListener("click", signal_line_clicked);
     line.wrapper.addEventListener("click", signal_line_clicked);
   }
@@ -280,7 +282,7 @@ function update_callouts(callouts) {
       line_callout_nodes = line_callouts.map(callout => callout_code_text(callout, line_doc));
     }
     line.callout_nodes = line_callout_nodes;
-  })
+  });
   console.log("JS has updated callouts!");
   Shiny.setInputValue("datawat-need_prompts", "we need the prompts now " + callouts.length);
 }
@@ -343,23 +345,24 @@ $(document).on("shiny:sessioninitialized", function(event) {
     console.log(data);
     // hide the last line wrapper
     hide_line_wrapper();
+    hide_callout_nodes();
     // for each line, we need to update the summary box change type, the row, and column
     // this j counter is for setting the correct lineid for summary boxes
     let j = 1;
     for (let i = 0; i < data.length; i++) {
       e = data[i];
       console.log(e.id)
-      line = lines["line" + e.id];
+      let line = lines["line" + e.id];
       console.log(line);
       console.log(e.code);
       console.log(e.change);
       if (e.change != "invisible" && e.change != "invalid") {
+        line.prompt.enable();
         line.summary_box.setAttribute("lineid", j);
         line.wrapper.setAttribute("squareid", j);
-        console.log(line.summary_box.getAttribute("lineid"));
-        line.prompt.enable();
         // set the line wrapper for an enabled line
         last_line_wrapper = line.wrapper;
+        last_callout_nodes = line.callout_nodes;
         j++;
       } else {
         line.prompt.disable();
@@ -372,8 +375,6 @@ $(document).on("shiny:sessioninitialized", function(event) {
       line.line_col_content.innerHTML = (e.col == "") ? "&nbsp;" : e.col;
       line.editor.getDoc().setValue(e.code);
     }
-    // update the last line wrapper to be the "selected" one
-    last_line_wrapper.style.border = "2px solid black";
     // setup summary box event listeners again because the lineids have been updated
     // this is important so that R knows to display the right output
     setup_box_listeners();
