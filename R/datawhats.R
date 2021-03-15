@@ -1,5 +1,13 @@
 library(shiny)
 
+# built-in toy datasets to explore dplyr / tidyr
+# nice for demo-ing effect of `rowwise`
+student_grades <- tibble::tibble(
+  student_id = 1:3,
+  test1 = 1:3,
+  test2 = 4:6
+)
+
 #' Creates a summary button
 #'
 #' @param ns_id

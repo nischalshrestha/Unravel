@@ -179,7 +179,6 @@ get_dplyr_intermediates <- function(pipeline) {
         }
         intermediate["summary"] <-
           ifelse(is.null(verb_summary) || identical(verb_summary, old_verb_summary), "", paste("<strong>Summary:</strong>", verb_summary))
-
         # set the change type for summary box
         change_type <- "none"
         if (i > 1) {
@@ -194,6 +193,10 @@ get_dplyr_intermediates <- function(pipeline) {
             # or if the current output is rowwise now when previous was not
             if (
               (!is_grouped_df(prev_output) && is_grouped_df(cur_output)) ||
+              (is_grouped_df(prev_output) && is_grouped_df(cur_output) &&
+               !identical(group_vars(prev_output), group_vars(cur_output)) &&
+               !verb_name %in% c("summarize", "summarise") # summarise will always produce something, so keep visible
+              ) ||
               (!inherits(prev_output, "rowwise_df") && inherits(cur_output, "rowwise_df"))
               ) {
               change_type <- "internal"
