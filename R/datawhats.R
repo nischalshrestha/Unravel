@@ -1,4 +1,4 @@
-
+library(shiny)
 
 #' Creates a summary button
 #'

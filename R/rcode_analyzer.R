@@ -42,7 +42,8 @@ get_change_type <- function(verb_name) {
   )
   visible_verbs <- c(
     "select", "filter", "mutate", "transmute", "summarise", "summarize", "arrange", "rename", "rename_with", "distinct",
-    "spread", "gather", "pivot_wider", "pivot_longer",  "distinct", "nest", "unnest"," hoist", "unnest_longer", "unnest_wider"
+    "spread", "gather", "pivot_wider", "pivot_longer",  "distinct", "nest", "unnest"," hoist", "unnest_longer", "unnest_wider",
+    "drop_na"
   )
   if (verb_name %in% internal_verbs) {
     return("internal")
@@ -178,7 +179,28 @@ get_dplyr_intermediates <- function(pipeline) {
         }
         intermediate["summary"] <-
           ifelse(is.null(verb_summary) || identical(verb_summary, old_verb_summary), "", paste("<strong>Summary:</strong>", verb_summary))
-        intermediate["change"] <- ifelse(grepl("no changes", verb_summary), "none", intermediate["change"])
+
+        # set the change type for summary box
+        change_type <- "none"
+        if (i > 1) {
+          prev_output <- results[[i - 1]]["output"][[1]]
+          cur_output <- intermediate["output"][[1]]
+          data_same <- identical(prev_output, cur_output)
+          if (data_same) {
+            change_type <- "none"
+          } else {
+            change_type <- "visible"
+            # if data is the same, check if current output is grouped when previous data was not
+            # or if the current output is rowwise now when previous was not
+            if (
+              (!is_grouped_df(prev_output) && is_grouped_df(cur_output)) ||
+              (!inherits(prev_output, "rowwise_df") && inherits(cur_output, "rowwise_df"))
+              ) {
+              change_type <- "internal"
+            }
+          }
+        }
+        intermediate["change"] <- change_type
         old_verb_summary <- verb_summary
       },
       error = function(e) {
