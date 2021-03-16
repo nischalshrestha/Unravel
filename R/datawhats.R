@@ -614,8 +614,14 @@ datawatsServer <- function(id) {
   )
 }
 #
+# "diamonds %>%
+#   select(carat, cut, color, clarity, price) %>%
+#   group_by(color) %>%
+#   summarise(n = n(), price = mean(price)) %>%
+#   arrange(desc(color))" -> code
+#
 # ui <- fluidPage(
-#   datawatsUI("datawat")
+#   datawatsUI("datawat", code)
 # )
 #
 # server <- function(input, output, session) {

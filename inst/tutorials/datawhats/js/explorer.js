@@ -4,7 +4,7 @@ This script is used for setting up the editors, prompts, toggles and summary box
 */
 
 var lines = {};
-var snippets = new Map();
+var snippets = null;
 var current_snippets = null;
 var sortable = null;
 // the last editor border to callout when clicking a summary box or the last line by default
@@ -13,7 +13,13 @@ var last_line_wrapper = null;
 var last_callout_nodes = null;
 
 function setup_editors() {
+  // reset state first
   lines = {};
+  snippets = new Map();
+  current_snippets = null;
+  last_line_wrapper = null;
+  last_callout_nodes = null;
+  sortable = null;
   console.log('setting up editors');
   $('.verb').each(function(index, element) {
     let ID = element.id;
@@ -150,7 +156,6 @@ function setup_toggles() {
   console.log("setting up toggles...");
   $('input[type=checkbox]').change(function() {
     ID = $(this).attr('toggle-id');
-    console.log("Event on ID: " + ID);
     let line = lines[ID];
     line_editor_wrapper = line.wrapper;
     line_glyph = line.glyph;
@@ -246,7 +251,6 @@ function callout_code_text(callout, verb_doc) {
   const matches = verb_doc.getValue().matchAll(re);
   // for now, going to assume variable is mentioned once in a verb line
   let m = matches.next();
-  console.log("callout in callout_code_text " + JSON.stringify(callout));
   // construct an html span element
   let callout_html_node = document.createElement("span");
   callout_html_node.innerHTML = snippet;
@@ -365,11 +369,7 @@ $(document).on("shiny:sessioninitialized", function(event) {
     let j = 1;
     for (let i = 0; i < data.length; i++) {
       e = data[i];
-      console.log(e.id)
       let line = lines["line" + e.id];
-      console.log(line);
-      console.log(e.code);
-      console.log(e.change);
       if (e.change != "invisible" && e.change != "invalid") {
         line.prompt.enable();
         line.summary_box.setAttribute("lineid", j);
