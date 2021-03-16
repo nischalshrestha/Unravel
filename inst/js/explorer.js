@@ -150,7 +150,6 @@ function setup_toggles() {
   console.log("setting up toggles...");
   $('input[type=checkbox]').change(function() {
     ID = $(this).attr('toggle-id');
-    console.log("Event on ID: " + ID);
     let line = lines[ID];
     line_editor_wrapper = line.wrapper;
     line_glyph = line.glyph;

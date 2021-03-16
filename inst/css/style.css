@@ -184,23 +184,6 @@
   padding: 1em;
 }
 
-/* Toggle */
-
-.fast .toggle-group { transition: left 0.2s; -webkit-transition: left 0.1s; }
-
-.toggle.ios, .toggle-on.ios, .toggle-off.ios {
-  /* height: 3px; */
-  margin: 0.5em;
-  padding-right: 0.25em;
-  padding-left: 0em;
-  border-radius: 20rem;
-}
-
-.toggle.ios .toggle-handle {
-  padding: 8px;
-  border-radius: 10rem;
-}
-
 /* tippy */
 
 .tippy-box {
@@ -246,3 +229,68 @@
     -ms-user-select: none;
     user-select: none;
 }
+
+/* Toggle */
+/* source: https://www.w3schools.com/howto/howto_css_switch.asp */
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 33px;
+  height: 20px;
+  margin : 0.5em;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .2s;
+  transition: .2s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  -webkit-transition: .2s;
+  transition: .2s;
+}
+
+input:checked + .slider {
+  background-color: #52af52;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #52af52;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(13px);
+  -ms-transform: translateX(13px);
+  transform: translateX(13px);
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 17px;
+}
+
+.slider.round:before {
+  border-radius: 60%;
+}
+

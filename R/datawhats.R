@@ -94,31 +94,28 @@ group_item_div <- function(line, ns_id) {
           div(class="row", style="font-size: 1em;", HTML("&nbsp;"))
       ),
       # codemirror div (gets dynamically created); fixedPage keeps the width=100%
-      # shiny::fixedPage(
       shiny::tags$textarea(
         shiny::HTML(line_code),
         class = "verb",
         id = id,
         lineid = line_id
       ),
-      # ),
       # toggle checkbox
       div(style="opacity:1; padding-right:0.25em;",
           div(class="d-flex justify-content-center align-self-center",
               div(style="font-size: 0.8em;", HTML("&nbsp;"))
           ),
           # the value of `checked` is not meaningful, the existence of attribute turns on toggle by default
-          shiny::tags$input(
-            type = "checkbox",
-            id = glue::glue("{id}-toggle"),
-            `toggle-id` = id,
-            `line-id` = line_id,
-            `checked` = TRUE,
-            `data-toggle`="toggle",
-            `data-size`="xs",
-            `data-height`="20", `data-width`="30",
-            `data-on`=" ", `data-off`=" ",
-            `data-style`="ios fast", `data-onstyle`="success", `data-offstyle`="secondary"
+          shiny::tags$label(
+            class = "switch",
+            shiny::tags$input(
+              type = "checkbox",
+              class = "slider",
+              `toggle-id` = id,
+              `line-id` = line_id,
+              `checked` = TRUE
+            ),
+            span(class="slider round")
           )
       )
   )
@@ -450,8 +447,6 @@ datawatsServer <- function(id) {
               shiny::tags$script("setup_editors();"),
               shiny::tags$script("setup_sortable();"),
               # toggle
-              shiny::includeCSS(here::here("inst/css/bootstrap4-toggle.min.css")),
-              shiny::includeScript(here::here("inst/js/bootstrap4-toggle.min.js")),
               shiny::tags$script("setup_toggles();"),
               shiny::tags$script("setup_box_listeners();")
             ),
