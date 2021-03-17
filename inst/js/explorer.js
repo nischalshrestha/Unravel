@@ -64,6 +64,9 @@ function setup_editors() {
         line_row_content: line_row_content,
         line_col_content: line_col_content
       };
+
+      // set the last line to focus
+      last_line_wrapper = line_editor_wrapper;
   	}
   });
   current_snippets = new Map(snippets);
@@ -85,7 +88,7 @@ function setup_sortable() {
 		let new_snippets = order.map(o => [o, snippets.get(o)]);
     current_snippets = new Map(new_snippets);
     // send R the reorder keys
-    Shiny.setInputValue("datawat-reorder", Array.from(current_snippets.keys()));
+    Shiny.setInputValue("datawat-reorder", Array.from(current_snippets.keys()), {priority: "event"});
   });
 }
 
@@ -123,8 +126,6 @@ function setup_prompts(summaries) {
         lines[key].wrapper.style.border = "2px solid black";
         // enable the callout words, e.g:
         lines[key].callout_nodes.map(node => node.className = node.id);
-        last_line_wrapper = lines[key].wrapper;
-        last_callout_nodes = lines[key].callout_nodes;
       },
       onHide(instance) {
         // we won't disable anything for now but keeping this in case
@@ -133,9 +134,6 @@ function setup_prompts(summaries) {
     line_tippy.setContent(e.summary);
     lines[key].prompt = line_tippy;
   });
-  // the last line wrapper and callout nodes will be set here when setting up listeners
-  last_line_wrapper = lines["line" + summaries.length].wrapper;
-  last_callout_nodes = lines["line" + summaries.length].callout_nodes;
   // simulate a click on the last line to focus on it ()
   last_line_wrapper.click();
   console.log("JS has set prompts! " + last_line_wrapper);
@@ -184,12 +182,14 @@ function setup_toggles() {
       line_summary_box_row.style.opacity = "0";
       line_prompt.disable();
     }
+    last_line_wrapper = line_editor_wrapper;
     Shiny.setInputValue(
       "datawat-toggle",
       {
         lineid: $(this).attr('line-id'),
         checked: checked
-      }
+      },
+      {priority: "event"}
     );
   });
 }
@@ -197,7 +197,7 @@ function setup_toggles() {
 // handler to be used for each summary box click event
 function signal_square_clicked(e) {
   let square = $(this).attr('lineid');
-  Shiny.setInputValue("datawat-square", square);
+  Shiny.setInputValue("datawat-square", square, {priority: "event"});
 }
 
 // handler to be used for each line click event
@@ -217,7 +217,7 @@ function signal_line_clicked(e) {
     // the last line wrapper and callout nodes will be set here when setting up listeners
     last_line_wrapper = line.wrapper;
     last_callout_nodes = line.callout_nodes;
-    Shiny.setInputValue("datawat-line", square);
+    Shiny.setInputValue("datawat-line", square, {priority: "event"});
   }
 }
 
@@ -232,12 +232,9 @@ function setup_box_listeners() {
     line.wrapper.removeEventListener("click", signal_line_clicked);
     line.wrapper.addEventListener("click", signal_line_clicked);
   }
-  Shiny.addCustomMessageHandler('square', function(message) {
-    console.log("sending square message!");
-    send_toggle(message);
-  });
   // in order for setInputValue to re-trigger upon update of lines, we add the new lines dictionary length
-  Shiny.setInputValue("datawat-need_callouts", "Gimme the callouts! " + Object.entries(lines).length);
+
+  Shiny.setInputValue("datawat-need_callouts", "Gimme the callouts! ", {priority: "event"});
 }
 
 // helper function to callout parts of the code snippet
@@ -284,7 +281,7 @@ function setup_callouts(callouts) {
     }
     line.callout_nodes = line_callout_nodes;
   })
-  Shiny.setInputValue("datawat-need_prompts", "we need the prompts now " + callouts.length);
+  Shiny.setInputValue("datawat-need_prompts", "we need the prompts now ", {priority: "event"});
 }
 
 function update_callouts(callouts) {
@@ -302,7 +299,7 @@ function update_callouts(callouts) {
     line.callout_nodes = line_callout_nodes;
   });
   console.log("JS has updated callouts!");
-  Shiny.setInputValue("datawat-need_prompts", "we need the prompts now " + callouts.length);
+  Shiny.setInputValue("datawat-need_prompts", "we need the prompts now ", {priority: "event"});
 }
 
 function send_toggle(message) {
@@ -321,7 +318,7 @@ $(document).on("shiny:sessioninitialized", function(event) {
 
   Shiny.addCustomMessageHandler('need_explorer', function(message) {
     console.log("JS is signaling R " + message);
-    Shiny.setInputValue("datawat-explorer_ready", "explorer ready!");
+    Shiny.setInputValue("datawat-explorer_ready", "explorer ready!", {priority: "event"});
   });
 
   // NOTE: callouts have to be setup before the prompts because we are relying
@@ -353,6 +350,11 @@ $(document).on("shiny:sessioninitialized", function(event) {
 
   Shiny.addCustomMessageHandler('toggle', function(message) {
     console.log("sending toggle a message!");
+    send_toggle(message);
+  });
+
+  Shiny.addCustomMessageHandler('square', function(message) {
+    console.log("sending square message!");
     send_toggle(message);
   });
 

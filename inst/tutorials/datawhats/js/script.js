@@ -32,6 +32,13 @@ $(document).ready(function() {
 $(document).on("shiny:sessioninitialized", function(event) {
   console.log("shiny initialized on main script");
 
+  // handler to set the input editor's text to the one sent by R via examples dropdown menu
+  Shiny.addCustomMessageHandler('set_code', function(message) {
+    console.log("Gettong code from R: " + message);
+    code_input.getDoc().setValue(message);
+  });
+
+  // handler to send R back the code when clicking the Unravel button
   Shiny.addCustomMessageHandler('need_code', function(message) {
     console.log("From R: " + message);
     Shiny.setInputValue("datawat-code_ready", code_input.getDoc().getValue());

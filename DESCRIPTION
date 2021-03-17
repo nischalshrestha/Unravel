@@ -14,7 +14,8 @@ Imports:
     magrittr,
     tidyverse,
     shiny,
-    here
+    here,
+    babynames
 Remotes:
     nischalshrestha/tidylog
 RoxygenNote: 7.1.1

@@ -1,4 +1,7 @@
 library(shiny)
+library(babynames)
+
+### Built-in Datasets
 
 # built-in toy datasets to explore dplyr / tidyr
 # nice for demo-ing effect of `rowwise`
@@ -7,6 +10,113 @@ student_grades <- tibble::tibble(
   test1 = 1:3,
   test2 = 4:6
 )
+
+# smaller size of babynames dataset
+mini_babynames <- head(babynames, 100000)
+
+# list of example code to play with
+example_list <- list(
+# example 1
+# Unravel: the toggle off can help us understand data semantic mistakes, like not grouping before summarizing
+# Unravel: reordering `arrange` before `summarise` reveals how `summarise` no longer respects order according to `arrange`
+# Unravel: the toggle off on certain verbs can also not really affect verbs down the pipeline such as `select` here (redundancy)
+# Unravel: code and data callouts help identify the new variables you should pay attention to (e.g. `n` and `price` via `summarise()`)
+# group_by and summarize go hand in hand together, don't forget to group_by if summarising on certain variables
+# note also how `select` in this example only gives us problems if placed after a line that removes one of the variables
+diamonds =
+"diamonds %>%
+  select(carat, cut, color, clarity, price) %>%
+  group_by(color) %>%
+  summarise(n = n(), price = mean(price)) %>%
+  arrange(desc(color))",
+
+# example 2 (order matters)
+# Unravel: the reorder of lines can reveal how verb order matters, e.g. `filter` has to follow `groupby` here.
+# when `filter` line is placed before `group_by`, the summary box is grey indicating no change since we are now operating on
+# the whole dataframe; we always have more than 1 row in the dataframe.
+starwars1 =
+"starwars %>%
+  group_by(species) %>%
+  filter(n() > 1) %>%
+  summarise(across(c(sex, gender, homeworld), ~ length(unique(.x))))",
+
+# example 3 (handle your NAs lest it bite you)
+# Unravel: the toggle off on `drop_na` can highlight the importance of dropping NAs for columns which you operate on for
+# other verbs like group_by/summarise (`mean` by default will not handle NAs)
+# The `fill` line would replace NAs in column 'mass' (by default replacing values from top to bottom)
+# since we `drop_na` the mass this line is redundant as-is, but if you toggle off the `drop_na` line you can see it
+# replace NAs as noted by yellow summary box color, changed dimensions and data prompt pointing out fewer NAs.
+starwars2 =
+"starwars %>%
+  drop_na(hair_color, mass) %>%
+  group_by(hair_color) %>%
+  fill(mass) %>%
+  summarise(mass_mean = mean(mass))",
+
+# example 4 (subtle function behavior -- grouping row)
+# inspired by https://www.tidyverse.org/blog/2020/04/dplyr-1-0-0-rowwise/#basic-operation
+# Unravel: by calling this out via blue summary box and blue row column on output, rowwise becomes clearer.
+# toggling the `rowwise` line on/off can help highlight `rowwise` effect on behavior in this example
+# where it will properly calculate mean scores of test1, test2 across the row of each student instead of col-wise.
+# built-in toy dataset
+studentgrades =
+"student_grades %>%
+  rowwise() %>%
+  mutate(avg_scores = mean(c(test1, test2)))",
+
+# example 5 (subtle function behavior -- group dropping)
+# example question (https://community.rstudio.com/t/understanding-group-by-order-matters/22685)
+# Unravel: the data prompt + summary box color + toggle off on line 2 can point out how `summarise` drops the last grouping variable (`gear`)
+# but keeps the rest (`cyl`) for anything downstream
+mtcars1 =
+"mtcars %>%
+  group_by(cyl, gear) %>%
+  summarise(mean_mpg = mean(mpg))",
+
+# example 6 (important but easy to forget steps --- ungroup)
+# "semantic parens": https://twitter.com/monkmanmh/status/1369691831403868160
+# Unravel: the tool's summary box color is also useful in internal changes like rowwise(), and with the
+# data prompt summary pointing out we're still grouped by rows + toggle off on `rowwise`, it can point
+# out how rowwise affects subsequent verbs, until you do an explicit `ungroup`
+mtcars2 =
+"mtcars %>%
+  rowwise() %>%
+  mutate(mymean = mean(c(cyl, mpg))) %>%
+  ungroup() %>% # toggle this off and notice how `select` keeps rows grouped
+  select(cyl, mpg, mymean)",
+
+# example 7 (general function behavior discovery --- group_by overrides previous groups )
+# Unravel: the blue summary box + blue column on output reveals certain api behavior that the dimension numbers or code callouts
+# alone might not help.
+# For e.g. `group_by` overrides the previous grouped variables but this is only apparent when we see that for each case, the
+# data is changed internally, and the output shows a different blue column being used as the grouped variable.
+# "mtcars %>%
+#   group_by(cyl) %>%
+#   group_by(disp)",
+
+# example 8 (re-shaping)
+iris =
+"iris %>%
+  group_by(Species) %>%
+  slice(1) %>%
+  pivot_longer(-Species, names_to = \"flower_att\", values_to = \"measurement\")",
+
+
+# example 9 (re-shaping and transforming columns)
+# Lesson: summary box + data prompt is useful to show how `pivot_wider` reshapes the data (dimension change + explanation)
+# Lesson: toggling off a verb shows column dependencies btw verbs: for e.g., the `pivot_wider` creates the M/F columns
+# required to compute new variables (the box is handy in showing the drastic change)
+# note the dimension change (pivot_wider)
+# toggle off above line to see column dependency on M/F
+minibabynames =
+"mini_babynames %>%
+   group_by(year, sex) %>%
+   summarise(total = sum(n)) %>%
+   pivot_wider(names_from = sex, values_from = total) %>%
+   mutate(percent_male = M / (M + F) * 100, ratio = M / F)"
+)
+
+### Shiny App logic
 
 #' Creates a summary button
 #'
@@ -183,20 +293,37 @@ datawatsUI <- function(id, code) {
     ),
     shiny::br(),
     shiny::br(),
-    div(class = "d-flex justify-content-center align-self-center",
-        shiny::column(
-          10,
-          shiny::h4("Enter dplyr code:"),
-          shiny::tags$textarea(
-            class = "code_input",
-            id = id,
-            code
-          ),
-          shiny::includeScript("js/script.js")
-        )
+    shiny::column(
+      12,
+      align = "center",
+      titlePanel("Unravel")
+    ),
+    shiny::column(
+      12,
+      shiny::selectInput(ns("examples"), label = "Examples",
+                         choices = list("diamonds" = "diamonds",
+                                        "starwars 1" = "starwars1",
+                                        "starwars 2" = "starwars2",
+                                        "student grades" = "studentgrades",
+                                        "mtcars 1" = "mtcars1",
+                                        "mtcars 2" = "mtcars2",
+                                        "iris" = "iris",
+                                        "mini babynames" = "minibabynames")
+      )
+    ),
+    shiny::column(
+      12,
+        shiny::tags$textarea(
+          class = "code_input",
+          id = id
+        ),
+        shiny::includeScript("js/script.js")
     ),
     shiny::br(),
-    div(class = "d-flex justify-content-center align-self-center",
+    shiny::column(
+      12,
+      align = "center",
+    # div(class = "d-flex justify-content-center align-self-center",
         shiny::actionButton(inputId = ns("explore"), label = "Unravel", icon = shiny::icon("fas fa-layer-group"),style = "margin: 1em;"),
         shiny::actionButton(
           inputId = ns("feedback"),
@@ -387,6 +514,16 @@ datawatsServer <- function(id) {
       rv$code_info <-  NULL
       rv$summaries <- list()
       rv$outputs <- NULL
+
+      observeEvent(input$examples, {
+        message("Example picked ", input$examples)
+        if (nzchar(input$examples)) {
+          code <- example_list[input$examples]
+          message(code)
+          # message(example_list[input$examples])
+          session$sendCustomMessage("set_code", paste0(code))
+        }
+      })
 
       # listen to button click and signal JS to give us code back from input editor
       observeEvent(input$explore, {
