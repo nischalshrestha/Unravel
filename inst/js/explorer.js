@@ -11,6 +11,11 @@ var sortable = null;
 var last_line_wrapper = null;
 // the last line's callout nodes
 var last_callout_nodes = null;
+var has_error = false;
+
+/*
+EDITOR
+*/
 
 function setup_editors() {
   // reset state first
@@ -23,7 +28,6 @@ function setup_editors() {
   console.log('setting up editors');
   $('.verb').each(function(index, element) {
     let ID = element.id;
-  	console.log(index + " " + ID);
   	if (!(ID in lines)) {
       let line_editor = CodeMirror.fromTextArea(element, {
         mode: 'r',
@@ -72,6 +76,10 @@ function setup_editors() {
   current_snippets = new Map(snippets);
 }
 
+/*
+Sortable
+*/
+
 function setup_sortable() {
   sortable = Sortable.create(simpleList, {});
   /* options */
@@ -79,11 +87,9 @@ function setup_sortable() {
     // same properties as onEnd
     console.log("reordering");
     let line_id = "#" + evt.item.id;
-    console.log(line_id);
     let order = sortable.toArray();
     // NOTE: for some reason sortable is keeping extra order items, so we slice it
     order = order.slice(0, Object.entries(lines).length);
-    order.forEach((value, index) => console.log(index + " " + value));
     // make new snippet order
 		let new_snippets = order.map(o => [o, snippets.get(o)]);
     current_snippets = new Map(new_snippets);
@@ -106,12 +112,16 @@ function hide_callout_nodes() {
   }
 }
 
+/*
+Prompts
+*/
+
 function setup_prompts(summaries) {
   console.log("setting up prompts...");
   summaries.forEach(e => {
-    console.log(e);
     let key = e.lineid;
-    let line_tippy = tippy(lines[key].summary_box, {
+    let line = lines[key];
+    let line_tippy = tippy(line.summary_box, {
       theme: 'light',
       allowHTML: true,
       placement: 'bottom',
@@ -123,37 +133,29 @@ function setup_prompts(summaries) {
         hide_line_wrapper();
         hide_callout_nodes();
         // when showing tippy, let's callout the code editor's border to draw attention to it
-        lines[key].wrapper.style.border = "2px solid black";
+        line.wrapper.style.border = "2px solid black";
         // enable the callout words, e.g:
-        lines[key].callout_nodes.map(node => node.className = node.id);
-        last_line_wrapper = lines[key].wrapper;
-        last_callout_nodes = lines[key].callout_nodes;
+        line.callout_nodes.map(node => node.className = node.id);
+        last_line_wrapper = line.wrapper;
+        last_callout_nodes = line.callout_nodes;
       },
       onHide(instance) {
         // we won't disable anything for now but keeping this in case
       }
     });
     line_tippy.setContent(e.summary);
-    lines[key].prompt = line_tippy;
+    line.prompt = line_tippy;
   });
-  // the last line wrapper and callout nodes will be set here when setting up listeners
-  last_line_wrapper = lines["line" + summaries.length].wrapper;
-  last_callout_nodes = lines["line" + summaries.length].callout_nodes;
-  // simulate a click on the last line to focus on it ()
-  last_line_wrapper.click();
+  if (has_error === false) {
+    // simulate a click on the last line to focus on it ()
+    last_line_wrapper.click();
+  }
   console.log("JS has set prompts! " + last_line_wrapper);
 }
 
-function update_prompts(summaries) {
-  console.log("updating prompts...");
-  summaries.forEach(e => {
-    let key = e.lineid;
-    lines[key].prompt.setContent(e.summary);
-  });
-  // simulate a click on the last line so both the square and the callout code text is displayed
-  last_line_wrapper.click();
-  console.log("JS has updated prompts!");
-}
+/*
+Toggles
+*/
 
 function setup_toggles() {
   console.log("setting up toggles...");
@@ -178,6 +180,7 @@ function setup_toggles() {
     	line_summary_box_col.style.opacity = "1";
     	line_summary_box_row.style.opacity = "1";
     	line_prompt.enable();
+    	last_line_wrapper = line_editor_wrapper;
     } else {
       // else hide or dim elements
       line_editor_wrapper.style.opacity = "0.25";
@@ -187,7 +190,6 @@ function setup_toggles() {
       line_summary_box_row.style.opacity = "0";
       line_prompt.disable();
     }
-    last_line_wrapper = line_editor_wrapper;
     Shiny.setInputValue(
       "datawat-toggle",
       {
@@ -198,6 +200,10 @@ function setup_toggles() {
     );
   });
 }
+
+/*
+Line + Square
+*/
 
 // handler to be used for each summary box click event
 function signal_square_clicked(e) {
@@ -238,7 +244,6 @@ function setup_box_listeners() {
     line.wrapper.addEventListener("click", signal_line_clicked);
   }
   // in order for setInputValue to re-trigger upon update of lines, we add the new lines dictionary length
-
   Shiny.setInputValue("datawat-need_callouts", "Gimme the callouts! ", {priority: "event"});
 }
 
@@ -272,6 +277,10 @@ function callout_code_text(callout, verb_doc) {
   return callout_html_node;
 }
 
+/*
+Callouts
+*/
+
 function setup_callouts(callouts) {
   console.log("got the callouts in JS! " + JSON.stringify(callouts));
   // for each lineid, add a the callout words field
@@ -286,24 +295,6 @@ function setup_callouts(callouts) {
     }
     line.callout_nodes = line_callout_nodes;
   })
-  Shiny.setInputValue("datawat-need_prompts", "we need the prompts now ", {priority: "event"});
-}
-
-function update_callouts(callouts) {
-  console.log("updating callouts...");
-  // NOTE: this is pretty much identical to setup_callouts but naming it different for conveying
-  // update operation
-  callouts.forEach(e => {
-    let line = lines[e.lineid];
-    let line_doc = line.editor.getDoc();
-    let line_callouts = e.callouts;
-    let line_callout_nodes = [];
-    if (line_callouts != null) {
-      line_callout_nodes = line_callouts.map(callout => callout_code_text(callout, line_doc));
-    }
-    line.callout_nodes = line_callout_nodes;
-  });
-  console.log("JS has updated callouts!");
   Shiny.setInputValue("datawat-need_prompts", "we need the prompts now ", {priority: "event"});
 }
 
@@ -335,22 +326,10 @@ $(document).on("shiny:sessioninitialized", function(event) {
     setup_callouts(callouts);
   });
 
-  Shiny.addCustomMessageHandler('update_callouts', function(callouts) {
-    console.log("trying to update the callouts in JS")
-    // update the callouts
-    update_callouts(callouts);
-  });
-
   Shiny.addCustomMessageHandler('prompts', function(summaries) {
     console.log("trying to setup the prompts in JS")
     // set up the event listener for boxes
     setup_prompts(summaries);
-  });
-
-  Shiny.addCustomMessageHandler('update_prompts', function(summaries) {
-    console.log("trying to update the prompts in JS")
-    // update the prompts
-    update_prompts(summaries);
   });
 
   Shiny.addCustomMessageHandler('toggle', function(message) {
@@ -364,29 +343,31 @@ $(document).on("shiny:sessioninitialized", function(event) {
   });
 
   // custom handler for updating lines after a toggle update
-  // TODO also handle the ordering
   Shiny.addCustomMessageHandler('update_line', function(data) {
     console.log("received update line data!");
     console.log(data);
     // hide the last line wrapper
     hide_line_wrapper();
     hide_callout_nodes();
+    has_error = false;
     // for each line, we need to update the summary box change type, the row, and column
     // this j counter is for setting the correct lineid for summary boxes
     let j = 1;
     for (let i = 0; i < data.length; i++) {
       e = data[i];
       let line = lines["line" + e.id];
-      if (e.change != "invisible" && e.change != "invalid") {
+      // always destroy the tippy instances
+      line.prompt.destroy();
+      if (e.change != "invisible" && e.change != "invalid" && e.change != "error") {
         line.prompt.enable();
         line.summary_box.setAttribute("lineid", j);
         line.wrapper.setAttribute("squareid", j);
-        // set the line wrapper for an enabled line
         last_line_wrapper = line.wrapper;
-        last_callout_nodes = line.callout_nodes;
         j++;
+      } else if (e.change == "error") {
+        // console.log("setting error line");
+        has_error = true;
       } else {
-        line.prompt.disable();
         line.summary_box.setAttribute("lineid", null);
         line.wrapper.setAttribute("squareid", null);
       }

@@ -472,15 +472,12 @@ update_lines <- function(order, outputs, current_code_info, new_code_info, rv, s
   send_js_code_info <- lapply(new_rv_code_info, function(x) {
     list(id = x$lineid, code = x$code, change = x$change, row = x$row, col = x$col)
   })
-  # send JS the new summary box, row and col
+  # NOTE: this starts the sequence again of requesting callouts, then prompts
   session$sendCustomMessage("update_line", send_js_code_info)
 
   # update the summaries, callouts, and outputs as well
   rv$summaries <- lapply(new_rv_code_info, function(x) list(lineid = paste0("line", x$lineid), summary = x$summary))
   rv$callouts <- lapply(new_rv_code_info, function(x) list(lineid = paste0("line", x$lineid), callouts = x$callouts))
-  # send JS the new prompts
-  session$sendCustomMessage("update_callouts", rv$callouts)
-  session$sendCustomMessage("update_prompts", rv$summaries)
   rv$outputs <- lapply(outputs, function(x) list(id = x$line, lineid = paste0("line", x$line), output = x$output))
   rv$cur_callouts <- lapply(outputs, function(x) x$callouts)
   # update the data display to the last enabled output
@@ -648,7 +645,7 @@ datawatsServer <- function(id, user_code = "") {
       # render a reactable of the current line output
       output$line_table <- reactable::renderReactable({
         value <- as.numeric(rv$current)
-        if (!is.null(value) && length(rv$outputs) > 0) {
+        if (!is.null(value) && length(rv$outputs) > 0 && value <= length(rv$outputs)) {
           # reactable can only efficiently display data of a certain size
           # if we enter into the 100K range, it starts to slow down
           message("changed data line output ", value)
