@@ -521,7 +521,6 @@ datawatsServer <- function(id) {
         if (nzchar(input$examples)) {
           code <- example_list[input$examples]
           message(code)
-          # message(example_list[input$examples])
           session$sendCustomMessage("set_code", paste0(code))
         }
       })
@@ -537,7 +536,7 @@ datawatsServer <- function(id) {
         message("Receiving code from JS: ", input$code_ready)
         # TODO process lines function?
         # process lines
-        if (!is.null(input$code_ready) && length(input$code_ready) > 0) {
+        if (!is.null(input$code_ready) && nzchar(input$code_ready)) {
           quoted <- rlang::parse_expr(input$code_ready)
           message(quoted)
           outputs <- get_dplyr_intermediates(quoted)
@@ -746,9 +745,7 @@ datawatsServer <- function(id) {
         # update line information for both R and JS
         update_lines(order, outputs, rv$code_info, new_code_info, rv, session)
       })
-
     }
-
   )
 }
 

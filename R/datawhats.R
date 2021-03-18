@@ -540,7 +540,7 @@ datawatsServer <- function(id, user_code = "") {
         message("Receiving code from JS: ", input$code_ready)
         # TODO process lines function?
         # process lines
-        if (!is.null(input$code_ready) && length(input$code_ready) > 0) {
+        if (!is.null(input$code_ready) && nzchar(input$code_ready)) {
           quoted <- rlang::parse_expr(input$code_ready)
           message(quoted)
           outputs <- get_dplyr_intermediates(quoted)
