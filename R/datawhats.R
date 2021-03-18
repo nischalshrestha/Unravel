@@ -14,7 +14,6 @@ student_grades <- tibble::tibble(
 # smaller size of babynames dataset
 mini_babynames <- head(babynames, 100000)
 
-
 # list of example code to play with
 example_list <- list(
   # example 1
@@ -25,7 +24,7 @@ example_list <- list(
   # group_by and summarize go hand in hand together, don't forget to group_by if summarising on certain variables
   # note also how `select` in this example only gives us problems if placed after a line that removes one of the variables
   diamonds =
-    "diamonds %>%
+"diamonds %>%
   select(carat, cut, color, clarity, price) %>%
   group_by(color) %>%
   summarise(n = n(), price = mean(price)) %>%
@@ -36,7 +35,7 @@ example_list <- list(
   # when `filter` line is placed before `group_by`, the summary box is grey indicating no change since we are now operating on
   # the whole dataframe; we always have more than 1 row in the dataframe.
   starwars1 =
-    "starwars %>%
+"starwars %>%
   group_by(species) %>%
   filter(n() > 1) %>%
   summarise(across(c(sex, gender, homeworld), ~ length(unique(.x))))",
@@ -48,7 +47,7 @@ example_list <- list(
   # since we `drop_na` the mass this line is redundant as-is, but if you toggle off the `drop_na` line you can see it
   # replace NAs as noted by yellow summary box color, changed dimensions and data prompt pointing out fewer NAs.
   starwars2 =
-    "starwars %>%
+"starwars %>%
   drop_na(hair_color, mass) %>%
   group_by(hair_color) %>%
   fill(mass) %>%
@@ -61,7 +60,7 @@ example_list <- list(
   # where it will properly calculate mean scores of test1, test2 across the row of each student instead of col-wise.
   # built-in toy dataset
   studentgrades =
-    "student_grades %>%
+"student_grades %>%
   rowwise() %>%
   mutate(avg_scores = mean(c(test1, test2)))",
 
@@ -70,7 +69,7 @@ example_list <- list(
   # Unravel: the data prompt + summary box color + toggle off on line 2 can point out how `summarise` drops the last grouping variable (`gear`)
   # but keeps the rest (`cyl`) for anything downstream
   mtcars1 =
-    "mtcars %>%
+"mtcars %>%
   group_by(cyl, gear) %>%
   summarise(mean_mpg = mean(mpg))",
 
@@ -80,7 +79,7 @@ example_list <- list(
   # data prompt summary pointing out we're still grouped by rows + toggle off on `rowwise`, it can point
   # out how rowwise affects subsequent verbs, until you do an explicit `ungroup`
   mtcars2 =
-    "mtcars %>%
+"mtcars %>%
   rowwise() %>%
   mutate(mymean = mean(c(cyl, mpg))) %>%
   ungroup() %>% # toggle this off and notice how `select` keeps rows grouped
@@ -97,11 +96,10 @@ example_list <- list(
 
   # example 8 (re-shaping)
   iris =
-    "iris %>%
+"iris %>%
   group_by(Species) %>%
   slice(1) %>%
   pivot_longer(-Species, names_to = \"flower_att\", values_to = \"measurement\")",
-
 
   # example 9 (re-shaping and transforming columns)
   # Lesson: summary box + data prompt is useful to show how `pivot_wider` reshapes the data (dimension change + explanation)
@@ -264,31 +262,35 @@ create_group_item_tags <- function(lines, ns_id) {
 #' @export
 #'
 #' @examples
-datawatsUI <- function(id, code) {
+datawatsUI <- function(id) {
+  package_path <- file.path(system.file(package = "DataTutor"))
+  str(package_path)
+  package_css <- file.path(package_path, "css")
+  package_js <- file.path(package_path, "js")
   # namespace for module
   ns <- shiny::NS(id)
   shiny::fixedPage(
     # TODO: make sure these resources load in properly; you may have to have these in the tutorial folder
     shiny::tags$body(
       # bootstrap stuff
-      shiny::includeCSS(here::here("inst/css/bootstrap.min.css")),
-      shiny::includeCSS(here::here("inst/css/bootstrap3.min.css")),
+      shiny::includeCSS(file.path(package_css, "bootstrap.min.css")),
+      shiny::includeCSS(file.path(package_css, "bootstrap3.min.css")),
       # codemirror stuff
-      shiny::includeScript(here::here("inst/js/codemirror.js")),
-      shiny::includeCSS(here::here("inst/css/codemirror.css")),
-      shiny::includeScript(here::here("inst/js/r.js")),
+      shiny::includeScript(file.path(package_js, "codemirror.js")),
+      shiny::includeCSS(file.path(package_css, "codemirror.css")),
+      shiny::includeScript(file.path(package_js, "r.js")),
       # fontawesome (for glyphicon for move)
-      shiny::includeCSS(here::here("inst/css/all.css")),
+      shiny::includeCSS(file.path(package_css, "all.css")),
       # Sortable.js
-      shiny::includeScript(here::here("inst/js/Sortable.js")),
+      shiny::includeScript(file.path(package_js, "Sortable.js")),
       # custom css
-      shiny::includeCSS(here::here("inst/css/style.css")),
+      shiny::includeCSS(file.path(package_css, "style.css")),
       # custom js for exploration of code
-      shiny::includeScript(here::here("inst/js/explorer.js")),
+      shiny::includeScript(file.path(package_js, "explorer.js")),
       # tippy
-      shiny::includeScript(here::here("inst/js/popper.min.js")),
-      shiny::includeScript(here::here("inst/js/tippy-bundle.min.js")),
-      shiny::includeCSS(here::here("inst/css/light.css")),
+      shiny::includeScript(file.path(package_js, "popper.min.js")),
+      shiny::includeScript(file.path(package_js, "tippy-bundle.min.js")),
+      shiny::includeCSS(file.path(package_css, "light.css")),
     ),
     shiny::br(),
     shiny::br(),
@@ -300,7 +302,8 @@ datawatsUI <- function(id, code) {
     shiny::column(
       12,
       shiny::selectInput(ns("examples"), label = "Examples",
-                         choices = list("diamonds" = "diamonds",
+                         choices = list(" " = "",
+                                        "diamonds" = "diamonds",
                                         "starwars 1" = "starwars1",
                                         "starwars 2" = "starwars2",
                                         "student grades" = "studentgrades",
@@ -316,18 +319,20 @@ datawatsUI <- function(id, code) {
         class = "code_input",
         id = id
       ),
-      shiny::includeScript(here::here("inst/js/script.js"))
+      shiny::includeScript(file.path(package_js, "script.js"))
     ),
     shiny::br(),
-    div(class = "d-flex justify-content-center align-self-center",
-        shiny::actionButton(inputId = ns("explore"), label = "Unravel", icon = shiny::icon("fas fa-layer-group"),style = "margin: 1em;"),
-        shiny::actionButton(
-          inputId = ns("feedback"),
-          label = "Please click to provide us feedback!",
-          icon = shiny::icon("fas fa-clipboard"),
-          onclick = "window.open('https://bit.ly/2PsA7w9', '_blank')",
-          style = "margin: 1em;"
-        )
+    shiny::column(
+      12,
+      align = "center",
+      shiny::actionButton(inputId = ns("explore"), label = "Unravel", icon = shiny::icon("fas fa-layer-group"),style = "margin: 1em;"),
+      shiny::actionButton(
+        inputId = ns("feedback"),
+        label = "Please click to provide us feedback!",
+        icon = shiny::icon("fas fa-clipboard"),
+        onclick = "window.open('https://bit.ly/2PsA7w9', '_blank')",
+        style = "margin: 1em;"
+      )
     ),
     shiny::htmlOutput(ns("code_explorer")),
     shiny::fixedPage(class="list-group",
@@ -491,7 +496,7 @@ update_lines <- function(order, outputs, current_code_info, new_code_info, rv, s
 #' @export
 #'
 #' @examples
-datawatsServer <- function(id) {
+datawatsServer <- function(id, user_code = "") {
   # load and attach packages
   require(DataTutor)
   require(tidyverse)
@@ -516,10 +521,12 @@ datawatsServer <- function(id) {
       observeEvent(input$examples, {
         message("Example picked ", input$examples)
         if (nzchar(input$examples)) {
-          code <- example_list[input$examples]
-          message(code)
+          input_code <- example_list[input$examples]
+          message(input_code)
           # message(example_list[input$examples])
-          session$sendCustomMessage("set_code", paste0(code))
+          session$sendCustomMessage("set_code", paste0(input_code))
+        } else if (nzchar(user_code)) {
+          session$sendCustomMessage("set_code", paste0(user_code))
         }
       })
 
@@ -748,19 +755,3 @@ datawatsServer <- function(id) {
 
   )
 }
-#
-# "diamonds %>%
-#   select(carat, cut, color, clarity, price) %>%
-#   group_by(color) %>%
-#   summarise(n = n(), price = mean(price)) %>%
-#   arrange(desc(color))" -> code
-#
-# ui <- fluidPage(
-#   datawatsUI("datawat", code)
-# )
-#
-# server <- function(input, output, session) {
-#   datawatsServer("datawat")
-# }
-#
-# shinyApp(ui, server)

@@ -4,7 +4,7 @@
 \alias{unravel}
 \title{Unravels dplyr code for exploration.}
 \usage{
-unravel(code)
+unravel(code = "")
 }
 \arguments{
 \item{code}{A character}
@@ -16,5 +16,5 @@ A shiny app
 Unravels dplyr code for exploration.
 }
 \examples{
-unravel(rlang::expr(mtcars \%>\% select(cyl, mpg)))
+unravel("mtcars \%>\% select(cyl, mpg)")
 }

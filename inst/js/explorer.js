@@ -134,6 +134,9 @@ function setup_prompts(summaries) {
     line_tippy.setContent(e.summary);
     lines[key].prompt = line_tippy;
   });
+  // the last line wrapper and callout nodes will be set here when setting up listeners
+  last_line_wrapper = lines["line" + summaries.length].wrapper;
+  last_callout_nodes = lines["line" + summaries.length].callout_nodes;
   // simulate a click on the last line to focus on it ()
   last_line_wrapper.click();
   console.log("JS has set prompts! " + last_line_wrapper);

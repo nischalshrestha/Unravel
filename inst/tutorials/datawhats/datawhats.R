@@ -249,7 +249,6 @@ create_group_item_tags <- function(lines, ns_id) {
 #' @param id
 #'
 #' @return
-#' @export
 #'
 #' @examples
 #' Datawats UI
@@ -260,7 +259,7 @@ create_group_item_tags <- function(lines, ns_id) {
 #' @return
 #'
 #' @noRd
-datawatsUI <- function(id, code) {
+datawatsUI <- function(id, code = "") {
   # "babynames %>%
   #   group_by(year, sex) %>%
   #   summarise(total = sum(n)) %>%
@@ -301,7 +300,8 @@ datawatsUI <- function(id, code) {
     shiny::column(
       12,
       shiny::selectInput(ns("examples"), label = "Examples",
-                         choices = list("diamonds" = "diamonds",
+                         choices = list(" " = "",
+                                        "diamonds" = "diamonds",
                                         "starwars 1" = "starwars1",
                                         "starwars 2" = "starwars2",
                                         "student grades" = "studentgrades",
@@ -323,7 +323,6 @@ datawatsUI <- function(id, code) {
     shiny::column(
       12,
       align = "center",
-    # div(class = "d-flex justify-content-center align-self-center",
         shiny::actionButton(inputId = ns("explore"), label = "Unravel", icon = shiny::icon("fas fa-layer-group"),style = "margin: 1em;"),
         shiny::actionButton(
           inputId = ns("feedback"),
@@ -339,6 +338,8 @@ datawatsUI <- function(id, code) {
     )
   )
 }
+
+DataTutor::unravel
 
 # helper function for grabbing a particular new code
 get_code <- function(target, id) {
@@ -751,14 +752,8 @@ datawatsServer <- function(id) {
   )
 }
 
-"diamonds %>%
-  select(carat, cut, color, clarity, price) %>%
-  group_by(color) %>%
-  summarise(n = n(), price = mean(price)) %>%
-  arrange(desc(color))" -> code
-
 ui <- fluidPage(
-  datawatsUI("datawat", code)
+  datawatsUI("datawat")
 )
 
 server <- function(input, output, session) {

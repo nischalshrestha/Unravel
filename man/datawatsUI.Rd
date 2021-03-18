@@ -4,7 +4,7 @@
 \alias{datawatsUI}
 \title{Datawats UI}
 \usage{
-datawatsUI(id, code)
+datawatsUI(id)
 }
 \arguments{
 \item{id}{A character}
