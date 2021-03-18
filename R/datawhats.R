@@ -264,7 +264,6 @@ create_group_item_tags <- function(lines, ns_id) {
 #' @examples
 datawatsUI <- function(id) {
   package_path <- file.path(system.file(package = "DataTutor"))
-  str(package_path)
   package_css <- file.path(package_path, "css")
   package_js <- file.path(package_path, "js")
   # namespace for module
