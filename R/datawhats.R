@@ -578,7 +578,11 @@ datawatsServer <- function(id, user_code = "") {
         if (!is.null(rv$code_info)) {
           shiny::tagList(
             shiny::br(),
-            shiny::p("You can click on a summary box to the left to view the summary and dataframe output at each step of the dplyr pipeline. Click on the toggles to the right to enable/disable certain lines for re-evaluation. You can also click and drag the particular line on the move icon to rearrange lines for re-evaluation."),
+            shiny::p(
+              HTML(
+                "You can click on a summary box to the left to view the summary and dataframe output at each step of the dplyr pipeline. Click on the line itself to focus on what the data is at that point in the pipeline. Use the toggles to the right to enable/disable certain lines for re-evaluation. You can also click and drag the particular line on the <span class='glyphicon glyphicon-move'></span> icon to rearrange lines for re-evaluation. Feel free to edit the code above as well to observe changes."
+              )
+            ),
             shiny::br(),
             shiny::fixedPage(id = "simpleList", class="list-group",
               create_group_item_tags(rv$code_info, id),
