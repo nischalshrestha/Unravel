@@ -12,7 +12,7 @@ A project that uses Shiny interactive apps for facilitating Data Science code co
 devtools::install_github('nischalshrestha/DataTutor')
 ```
 
-Then, you can try unraveling `dplyr` or `tidyr` (pivoting) code like so:
+Then, you can try unraveling `dplyr` or `tidyr` (pivoting) code by wrapping it in `unravel` like so:
 
 ```r
 DataTutor::unravel(
@@ -32,3 +32,21 @@ This will open up a Shiny web app on the Viewer pane in RStudio by default. But,
     viewer = FALSE
   )
 ```
+
+Currently, any tidyverse code _should_ work, but only a handful of the functions in each package has explicit support / been tested:
+
+- [x] `select`
+- [x] `rename`
+- [x] `filter`
+- [x] `arrange`
+- [x] `mutate`
+- [x] `transmute`
+- [x] `spread`
+- [x] `gather`
+- [x] `pivot_wider`
+- [x] `pivot_longer`
+- [x] `group_by`
+- [x] `rowwise`
+- [x] `summarise`
+
+Keep in mind, it's very early so trying things on your own code/data might not work.
