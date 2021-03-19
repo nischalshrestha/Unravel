@@ -33,7 +33,7 @@ DataTutor::unravel(
 )
 ```
 
-Currently, any tidyverse code _should_ work, but only a handful of the functions in each package has explicit support for summaries / has been tested:
+Currently, any `dplyr`/`tidyr` piped code _should_ work execution-wise, but only a handful of the functions in each package has explicit support for summaries / has been tested:
 
 - [x] `select`
 - [x] `rename`
@@ -41,12 +41,12 @@ Currently, any tidyverse code _should_ work, but only a handful of the functions
 - [x] `arrange`
 - [x] `mutate`
 - [x] `transmute`
+- [x] `group_by`
+- [x] `rowwise`
+- [x] `summarise`
 - [x] `spread`
 - [x] `gather`
 - [x] `pivot_wider`
 - [x] `pivot_longer`
-- [x] `group_by`
-- [x] `rowwise`
-- [x] `summarise`
 
 Keep in mind, it's very early so trying things on your own code/data might not work.
