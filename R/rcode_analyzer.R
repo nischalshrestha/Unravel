@@ -121,7 +121,7 @@ get_dplyr_intermediates <- function(pipeline) {
       lines <- recurse_dplyr(pipeline)
     },
     error = function(e) {
-      err <<- e$message
+      err <<- crayon::strip_style(e$message)
     }
   )
   # if so, just return with error message (currently not being used in front-end)
@@ -215,14 +215,20 @@ get_dplyr_intermediates <- function(pipeline) {
       # Error: Must group by variables found in `.data`.
       # * Column `colorr` is not found.
       # for e.g. we could replace the `.data` with the actual expression
-      # message(err$message)
+      intermediate[["change"]] <- "error"
       msg <- ifelse(
         nzchar(err$message),
         crayon::strip_style(err$message),
         crayon::strip_style(paste0(err))
       )
-      intermediate[["change"]] <- "error"
-      intermediate[["err"]] <- ifelse(!grepl("Error", msg), paste("<strong>Error:</strong>", msg), msg)
+      msg <- gsub("Error:", "<strong>Error:</strong>", msg)
+      msg <- ifelse(!grepl("Error:", msg), paste("<strong>Error:</strong>", msg), msg)
+      # style back the x's, i's, and *
+      msg <- gsub("\nx", "<br><span style='color:red'>x</span>", msg)
+      msg <- gsub("\nℹ", "<br><span style='color:DodgerBlue'>ℹ</span>", msg)
+      msg <- gsub("\n\\*", "<br>*", msg)
+      intermediate[["err"]] <- msg
+      # try to retain the format as much as possible by keeping it as HTML string
       results <- append(results, list(intermediate))
       return(results)
     }
@@ -234,7 +240,7 @@ get_dplyr_intermediates <- function(pipeline) {
 #
 # require(tidyverse)
 # "diamonds %>%
-#   select(carat, cut, color, clarity, price) %>%
+#   select(carat, cutt, color, clarity, price) %>%
 #   group_by(color) %>%
 #   summarise(n = n(), price = mean(price)) %>%
 #   arrange(desc(color))" -> pipeline

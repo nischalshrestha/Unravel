@@ -2,19 +2,23 @@
 % Please edit documentation in R/unravel.R
 \name{unravel}
 \alias{unravel}
-\title{Unravels dplyr code for exploration.}
+\title{Unravel dplyr expression for exploration}
 \usage{
-unravel(code = "")
+unravel(code, viewer = T)
 }
 \arguments{
-\item{code}{A character}
+\item{code}{}
 }
 \value{
-A shiny app
+
 }
 \description{
-Unravels dplyr code for exploration.
+Unravel dplyr expression for exploration
 }
 \examples{
-unravel("mtcars \%>\% select(cyl, mpg)")
+unravel(
+mtcars \%>\%
+  head(20) \%>\%
+  select(mpg)
+)
 }

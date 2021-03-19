@@ -641,7 +641,7 @@ datawatsServer <- function(id) {
       # render a reactable of the current line output
       output$line_table <- reactable::renderReactable({
         value <- as.numeric(rv$current)
-        if (!is.null(value) && length(rv$outputs) > 0 && value <= length(rv$outputs)) {
+        if (!is.na(value) && length(rv$outputs) > 0 && value <= length(rv$outputs)) {
           # reactable can only efficiently display data of a certain size
           # if we enter into the 100K range, it starts to slow down
           message("changed data line output ", value)
