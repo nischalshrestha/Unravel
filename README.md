@@ -22,7 +22,7 @@ DataTutor::unravel(
 )
 ```
 
-This will open up a Shiny web app on the Viewer pane by default, but if you want to respect your currently chosen window, you can add a `viewer = FALSE`:
+This will open up a Shiny web app on the Viewer pane in RStudio by default. But, if you want to respect your currently chosen browser window, you can add a `viewer = FALSE`:
 
 ```r
   DataTutor::unravel(
