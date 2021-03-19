@@ -34,9 +34,8 @@ recurse_dplyr <- function(dplyr_tree, outputs = list()) {
 #' @examples
 #' get_change_type("group_by")
 get_change_type <- function(verb_name) {
-  # TODO rn this is just based on function names, but should take into whether
-  # there were any changes from previous df to current df. tidylog could also
-  # help us out here.
+  # rn this is just a fail-safe if we for some reason have not supported the correct
+  # change type based on actual data; remove it in the future when we are confident of support.
   internal_verbs <- c(
     "group_by", "rowwise"
   )
@@ -237,15 +236,6 @@ get_dplyr_intermediates <- function(pipeline) {
 
   return(results)
 }
-#
-# require(tidyverse)
-# "diamonds %>%
-#   select(carat, cutt, color, clarity, price) %>%
-#   group_by(color) %>%
-#   summarise(n = n(), price = mean(price)) %>%
-#   arrange(desc(color))" -> pipeline
-# quoted <- rlang::parse_expr(pipeline)
-# outputs <- get_dplyr_intermediates(quoted)
 
 #' Given a quoted dplyr code, return a list of <expression, columns used> pairs.
 #'
