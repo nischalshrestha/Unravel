@@ -4,7 +4,7 @@
 \alias{datawatsServer}
 \title{Datawats server}
 \usage{
-datawatsServer(id, user_code = "")
+datawatsServer(id, user_code = NULL)
 }
 \arguments{
 \item{id}{}

@@ -15,7 +15,8 @@ Imports:
     tidyverse,
     shiny,
     here,
-    babynames
+    babynames,
+    gapminder
 Remotes:
     nischalshrestha/tidylog
 RoxygenNote: 7.1.1

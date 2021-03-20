@@ -2,18 +2,21 @@
 % Please edit documentation in R/unravel.R
 \name{unravel_code}
 \alias{unravel_code}
-\title{Unravels dplyr code for exploration.}
+\title{A variant of `unravel` to support accepting the code character instead.}
 \usage{
 unravel_code(code = "", viewer = T)
 }
 \arguments{
 \item{code}{A character}
+
+\item{viewer}{a boolean on whether to display unravel in viewer pane
+This is `TRUE` by default so it's fluid going between editor and viewer rather than window.}
 }
 \value{
 A shiny app
 }
 \description{
-Unravels dplyr code for exploration.
+A variant of `unravel` to support accepting the code character instead.
 }
 \examples{
 unravel_code("mtcars \%>\% select(cyl, mpg)")

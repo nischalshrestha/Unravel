@@ -188,16 +188,22 @@ get_dplyr_intermediates <- function(pipeline) {
             change_type <- "none"
           } else {
             change_type <- "visible"
+            # if we went from a grouped to ungrouped
+            if(!inherits(prev_output, "rowwise_df") && inherits(cur_output, "rowwise_df") ||
+                inherits(prev_output, "rowwise_df") && !inherits(cur_output, "rowwise_df") ||
+                is_grouped_df(prev_output) && !is_grouped_df(cur_output)
+            ) {
+              change_type <- "internal"
             # if data is the same, check if current output is grouped when previous data was not
             # or if the current output is rowwise now when previous was not
-            if (
+            } else if (
+              # if we created grouped df
               (!is_grouped_df(prev_output) && is_grouped_df(cur_output)) ||
+              # if both are grouped, and group_vars differs and it's not a `summarise`
               (is_grouped_df(prev_output) && is_grouped_df(cur_output) &&
                !identical(group_vars(prev_output), group_vars(cur_output)) &&
                !verb_name %in% c("summarize", "summarise") # summarise will always produce something, so keep visible
-              ) ||
-              (!inherits(prev_output, "rowwise_df") && inherits(cur_output, "rowwise_df"))
-              ) {
+              )){
               change_type <- "internal"
             }
           }

@@ -1,5 +1,7 @@
 library(shiny)
+library(tidyverse)
 library(babynames)
+library(gapminder)
 
 ### Built-in Datasets
 
@@ -12,7 +14,12 @@ student_grades <- tibble::tibble(
 )
 
 # smaller size of babynames dataset
-mini_babynames <- head(babynames, 100000)
+mini_babynames <-
+  babynames %>%
+    group_by(year, sex) %>%
+    group_split() %>%
+    head(50) %>%
+    bind_rows()
 
 # list of example code to play with
 example_list <- list(
@@ -91,16 +98,14 @@ mtcars1 =
 
 # example 6 (important but easy to forget steps --- ungroup)
 # "semantic parens": https://twitter.com/monkmanmh/status/1369691831403868160
-# task: toggle this off and notice how `select` keeps rows grouped
-# Unravel: the tool's summary box color is also useful in internal changes like rowwise(), and with the
-# data prompt summary pointing out we're still grouped by rows + toggle off on `rowwise`, it can point
-# out how rowwise affects subsequent verbs, until you do an explicit `ungroup`
-mtcars2 =
-"mtcars %>%
-  rowwise() %>%
-  mutate(mymean = mean(c(cyl, mpg))) %>%
-  ungroup() %>%
-  select(cyl, mpg, mymean)",
+# task: reorder `ungroup` so that it's between the two mutate
+# tip: you should do an explicit `ungroup` and if you don't you might get unexpected results
+gapminder =
+"gapminder %>%
+  group_by(country) %>%
+  mutate(mean_pop = mean(pop)) %>%
+  mutate(mean_life = mean(lifeExp)) %>%
+  ungroup()",
 
 # example 7 (general function behavior discovery --- group_by overrides previous groups )
 # Unravel: the blue summary box + blue column on output reveals certain api behavior that the dimension numbers or code callouts
@@ -279,11 +284,6 @@ create_group_item_tags <- function(lines, ns_id) {
 #'
 #' @noRd
 datawatsUI <- function(id, code = "") {
-  # "babynames %>%
-  #   group_by(year, sex) %>%
-  #   summarise(total = sum(n)) %>%
-  #   spread(sex, total) %>%
-  #   mutate(percent_male = M / (M + F) * 100, ratio = M / F)" -> code
   # namespace for module
   ns <- shiny::NS(id)
   shiny::fixedPage(
@@ -324,8 +324,8 @@ datawatsUI <- function(id, code = "") {
                                         "starwars 1" = "starwars1",
                                         "starwars 2" = "starwars2",
                                         "student grades" = "studentgrades",
-                                        "mtcars 1" = "mtcars1",
-                                        "mtcars 2" = "mtcars2",
+                                        "mtcars" = "mtcars1",
+                                        "gapminder" = "gapminder",
                                         "iris" = "iris",
                                         "mini babynames" = "minibabynames")
       )
@@ -357,8 +357,6 @@ datawatsUI <- function(id, code = "") {
     )
   )
 }
-
-DataTutor::unravel
 
 # helper function for grabbing a particular new code
 get_code <- function(target, id) {
@@ -510,7 +508,7 @@ update_lines <- function(order, outputs, current_code_info, new_code_info, rv, s
 #' @return
 #'
 #' @noRd
-datawatsServer <- function(id) {
+datawatsServer <- function(id, user_code = NULL) {
   # load and attach packages
   require(DataTutor)
   require(tidyverse)
@@ -535,9 +533,12 @@ datawatsServer <- function(id) {
       observeEvent(input$examples, {
         message("Example picked ", input$examples)
         if (nzchar(input$examples)) {
-          code <- example_list[input$examples]
-          message(code)
-          session$sendCustomMessage("set_code", paste0(code))
+          input_code <- example_list[input$examples]
+          message(input_code)
+          # message(example_list[input$examples])
+          session$sendCustomMessage("set_code", paste0(input_code))
+        } else if (!is.null(user_code) && nzchar(user_code)) {
+          session$sendCustomMessage("set_code", paste0(user_code))
         }
       })
 
@@ -611,16 +612,20 @@ datawatsServer <- function(id) {
             # TODO if we want we could also add prompts to the data change scheme color
             shiny::div(class ="d-flex justify-content-center",
               shiny::div(class = "d-flex align-self-center", style = "margin-left: 8em;",
-                         div(class = glue::glue("d-flex none-square-key justify-content-center")),
+                         # no change
+                         div(class = glue::glue("d-flex none-square-key justify-content-center"), style = "cursor: default;"),
                          div(class = glue::glue("d-flex empty-square justify-content-left align-self-center"),
                              style = "padding-left: 1em; font-size: 0.8em; width: 80px;", "No change"),
-                         div(class = glue::glue("d-flex internal-square-key justify-content-center")),
+                         # internal
+                         div(class = glue::glue("d-flex internal-square-key justify-content-center"), style = "cursor: default;"),
                          div(class = glue::glue("d-flex empty-square justify-content-left align-self-center"),
                              style = "padding-left: 1em; font-size: 0.8em; width: 100px;", "Internal change"),
-                         div(class = glue::glue("d-flex visible-square-key justify-content-center")),
+                         # visible
+                         div(class = glue::glue("d-flex visible-square-key justify-content-center"), style = "cursor: default;"),
                          div(class = glue::glue("d-flex empty-square justify-content-left align-self-center"),
                              style = "padding-left: 1em; font-size: 0.8em; width: 100px;", "Visible change"),
-                         div(class = glue::glue("d-flex error-square-key justify-content-left")),
+                         # error
+                         div(class = glue::glue("d-flex error-square-key justify-content-left"), style = "cursor: default;"),
                          div(class = glue::glue("d-flex empty-square justify-content-left align-self-center"),
                              style = "padding-left: 0.5em; font-size: 0.8em; width: 100px;", "Error"),
               )

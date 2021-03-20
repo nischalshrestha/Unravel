@@ -1,9 +1,11 @@
 
 #' Unravel dplyr expression for exploration
 #'
-#' @param code
+#' @param code a language
+#' @param viewer a boolean on whether to display unravel in viewer pane
+#'   This is `TRUE` by default so it's fluid going between editor and viewer rather than window.
 #'
-#' @return
+#' @return A shiny app
 #' @export
 #'
 #' @examples
@@ -12,7 +14,7 @@
 #'   head(20) %>%
 #'   select(mpg)
 #' )
-unravel <- function(code, viewer = T) {
+unravel <- function(code = NULL, viewer = T) {
   require(shiny)
   # by default run on Viewer pane, else on browser
   if (viewer) {
@@ -20,7 +22,9 @@ unravel <- function(code, viewer = T) {
   }
 
   expr <- rlang::get_expr(rlang::enquo(code))
-  code <- gsub("%>% ", "%>%\n\t", paste0(rlang::expr_deparse(expr), collapse = ""))
+  if (!is.null(expr)) {
+    code <- gsub("%>% ", "%>%\n\t", paste0(rlang::expr_deparse(expr), collapse = ""))
+  }
 
   ui <- fluidPage(
     datawatsUI("datawat")
@@ -34,9 +38,11 @@ unravel <- function(code, viewer = T) {
 }
 
 
-#' Unravels dplyr code for exploration.
+#' A variant of `unravel` to support accepting the code character instead.
 #'
 #' @param code A character
+#' @param viewer a boolean on whether to display unravel in viewer pane
+#'   This is `TRUE` by default so it's fluid going between editor and viewer rather than window.
 #'
 #' @return A shiny app
 #' @export

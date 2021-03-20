@@ -4,13 +4,16 @@
 \alias{unravel}
 \title{Unravel dplyr expression for exploration}
 \usage{
-unravel(code, viewer = T)
+unravel(code = NULL, viewer = T)
 }
 \arguments{
-\item{code}{}
+\item{code}{a language}
+
+\item{viewer}{a boolean on whether to display unravel in viewer pane
+This is `TRUE` by default so it's fluid going between editor and viewer rather than window.}
 }
 \value{
-
+A shiny app
 }
 \description{
 Unravel dplyr expression for exploration
