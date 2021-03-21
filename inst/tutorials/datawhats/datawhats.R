@@ -23,75 +23,75 @@ mini_babynames <-
 
 # list of example code to play with
 example_list <- list(
-# example 1
-# Unravel: the toggle off can help us understand data semantic mistakes, like not grouping before summarizing
-# Unravel: code and data callouts help identify the new variables you should pay attention to (e.g. `n` and `price` via `summarise()`)
-#
-# task1: try toggling off the `group_by`
-# task2: reordering `arrange` before `summarise` reveals how `summarise` no longer respects order according to `arrange`
-# task3: the toggle off on certain verbs can also not really affect verbs down the pipeline such as `select` here (redundancy)
-#
-# group_by and summarize go hand in hand together, don't forget to group_by if summarising on certain variables
-# note also how `select` in this example only gives us problems if placed after a line that removes one of the variables
-diamonds =
+  # example 1
+  # Unravel: the toggle off can help us understand data semantic mistakes, like not grouping before summarizing
+  # Unravel: code and data callouts help identify the new variables you should pay attention to (e.g. `n` and `price` via `summarise()`)
+  #
+  # task1: try toggling off the `group_by`
+  # task2: reordering `arrange` before `summarise` reveals how `summarise` no longer respects order according to `arrange`
+  # task3: the toggle off on certain verbs can also not really affect verbs down the pipeline such as `select` here (redundancy)
+  #
+  # group_by and summarize go hand in hand together, don't forget to group_by if summarising on certain variables
+  # note also how `select` in this example only gives us problems if placed after a line that removes one of the variables
+  diamonds =
 "diamonds %>%
   select(carat, cut, color, clarity, price) %>%
   group_by(color) %>%
   summarise(n = n(), price = mean(price)) %>%
   arrange(desc(color))",
 
-# example 2 (order matters)
-# Unravel: the reorder of lines can reveal how verb order matters, e.g. `filter` has to follow `groupby` here.
-#
-# task1: toggle off the `group_by` (you get aggregate of whole data now)
-# task2: toggle off the `filter` (you consider all species)
-# task3: put `filter` line before `group_by`
-#
-# the summary box is grey indicating no change since we are now operating on the whole dataframe; we always have more
-# than 1 row in the dataframe.
-starwars1 =
+  # example 2 (order matters)
+  # Unravel: the reorder of lines can reveal how verb order matters, e.g. `filter` has to follow `groupby` here.
+  #
+  # task1: toggle off the `group_by` (you get aggregate of whole data now)
+  # task2: toggle off the `filter` (you consider all species)
+  # task3: put `filter` line before `group_by`
+  #
+  # the summary box is grey indicating no change since we are now operating on the whole dataframe; we always have more
+  # than 1 row in the dataframe.
+  starwars1 =
 "starwars %>%
   group_by(species) %>%
   filter(n() > 1) %>%
   summarise(across(c(sex, gender, homeworld), ~ length(unique(.x))))",
 
-# example 3 (handle your NAs lest it bite you)
-# Unravel:
-# task1: toggle off on `drop_na`
-# (can highlight the importance of dropping NAs for columns which you operate on for other verbs like group_by/summarise
-# (`mean` by default will not handle NAs))
-#
-# The `fill` line would replace NAs in column 'mass' (by default replacing values from top to bottom)
-# since we `drop_na` the mass this line is redundant as-is, but
-#
-# task2: if you toggle off the `drop_na` line
-# you can see it replace NAs as noted by yellow summary box color, changed dimensions and data prompt pointing out fewer NAs.
-starwars2 =
+  # example 3 (handle your NAs lest it bite you)
+  # Unravel:
+  # task1: toggle off on `drop_na`
+  # (can highlight the importance of dropping NAs for columns which you operate on for other verbs like group_by/summarise
+  # (`mean` by default will not handle NAs))
+  #
+  # The `fill` line would replace NAs in column 'mass' (by default replacing values from top to bottom)
+  # since we `drop_na` the mass this line is redundant as-is, but
+  #
+  # task2: if you toggle off the `drop_na` line
+  # you can see it replace NAs as noted by yellow summary box color, changed dimensions and data prompt pointing out fewer NAs.
+  starwars2 =
 "starwars %>%
   drop_na(hair_color, mass) %>%
   group_by(hair_color) %>%
   fill(mass) %>%
   summarise(mass_mean = mean(mass))",
 
-# example 4 (subtle function behavior -- grouping row)
-# inspired by https://www.tidyverse.org/blog/2020/04/dplyr-1-0-0-rowwise/#basic-operation
-# Unravel: by calling this out via blue summary box and blue row column on output, rowwise becomes clearer.
-#
-# task: toggle the `rowwise` line on/off
-# can help highlight `rowwise` effect on behavior in this example
-# where it will properly calculate mean scores of test1, test2 across the row of each student instead of col-wise.
-# built-in toy dataset
-studentgrades =
+  # example 4 (subtle function behavior -- grouping row)
+  # inspired by https://www.tidyverse.org/blog/2020/04/dplyr-1-0-0-rowwise/#basic-operation
+  # Unravel: by calling this out via blue summary box and blue row column on output, rowwise becomes clearer.
+  #
+  # task: toggle the `rowwise` line on/off
+  # can help highlight `rowwise` effect on behavior in this example
+  # where it will properly calculate mean scores of test1, test2 across the row of each student instead of col-wise.
+  # built-in toy dataset
+  studentgrades =
 "student_grades %>%
   rowwise() %>%
   mutate(avg_scores = mean(c(test1, test2)))",
 
-# example 5 (subtle function behavior -- group dropping)
-# example question (https://community.rstudio.com/t/understanding-group-by-order-matters/22685)
-#
-# task: toggle off on line 2
-# `summarise` drops the last grouping variable (`gear`) but keeps the rest (`cyl`) for anything downstream
-mtcars1 =
+  # example 5 (subtle function behavior -- group dropping)
+  # example question (https://community.rstudio.com/t/understanding-group-by-order-matters/22685)
+  #
+  # task: toggle off on line 2
+  # `summarise` drops the last grouping variable (`gear`) but keeps the rest (`cyl`) for anything downstream
+  mtcars1 =
 "mtcars %>%
   group_by(cyl, gear) %>%
   summarise(mean_mpg = mean(mpg))",
@@ -107,32 +107,23 @@ gapminder =
   mutate(mean_life = mean(lifeExp)) %>%
   ungroup()",
 
-# example 7 (general function behavior discovery --- group_by overrides previous groups )
-# Unravel: the blue summary box + blue column on output reveals certain api behavior that the dimension numbers or code callouts
-# alone might not help.
-# For e.g. `group_by` overrides the previous grouped variables but this is only apparent when we see that for each case, the
-# data is changed internally, and the output shows a different blue column being used as the grouped variable.
-# "mtcars %>%
-#   group_by(cyl) %>%
-#   group_by(disp)"
-
-# example 8 (re-shaping)
-# task: toggle `group_by`, `slice`
-# task: drag and drop `slice` before `groupby`
-iris =
+  # example 8 (re-shaping)
+  # task: toggle `group_by`, `slice`
+  # task: drag and drop `slice` before `groupby`
+  iris =
 "iris %>%
   group_by(Species) %>%
   slice(1) %>%
   pivot_longer(-Species, names_to = \"flower_att\", values_to = \"measurement\")",
 
-# example 9 (re-shaping and transforming columns)
-# task: toggle off `pivot_wider` line to see column dependency on M/F
-#
-# Lesson: summary box + data prompt is useful to show how `pivot_wider` reshapes the data (dimension change + explanation)
-# Lesson: toggling off a verb shows column dependencies btw verbs: for e.g., the `pivot_wider` creates the M/F columns
-# required to compute new variables (the box is handy in showing the drastic change)
-# note the dimension change (pivot_wider)
-minibabynames =
+  # example 9 (re-shaping and transforming columns)
+  # task: toggle off `pivot_wider` line to see column dependency on M/F
+  #
+  # Lesson: summary box + data prompt is useful to show how `pivot_wider` reshapes the data (dimension change + explanation)
+  # Lesson: toggling off a verb shows column dependencies btw verbs: for e.g., the `pivot_wider` creates the M/F columns
+  # required to compute new variables (the box is handy in showing the drastic change)
+  # note the dimension change (pivot_wider)
+  minibabynames =
 "mini_babynames %>%
    group_by(year, sex) %>%
    summarise(total = sum(n)) %>%

@@ -80,27 +80,20 @@ example_list <- list(
   group_by(cyl, gear) %>%
   summarise(mean_mpg = mean(mpg))",
 
-# example 6 (important but easy to forget steps --- ungroup)
-# "semantic parens": https://twitter.com/monkmanmh/status/1369691831403868160
-# task: reorder `ungroup` so that it's between the two mutate
-# tip: you should do an explicit `ungroup` and if you don't you might get unexpected results
-gapminder =
+  # example 6 (important but easy to forget steps --- ungroup)
+  # "semantic parens": https://twitter.com/monkmanmh/status/1369691831403868160
+  # task: reorder `ungroup` so that it's between the two mutate
+  # tip: you should do an explicit `ungroup` and if you don't you might get unexpected results
+  gapminder =
 "gapminder %>%
   group_by(country) %>%
   mutate(mean_pop = mean(pop)) %>%
   mutate(mean_life = mean(lifeExp)) %>%
   ungroup()",
 
-  # example 7 (general function behavior discovery --- group_by overrides previous groups )
-  # Unravel: the blue summary box + blue column on output reveals certain api behavior that the dimension numbers or code callouts
-  # alone might not help.
-  # For e.g. `group_by` overrides the previous grouped variables but this is only apparent when we see that for each case, the
-  # data is changed internally, and the output shows a different blue column being used as the grouped variable.
-  # "mtcars %>%
-  #   group_by(cyl) %>%
-  #   group_by(disp)",
-
   # example 8 (re-shaping)
+  # task: reorder `slice(1)` to see grouped vs ungrouped effect
+  # task: switch between slice and pivot_longer to see what has changed
   iris =
 "iris %>%
   group_by(Species) %>%

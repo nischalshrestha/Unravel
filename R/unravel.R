@@ -1,7 +1,8 @@
 
-#' Unravel dplyr expression for exploration
+#' Unravel dplyr expression for exploration. You can either wrap your dplyr/tidyr code in
+#' a call or pipe the code to unravel.
 #'
-#' @param code a language
+#' @param code a language (dplyr/tidyr code)
 #' @param viewer a boolean on whether to display unravel in viewer pane
 #'   This is `TRUE` by default so it's fluid going between editor and viewer rather than window.
 #'
@@ -10,20 +11,31 @@
 #'
 #' @examples
 #' unravel(
+#'   mtcars %>%
+#'     head(20) %>%
+#'     select(mpg)
+#' )
 #' mtcars %>%
 #'   head(20) %>%
-#'   select(mpg)
-#' )
+#'   select(mpg) %>%
+#'   unravel()
 unravel <- function(code = NULL, viewer = T) {
   require(shiny)
+  # don't evaluate code yet
+  code <- substitute(code)
+  # are we at the last pipe function
+  if (identical(code, quote(`.`))) {
+    # if so, get the piped code
+    code <- sys.call(1)[[2]]
+  }
+
   # by default run on Viewer pane, else on browser
   if (viewer) {
     on.exit(options(shiny.launch.browser = .rs.invokeShinyPaneViewer, add = TRUE))
   }
 
-  expr <- rlang::get_expr(rlang::enquo(code))
   if (!is.null(expr)) {
-    code <- gsub("%>% ", "%>%\n\t", paste0(rlang::expr_deparse(expr), collapse = ""))
+    code <- gsub("%>% ", "%>%\n\t", paste0(rlang::expr_deparse(code), collapse = ""))
   }
 
   ui <- fluidPage(
@@ -36,7 +48,6 @@ unravel <- function(code = NULL, viewer = T) {
 
   shinyApp(ui, server)
 }
-
 
 #' A variant of `unravel` to support accepting the code character instead.
 #'

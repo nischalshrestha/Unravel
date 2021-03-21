@@ -2,12 +2,13 @@
 % Please edit documentation in R/unravel.R
 \name{unravel}
 \alias{unravel}
-\title{Unravel dplyr expression for exploration}
+\title{Unravel dplyr expression for exploration. You can either wrap your dplyr/tidyr code in
+a call or pipe the code to unravel.}
 \usage{
 unravel(code = NULL, viewer = T)
 }
 \arguments{
-\item{code}{a language}
+\item{code}{a language (dplyr/tidyr code)}
 
 \item{viewer}{a boolean on whether to display unravel in viewer pane
 This is `TRUE` by default so it's fluid going between editor and viewer rather than window.}
@@ -16,12 +17,17 @@ This is `TRUE` by default so it's fluid going between editor and viewer rather t
 A shiny app
 }
 \description{
-Unravel dplyr expression for exploration
+Unravel dplyr expression for exploration. You can either wrap your dplyr/tidyr code in
+a call or pipe the code to unravel.
 }
 \examples{
 unravel(
+  mtcars \%>\%
+    head(20) \%>\%
+    select(mpg)
+)
 mtcars \%>\%
   head(20) \%>\%
-  select(mpg)
-)
+  select(mpg) \%>\%
+  unravel()
 }
