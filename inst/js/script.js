@@ -36,6 +36,7 @@ $(document).on("shiny:sessioninitialized", function(event) {
   Shiny.addCustomMessageHandler('set_code', function(message) {
     console.log("Gettong code from R: " + message);
     code_input.getDoc().setValue(message);
+    Shiny.setInputValue("datawat-code_ready", code_input.getDoc().getValue());
   });
 
   // handler to send R back the code when clicking the Unravel button

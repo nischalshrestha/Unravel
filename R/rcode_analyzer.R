@@ -53,6 +53,34 @@ get_change_type <- function(verb_name) {
   }
 }
 
+# helper function to get the type of change from previous and current dataframe
+get_data_change_type <- function(verb_name, prev_output, cur_output) {
+  # set the change type for summary box
+  change_type <- "none"
+  data_same <- identical(prev_output, cur_output)
+  prev_rowwise <- inherits(prev_output, "rowwise_df")
+  cur_rowwise <- inherits(cur_output, "rowwise_df")
+  prev_grouped <- is_grouped_df(prev_output)
+  cur_grouped <- is_grouped_df(cur_output)
+  if (data_same) {
+    change_type <- "none"
+  } else {
+    change_type <- "visible"
+    # rowwise case
+    if ((!prev_rowwise && cur_rowwise) || (prev_rowwise && !cur_rowwise)) {
+      change_type <- "internal"
+    } else if(
+      # grouped vs ungrouped or grouped vs grouped case
+      (!prev_grouped && cur_grouped && !verb_name %in% c("summarize", "summarise")) ||
+      (prev_grouped && !cur_grouped && !verb_name %in% c("summarize", "summarise")) ||
+      (prev_grouped && cur_grouped && !identical(group_vars(prev_output), group_vars(cur_output)))
+    ) {
+      change_type <- "internal"
+    }
+  }
+  return(change_type)
+}
+
 #' Given a quoted dplyr chained code, return a list of intermediate outputs.
 #'
 #' If there is an error, \code{get_dplyr_intermediates} will return outputs up to that
@@ -183,23 +211,7 @@ get_dplyr_intermediates <- function(pipeline) {
         if (i > 1) {
           prev_output <- results[[i - 1]]["output"][[1]]
           cur_output <- intermediate["output"][[1]]
-          data_same <- identical(prev_output, cur_output)
-          if (data_same) {
-            change_type <- "none"
-          } else {
-            change_type <- "visible"
-            # rowwise case
-            if((!inherits(prev_output, "rowwise_df") && inherits(cur_output, "rowwise_df")) ||
-               (inherits(prev_output, "rowwise_df") && !inherits(cur_output, "rowwise_df"))) {
-              change_type <- "internal"
-            } else if(
-                # grouped vs ungrouped or grouped vs grouped case
-                (!is_grouped_df(prev_output) && is_grouped_df(cur_output) && !verb_name %in% c("summarize", "summarise")) ||
-                (is_grouped_df(prev_output) && is_grouped_df(cur_output) && !identical(group_vars(prev_output), group_vars(cur_output)))
-            ) {
-              change_type <- "internal"
-            }
-          }
+          change_type <- get_data_change_type(verb_name, prev_output, cur_output)
         }
         intermediate["change"] <- change_type
         old_verb_summary <- verb_summary

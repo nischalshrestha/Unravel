@@ -34,8 +34,10 @@ unravel <- function(code = NULL, viewer = T) {
     on.exit(options(shiny.launch.browser = .rs.invokeShinyPaneViewer, add = TRUE))
   }
 
-  if (!is.null(expr)) {
+  if (!is.null(code)) {
     code <- gsub("%>% ", "%>%\n\t", paste0(rlang::expr_deparse(code), collapse = ""))
+  } else {
+    code <- ""
   }
 
   ui <- fluidPage(

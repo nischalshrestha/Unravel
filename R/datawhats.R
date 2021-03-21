@@ -324,13 +324,6 @@ datawatsUI <- function(id) {
       12,
       align = "center",
       shiny::actionButton(inputId = ns("explore"), label = "Unravel", icon = shiny::icon("fas fa-layer-group"),style = "margin: 1em;"),
-      shiny::actionButton(
-        inputId = ns("feedback"),
-        label = "Please click to provide us feedback!",
-        icon = shiny::icon("fas fa-clipboard"),
-        onclick = "window.open('https://bit.ly/2PsA7w9', '_blank')",
-        style = "margin: 1em;"
-      )
     ),
     shiny::htmlOutput(ns("code_explorer")),
     shiny::fixedPage(class="list-group",
