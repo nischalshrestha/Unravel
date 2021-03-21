@@ -33,7 +33,7 @@ DataTutor::unravel(
 mtcars %>%
   group_by(cyl) %>% 
   summarise(mean_mpg = mean(mpg)) %>%
-  unravel()
+  DataTutor::unravel()
 ```
 
 ![](man/figures/example.png)
@@ -44,7 +44,7 @@ This will open up the app on the Viewer pane in RStudio by default. But, if you 
 mtcars %>%
   group_by(cyl) %>% 
   summarise(mean_mpg = mean(mpg)) %>%
-  unravel(viewer = FALSE)
+  DataTutor::unravel(viewer = FALSE)
 ```
 
 Keep in mind, it's very early so trying things on your own code/data might not work.
