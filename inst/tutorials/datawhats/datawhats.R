@@ -586,8 +586,15 @@ datawatsServer <- function(id, user_code = NULL) {
           shiny::tagList(
             shiny::br(),
             shiny::p(
-              HTML(
-                "You can click on a summary box to the left to view the summary and dataframe output at each step of the dplyr pipeline. Click on the line itself to focus on what the data is at that point in the pipeline. Use the toggles to the right to enable/disable certain lines for re-evaluation. You can also click and drag the particular line on the <span class='glyphicon glyphicon-move'></span> icon to rearrange lines for re-evaluation. Feel free to edit the code above as well to observe changes."
+              shiny::tags$ul(
+                p("Available actions:"),
+                shiny::tags$li(HTML("<strong>View intermediate data:</strong> click on a line.")),
+                shiny::tags$li(HTML("<strong>View data summary:</strong> click on a colored summary box <span class='d-inline-flex visible-square justify-content-center' style='width:1.5em; height:1.5em;'></span>.")),
+                shiny::tags$li(HTML("<strong>Enable/disable a line:</strong> click on a line's toggle switch <label class='switch'>
+  <input type='checkbox'>
+  <span class='slider round'></span>
+</label>")),
+                shiny::tags$li(HTML("<strong>Reorder a line:</strong> click on the move icon <span class='glyphicon glyphicon-move'></span>, and drag and drop the line."))
               )
             ),
             shiny::br(),
