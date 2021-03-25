@@ -34,7 +34,11 @@ example_list <- list(
   # group_by and summarize go hand in hand together, don't forget to group_by if summarising on certain variables
   # note also how `select` in this example only gives us problems if placed after a line that removes one of the variables
   diamonds =
-"diamonds %>%
+"# things you can try
+# task: try toggling off `group_by` to see its effect down the chain
+# task: try reordering `select` after `summarise`
+# task: try reordering `arrange` before `summarise` to show how `summarise` does not respect order anymore
+diamonds %>%
   select(carat, cut, color, clarity, price) %>%
   group_by(color) %>%
   summarise(n = n(), price = mean(price)) %>%
@@ -50,7 +54,10 @@ example_list <- list(
   # the summary box is grey indicating no change since we are now operating on the whole dataframe; we always have more
   # than 1 row in the dataframe.
   starwars1 =
-"starwars %>%
+"# things you can try
+# task: try toggling off `group_by` to see its effect on `summarise`
+# task: try reordering `filter` before `group_by` and note how it has no effect anymore, and affects final output
+starwars %>%
   group_by(species) %>%
   filter(n() > 1) %>%
   summarise(across(c(sex, gender, homeworld), ~ length(unique(.x))))",
@@ -67,7 +74,10 @@ example_list <- list(
   # task2: if you toggle off the `drop_na` line
   # you can see it replace NAs as noted by yellow summary box color, changed dimensions and data prompt pointing out fewer NAs.
   starwars2 =
-"starwars %>%
+"# things you can try
+# task: see if you can glean information on the `fill` that's not doing anything by clicking the summary box besides `fill`
+# task: try toggling off `drop_na` or reordering `fill` before `drop_na` to see why it's not doing anything initially
+starwars %>%
   drop_na(hair_color, mass) %>%
   group_by(hair_color) %>%
   fill(mass) %>%
@@ -82,7 +92,9 @@ example_list <- list(
   # where it will properly calculate mean scores of test1, test2 across the row of each student instead of col-wise.
   # built-in toy dataset
   studentgrades =
-"student_grades %>%
+"# things you can try
+# task: try toggling off `rowwise` and see the effect on `mutate` output
+student_grades %>%
   rowwise() %>%
   mutate(avg_scores = mean(c(test1, test2)))",
 
@@ -92,7 +104,10 @@ example_list <- list(
   # task: toggle off on line 2
   # `summarise` drops the last grouping variable (`gear`) but keeps the rest (`cyl`) for anything downstream
   mtcars1 =
-"mtcars %>%
+"# things you can try
+# task: try clicking on summary box besides `summarise` and note its output to see how it drops one grouping variable
+# task: now try changing the code above by removing `gear` and click Unravel button to examine the effect
+mtcars %>%
   group_by(cyl, gear) %>%
   summarise(mean_mpg = mean(mpg))",
 
@@ -101,7 +116,12 @@ example_list <- list(
 # task: reorder `ungroup` so that it's between the two mutate
 # tip: you should do an explicit `ungroup` and if you don't you might get unexpected results
 gapminder =
-"gapminder %>%
+"# things you can try
+# task: try toggling off `ungroup` and check out the summary box on the second `mutate` to see
+# how grouping is retained until `ungroup()`
+# task: try reordering `ungroup` after the first `mutate` and notice the change in output as you
+# toggle `ungroup()` on and off
+gapminder %>%
   group_by(country) %>%
   mutate(mean_pop = mean(pop)) %>%
   mutate(mean_life = mean(lifeExp)) %>%
@@ -111,7 +131,10 @@ gapminder =
   # task: toggle `group_by`, `slice`
   # task: drag and drop `slice` before `groupby`
   iris =
-"iris %>%
+"# things you can try
+# try toggling off `group_by` or reordering `slice` before `group_by` and notice how `slice` behaves
+# differently on grouped vs ungrouped dataframes
+iris %>%
   group_by(Species) %>%
   slice(1) %>%
   pivot_longer(-Species, names_to = \"flower_att\", values_to = \"measurement\")",
@@ -124,7 +147,9 @@ gapminder =
   # required to compute new variables (the box is handy in showing the drastic change)
   # note the dimension change (pivot_wider)
   minibabynames =
-"mini_babynames %>%
+"# things you can try
+# try toggling off `pivot_wider` to see how `mutate` depended on newly created columns `M` / `F` from the `pivot_wider`
+mini_babynames %>%
    group_by(year, sex) %>%
    summarise(total = sum(n)) %>%
    pivot_wider(names_from = sex, values_from = total) %>%
@@ -334,13 +359,13 @@ datawatsUI <- function(id, code = "") {
       12,
       align = "center",
         shiny::actionButton(inputId = ns("explore"), label = "Unravel", icon = shiny::icon("fas fa-layer-group"),style = "margin: 1em;"),
-        shiny::actionButton(
-          inputId = ns("feedback"),
-          label = "Please click to provide us feedback!",
-          icon = shiny::icon("fas fa-clipboard"),
-          onclick = "window.open('https://bit.ly/2PsA7w9', '_blank')",
-          style = "margin: 1em;"
-        )
+        # shiny::actionButton(
+        #   inputId = ns("feedback"),
+        #   label = "Please click to provide us feedback!",
+        #   icon = shiny::icon("fas fa-clipboard"),
+        #   onclick = "window.open('https://bit.ly/2PsA7w9', '_blank')",
+        #   style = "margin: 1em;"
+        # )
     ),
     shiny::htmlOutput(ns("code_explorer")),
     shiny::fixedPage(class="list-group",
