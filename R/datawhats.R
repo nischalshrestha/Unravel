@@ -363,7 +363,13 @@ datawatsUI <- function(id) {
       12,
       align = "center",
       shiny::actionButton(inputId = ns("explore"), label = "Unravel", icon = shiny::icon("fas fa-layer-group"),style = "margin: 1em;"),
+      shiny::actionButton(inputId = ns("help"),
+                          label = "Help",
+                          icon = shiny::icon("far fa-question-circle"),
+                          style = "margin: 1em;"
+      )
     ),
+    shiny::htmlOutput(ns("tutorial")),
     shiny::htmlOutput(ns("code_explorer")),
     shiny::fixedPage(class="list-group",
                      reactable::reactableOutput(ns("line_table"))
@@ -535,6 +541,7 @@ datawatsServer <- function(id, user_code = NULL) {
     "tidylog.callouts" = DataTutor:::store_line_callouts
   )
   require(reactable)
+  shiny::addResourcePath('www', system.file('www', package = 'DataTutor'))
   moduleServer(
     id,
     function(input, output, session) {
@@ -561,6 +568,40 @@ datawatsServer <- function(id, user_code = NULL) {
       observeEvent(input$explore, {
         message("Explore button")
         session$sendCustomMessage("need_code", "R needs the code!")
+      })
+
+      # display available actions when user needs help
+      output$tutorial <- renderUI({
+        if (input$help %% 2 == 1) {
+          shiny::div(class = "flex-row",
+                     shiny::br(),
+                     shiny::div(class = "p-2",
+                                HTML("<strong>View the intermediate data</strong> by clicking on a line")
+                     ),
+                     shiny::div(class = "p-2",
+                                HTML("<strong>View the function summary by</strong> clicking on a colored summary box"),
+                                shiny::tags$span(shiny::img(src = "www/summary_box_demo.svg",
+                                                            width = "8%", margin = "0px"))
+
+                     ),
+                     shiny::div(class = "p-2",
+                                HTML("<strong>Enable/disable a line</strong> by clicking on a line's toggle switch"),
+                                shiny::tags$span(
+
+                                  HTML(
+                                    "<label class='switch'>
+                                    <input type='checkbox' checked disabled>
+                                    <span class='slider round'></span>
+                                  </label>"
+                                  )
+                                ),
+                     ),
+                     # shiny::br(),
+                     shiny::div(class = "p-2",
+                                HTML("<strong>Rorder a line</strong> by clicking on the move icon <span class='glyphicon glyphicon-move'></span> next to the line and drag and drop it")
+                     )
+          )
+        }
       })
 
       # listen for JS to tell us code is ready for us to be processed
@@ -608,19 +649,6 @@ datawatsServer <- function(id, user_code = NULL) {
       output$code_explorer <- renderUI({
         if (!is.null(rv$code_info)) {
           shiny::tagList(
-            shiny::br(),
-            shiny::p(
-              shiny::tags$ul(
-                p("Available actions:"),
-                shiny::tags$li(HTML("<strong>View intermediate data:</strong> click on a line.")),
-                shiny::tags$li(HTML("<strong>View data summary:</strong> click on a colored summary box <span class='d-inline-flex visible-square justify-content-center' style='width:1.5em; height:1.5em;'></span>.")),
-                shiny::tags$li(HTML("<strong>Enable/disable a line:</strong> click on a line's toggle switch <label class='switch'>
-  <input type='checkbox'>
-  <span class='slider round'></span>
-</label>")),
-                shiny::tags$li(HTML("<strong>Reorder a line:</strong> click on the move icon <span class='glyphicon glyphicon-move'></span>, and drag and drop the line."))
-              )
-            ),
             shiny::br(),
             shiny::fixedPage(id = "simpleList", class="list-group",
               create_group_item_tags(rv$code_info, id),

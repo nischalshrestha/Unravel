@@ -66,16 +66,17 @@ get_data_change_type <- function(verb_name, prev_output, cur_output) {
     change_type <- "none"
   } else {
     change_type <- "visible"
-    # rowwise case
-    if ((!prev_rowwise && cur_rowwise) || (prev_rowwise && !cur_rowwise)) {
-      change_type <- "internal"
-    } else if(
-      # grouped vs ungrouped or grouped vs grouped case
-      (!prev_grouped && cur_grouped && !verb_name %in% c("summarize", "summarise")) ||
-      (prev_grouped && !cur_grouped && !verb_name %in% c("summarize", "summarise")) ||
-      (prev_grouped && cur_grouped && !identical(group_vars(prev_output), group_vars(cur_output)))
-    ) {
-      change_type <- "internal"
+    if(!verb_name %in% c("summarize", "summarise")) {
+      # rowwise case
+      if ((!prev_rowwise && cur_rowwise) || (prev_rowwise && !cur_rowwise)) {
+        change_type <- "internal"
+      } else if(
+        # grouped vs ungrouped or grouped vs grouped case
+        (!prev_grouped && cur_grouped) || (prev_grouped && !cur_grouped) ||
+        (prev_grouped && cur_grouped && !identical(group_vars(prev_output), group_vars(cur_output)))
+      ) {
+        change_type <- "internal"
+      }
     }
   }
   return(change_type)
