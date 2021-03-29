@@ -576,6 +576,10 @@ datawatsServer <- function(id, user_code = NULL) {
           shiny::div(class = "flex-row",
                      shiny::br(),
                      shiny::div(class = "p-2",
+                                HTML("<strong>Edit and run modified code</strong> by changing code in the text editor above and clicking on the Unravel button.")
+                     ),
+                     shiny::br(),
+                     shiny::div(class = "p-2",
                                 HTML("<strong>View the intermediate data</strong> by clicking on a line")
                      ),
                      shiny::div(class = "p-2",
@@ -598,7 +602,7 @@ datawatsServer <- function(id, user_code = NULL) {
                      ),
                      # shiny::br(),
                      shiny::div(class = "p-2",
-                                HTML("<strong>Rorder a line</strong> by clicking on the move icon <span class='glyphicon glyphicon-move'></span> next to the line and drag and drop it")
+                                HTML("<strong>Re-order a line</strong> by clicking on the move icon <span class='glyphicon glyphicon-move'></span> next to the line and drag and drop it")
                      )
           )
         }
