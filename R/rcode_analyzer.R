@@ -236,7 +236,7 @@ get_dplyr_intermediates <- function(pipeline) {
       msg <- ifelse(!grepl("Error:", msg), paste("<strong>Error:</strong>", msg), msg)
       # style back the x's, i's, and *
       msg <- gsub("\nx", "<br><span style='color:red'>x</span>", msg)
-      msg <- gsub("\nℹ", "<br><span style='color:DodgerBlue'>ℹ</span>", msg)
+      msg <- gsub("\n\u2139", "<br><span style='color:DodgerBlue'>\u2139</span>", msg)
       msg <- gsub("\n\\*", "<br>*", msg)
       intermediate[["err"]] <- msg
       # try to retain the format as much as possible by keeping it as HTML string
