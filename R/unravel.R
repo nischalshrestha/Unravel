@@ -48,7 +48,16 @@ unravel <- function(code = NULL, viewer = T) {
     datawatsServer("datawat", code)
   }
 
-  shinyApp(ui, server)
+  shinyApp(
+    ui,
+    server,
+    onStart = function() {
+      onStop(function() {
+        # detach tidylog so the outputs no longer appear
+        detach('package:tidylog')
+      })
+    }
+  )
 }
 
 #' A variant of `unravel` to support accepting the code character instead.
@@ -78,5 +87,14 @@ unravel_code <- function(code = "", viewer = T) {
     datawatsServer("datawat", code)
   }
 
-  shinyApp(ui, server)
+  shinyApp(
+    ui,
+    server,
+    onStart = function() {
+      onStop(function() {
+        # detach tidylog so the outputs no longer appear
+        detach('package:tidylog')
+      })
+    }
+  )
 }

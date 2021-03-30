@@ -430,8 +430,8 @@ generate_code_info_outputs <- function(order, rv) {
   })
   new_code_source <- paste0(lapply(new_code_info, function(x) x$code), collapse = "\n")
   quoted <- rlang::parse_expr(new_code_source)
-  message("quoted code:")
-  str(quoted)
+  message("producing new code info")
+  # str(quoted)
 
   # get new code intermediate info
   outputs <- get_dplyr_intermediates(quoted)
@@ -617,7 +617,7 @@ datawatsServer <- function(id, user_code = NULL) {
           quoted <- rlang::parse_expr(input$code_ready)
           message(quoted)
           outputs <- get_dplyr_intermediates(quoted)
-          str(outputs)
+          # str(outputs)
           # set reactive values
           rv$code_info <- lapply(outputs, function(x) {
             list(lineid = x$line, code = x$code, change = x$change, row = abbrev_num(x$row), col = abbrev_num(x$col), err = x$err)
