@@ -127,7 +127,7 @@ get_dplyr_intermediates <- function(pipeline) {
   # if first part of ast is not a %>% just quit
   # or if only a verb by itself was supplied (via. data argument)
   if (!identical(pipeline[[1]], as.symbol("%>%"))) {
-    message("`pipeline` input is not a pipe call!")
+    # message("`pipeline` input is not a pipe call!")
     return(list(
       list(
         line = 1,
@@ -198,9 +198,9 @@ get_dplyr_intermediates <- function(pipeline) {
         # we would have the same summary when tidylog does not support a certain
         # verb, so let's set it to empty string if that's the case.
         verb_summary <- ifelse(is.null(verb_summary), "", verb_summary)
-        message("verb_summary: ", verb_summary)
-        message("old_verb_summary: ", old_verb_summary)
-        message("verb_callouts: ", get_line_callouts())
+        # message("verb_summary: ", verb_summary)
+        # message("old_verb_summary: ", old_verb_summary)
+        # message("verb_callouts: ", get_line_callouts())
         intermediate["callouts"] <- list(get_line_callouts())
         if (i == 1) {
           verb_summary <- tidylog::get_data_summary(intermediate["output"][[1]])

@@ -329,8 +329,6 @@ datawatsUI <- function(id) {
       shiny::includeScript(file.path(package_js, "tippy-bundle.min.js")),
       shiny::includeCSS(file.path(package_css, "light.css")),
     ),
-    shiny::br(),
-    shiny::br(),
     shiny::column(
       12,
       align = "center",
@@ -371,8 +369,9 @@ datawatsUI <- function(id) {
     ),
     shiny::htmlOutput(ns("tutorial")),
     shiny::htmlOutput(ns("code_explorer")),
-    shiny::fixedPage(class="list-group",
-                     reactable::reactableOutput(ns("line_table"))
+    shiny::div(
+      style = "width: 100%; height: 500px; margin: 10px;",
+      reactable::reactableOutput(ns("line_table"))
     )
   )
 }
@@ -430,7 +429,7 @@ generate_code_info_outputs <- function(order, rv) {
   })
   new_code_source <- paste0(lapply(new_code_info, function(x) x$code), collapse = "\n")
   quoted <- rlang::parse_expr(new_code_source)
-  message("producing new code info")
+  # message("producing new code info")
   # str(quoted)
 
   # get new code intermediate info
@@ -553,10 +552,10 @@ datawatsServer <- function(id, user_code = NULL) {
       rv$outputs <- NULL
 
       observeEvent(input$examples, {
-        message("Example picked ", input$examples)
+        # message("Example picked ", input$examples)
         if (nzchar(input$examples)) {
           input_code <- example_list[input$examples]
-          message(input_code)
+          # message(input_code)
           # message(example_list[input$examples])
           session$sendCustomMessage("set_code", paste0(input_code))
         } else if (!is.null(user_code) && nzchar(user_code)) {
@@ -566,7 +565,7 @@ datawatsServer <- function(id, user_code = NULL) {
 
       # listen to button click and signal JS to give us code back from input editor
       observeEvent(input$explore, {
-        message("Explore button")
+        # message("Explore button")
         session$sendCustomMessage("need_code", "R needs the code!")
       })
 
@@ -610,12 +609,12 @@ datawatsServer <- function(id, user_code = NULL) {
 
       # listen for JS to tell us code is ready for us to be processed
       observeEvent(input$code_ready, {
-        message("Receiving code from JS: ", input$code_ready)
+        # message("Receiving code from JS: ", input$code_ready)
         # TODO process lines function?
         # process lines
         if (!is.null(input$code_ready) && nzchar(input$code_ready)) {
           quoted <- rlang::parse_expr(input$code_ready)
-          message(quoted)
+          # message(quoted)
           outputs <- get_dplyr_intermediates(quoted)
           # str(outputs)
           # set reactive values
@@ -691,19 +690,19 @@ datawatsServer <- function(id, user_code = NULL) {
 
       # list for a trigger message input from JS input so we can send callout info for each line
       observeEvent(input$need_callouts, {
-        message("JS is ready for callouts: ", input$need_callouts)
+        # message("JS is ready for callouts: ", input$need_callouts)
         session$sendCustomMessage("callouts", rv$callouts)
       })
 
       # list for a trigger message input from JS input so we can send summary info for data prompts
       observeEvent(input$need_prompts, {
-        message("JS is ready for prompts: ", input$need_prompts)
+        # message("JS is ready for prompts: ", input$need_prompts)
         session$sendCustomMessage("prompts", rv$summaries)
       })
 
       # list for a click square input from JS to tells us which data to display for a particular line
       observeEvent(input$square, {
-        message("clicked on a square: ", input$square)
+        # message("clicked on a square: ", input$square)
         # make sure to only change current if the current code info has the line marked as enabled
         if (!is.null(input$square)) {
           rv$current <- input$square;
@@ -712,7 +711,7 @@ datawatsServer <- function(id, user_code = NULL) {
       })
 
       observeEvent(input$line, {
-        message("clicked on a line: ", input$line)
+        # message("clicked on a line: ", input$line)
         # make sure to only change current if the current code info has the line marked as enabled
         if (!is.null(input$line)) {
           rv$current <- input$line;
@@ -726,7 +725,7 @@ datawatsServer <- function(id, user_code = NULL) {
         if (!is.na(value) && length(rv$outputs) > 0 && value <= length(rv$outputs)) {
           # reactable can only efficiently display data of a certain size
           # if we enter into the 100K range, it starts to slow down
-          message("changed data line output ", value)
+          # message("changed data line output ", value)
           final_data <- rv$outputs[[value]]$output
           if (!is.null(final_data) && length(final_data) >= 1) {
             if (dim(final_data)[[1]] > 5e5) {
@@ -740,6 +739,7 @@ datawatsServer <- function(id, user_code = NULL) {
                                    highlight = TRUE,
                                    bordered = TRUE,
                                    rownames = TRUE,
+                                   defaultPageSize = 5,
                                    # we can do a custom thing for a particular column
                                    columns = DataTutor:::reappend(
                                      list(.rownames = colDef(style = list(textAlign = "left"), maxWidth = 80)),
@@ -755,6 +755,7 @@ datawatsServer <- function(id, user_code = NULL) {
                                    highlight = TRUE,
                                    bordered = TRUE,
                                    rownames = TRUE,
+                                   defaultPageSize = 5,
                                    # we can do a custom thing for a particular column
                                    columns = DataTutor:::reappend(
                                      list(.rownames = colDef(style = append(list(textAlign = "left"), rowname_background), maxWidth = 80)),
@@ -768,7 +769,7 @@ datawatsServer <- function(id, user_code = NULL) {
       # this input even tells us which line to (un)comment
       # TODO trigger a revaluation of the code of enabled lines
       observeEvent(input$toggle, {
-        message("TOGGLE", input$toggle)
+        # message("TOGGLE", input$toggle)
         # this lets us get the boolean value of the toggle from JS side!
         if (isTRUE(input$toggle$checked)) {
           session$sendCustomMessage("toggle", paste0("un-commenting line ", input$toggle$lineid))
@@ -804,7 +805,7 @@ datawatsServer <- function(id, user_code = NULL) {
       })
 
       observeEvent(input$reorder, {
-        message("REORDER", input$reorder)
+        # message("REORDER", input$reorder)
         # this lets us get the boolean value of the toggle from JS side!
         order <- as.numeric(input$reorder)
 

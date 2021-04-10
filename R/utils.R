@@ -46,7 +46,7 @@ callout_cache <- new.env(parent=emptyenv())
 get_line_callouts <- function() {
   if (exists("callouts", envir = callout_cache)) {
     callouts <- get("callouts", envir = callout_cache)
-    message("getting callouts ", callouts)
+    # message("getting callouts ", callouts)
     return(callouts)
   }
   return(NULL)
@@ -54,13 +54,13 @@ get_line_callouts <- function() {
 
 # helper function to store callout words from tidylog
 store_line_callouts <- function(callouts) {
-  message("storing callouts ", callouts)
+  # message("storing callouts ", callouts)
   assign("callouts", callouts, envir = callout_cache)
 }
 
 # helper function to clear the callout_cache envir
 clear_callouts <- function() {
-  message("clearing callouts")
+  # message("clearing callouts")
   rm(list=ls(callout_cache, all.names=TRUE), envir=callout_cache)
 }
 
