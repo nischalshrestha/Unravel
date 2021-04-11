@@ -35,7 +35,7 @@ unravel <- function(code = NULL, viewer = T) {
   }
 
   if (!is.null(code)) {
-    code <- gsub("%>% ", "%>%\n\t", paste0(rlang::expr_deparse(code), collapse = ""))
+    code <- gsub("%>% ", "%>%\n\t", paste0(trimws(rlang::expr_deparse(code)), collapse = ""))
   } else {
     code <- ""
   }
