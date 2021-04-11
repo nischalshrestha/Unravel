@@ -71,9 +71,10 @@ get_data_change_type <- function(verb_name, prev_output, cur_output) {
       if ((!prev_rowwise && cur_rowwise) || (prev_rowwise && !cur_rowwise)) {
         change_type <- "internal"
       } else if(
+        (verb_name %in% c("group_by", "ungroup")) &&
         # grouped vs ungrouped or grouped vs grouped case
-        (!prev_grouped && cur_grouped) || (prev_grouped && !cur_grouped) ||
-        (prev_grouped && cur_grouped && !identical(group_vars(prev_output), group_vars(cur_output)))
+        ((!prev_grouped && cur_grouped) || (prev_grouped && !cur_grouped) ||
+        (prev_grouped && cur_grouped && !identical(group_vars(prev_output), group_vars(cur_output))))
       ) {
         change_type <- "internal"
       }
