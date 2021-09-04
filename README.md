@@ -1,8 +1,8 @@
+# DataTutor: Data Science Code Comprehension Tools.
+
 <!-- badges: start -->
 [![lifecycle](https://img.shields.io/badge/lifecycle-experimental-blue.svg)](https://www.tidyverse.org/lifecycle/#experimental)
 <!-- badges: end -->
-
-# DataTutor: Data Science Code Comprehension Tools.
 
 A project that uses Shiny interactive apps for facilitating Data Science code comprehension using R.
 
