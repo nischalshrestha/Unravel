@@ -6,13 +6,18 @@
 
 A project that uses Shiny interactive apps for facilitating Data Science code comprehension using R.
 
-**NOTE:** This is not yet ready for public use, and is undergoing development. But, if you are ever so curious, you can install it with:
+**NOTE:** The package is early on in its lifecycle and is still undergoing development. But, if you are ever so curious, you can install it with:
 
 ```r
 devtools::install_github('nischalshrestha/DataTutor')
 ```
 
-# Unravel piped code
+# Unravel
+
+Unravel is a tool that enables data scientists to understand and explore tidyverse R code which makes use of the fluent interface. You can read about
+the tool in my [paper](https://dl.acm.org/doi/10.1145/3472749.3474744) which covers its motivation, design, and results of a user study.
+
+## Usage
 
 You can unravel `dplyr` or `tidyr` (pivoting) code in a Shiny app to explore the intermediate data and data change states (no change, visible change, internal change, error). It will also allow you to perform structural edits to the code via toggles (think comment/uncomment), and reordering lines with drag and drop interaction. If you want to just run the app without any user code you can run:
 
