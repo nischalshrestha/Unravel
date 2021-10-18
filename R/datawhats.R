@@ -307,7 +307,8 @@ datawatsUI <- function(id) {
   # namespace for module
   ns <- shiny::NS(id)
   shiny::fixedPage(
-    # TODO: make sure these resources load in properly; you may have to have these in the tutorial folder
+    # fontawesome (for glyphicon for move)
+    shiny::tags$style("@import url(https://use.fontawesome.com/releases/v5.7.2/css/all.css);"),
     shiny::tags$body(
       # bootstrap stuff
       shiny::includeCSS(file.path(package_css, "bootstrap.min.css")),
@@ -316,8 +317,6 @@ datawatsUI <- function(id) {
       shiny::includeScript(file.path(package_js, "codemirror.js")),
       shiny::includeCSS(file.path(package_css, "codemirror.css")),
       shiny::includeScript(file.path(package_js, "r.js")),
-      # fontawesome (for glyphicon for move)
-      shiny::includeCSS(file.path(package_css, "all.css")),
       # Sortable.js
       shiny::includeScript(file.path(package_js, "Sortable.js")),
       # custom css
@@ -329,45 +328,7 @@ datawatsUI <- function(id) {
       shiny::includeScript(file.path(package_js, "tippy-bundle.min.js")),
       shiny::includeCSS(file.path(package_css, "light.css")),
     ),
-    shiny::column(
-      12,
-      align = "center",
-      titlePanel("Unravel")
-    ),
-    shiny::column(
-      12,
-      shiny::selectInput(ns("examples"), label = "Examples",
-                         choices = list(" " = "",
-                                        "diamonds" = "diamonds",
-                                        "starwars 1" = "starwars1",
-                                        "starwars 2" = "starwars2",
-                                        "student grades" = "studentgrades",
-                                        "mtcars" = "mtcars1",
-                                        "gapminder" = "gapminder",
-                                        "iris" = "iris",
-                                        "mini babynames" = "minibabynames")
-      )
-    ),
-    shiny::column(
-      12,
-      shiny::tags$textarea(
-        class = "code_input",
-        id = id
-      ),
-      shiny::includeScript(file.path(package_js, "script.js"))
-    ),
-    shiny::br(),
-    shiny::column(
-      12,
-      align = "center",
-      shiny::actionButton(inputId = ns("explore"), label = "Unravel", icon = shiny::icon("fas fa-layer-group"),style = "margin: 1em;"),
-      shiny::actionButton(inputId = ns("help"),
-                          label = "Help",
-                          icon = shiny::icon("far fa-question-circle"),
-                          style = "margin: 1em;"
-      )
-    ),
-    shiny::htmlOutput(ns("tutorial")),
+    shiny::includeScript(file.path(package_js, "script.js")),
     shiny::htmlOutput(ns("code_explorer")),
     shiny::div(
       style = "width: 100%; height: 500px; margin: 10px;",
@@ -551,65 +512,12 @@ datawatsServer <- function(id, user_code = NULL) {
       rv$summaries <- list()
       rv$outputs <- NULL
 
-      observeEvent(input$examples, {
-        # message("Example picked ", input$examples)
-        if (nzchar(input$examples)) {
-          input_code <- example_list[input$examples]
-          # message(input_code)
-          # message(example_list[input$examples])
-          session$sendCustomMessage("set_code", paste0(input_code))
-        } else if (!is.null(user_code) && nzchar(user_code)) {
-          session$sendCustomMessage("set_code", paste0(user_code))
-        }
-      })
-
-      # listen to button click and signal JS to give us code back from input editor
-      observeEvent(input$explore, {
-        # message("Explore button")
-        session$sendCustomMessage("need_code", "R needs the code!")
-      })
-
-      # display available actions when user needs help
-      output$tutorial <- renderUI({
-        if (input$help %% 2 == 1) {
-          shiny::div(class = "flex-row",
-                     shiny::br(),
-                     shiny::div(class = "p-2",
-                                HTML("<strong>Edit and run modified code</strong> by changing code in the text editor above and clicking on the Unravel button.")
-                     ),
-                     shiny::br(),
-                     shiny::div(class = "p-2",
-                                HTML("<strong>View the intermediate data</strong> by clicking on a line")
-                     ),
-                     shiny::div(class = "p-2",
-                                HTML("<strong>View the function summary by</strong> clicking on a colored summary box"),
-                                shiny::tags$span(shiny::img(src = "www/summary_box_demo.svg",
-                                                            width = "8%", margin = "0px"))
-
-                     ),
-                     shiny::div(class = "p-2",
-                                HTML("<strong>Enable/disable a line</strong> by clicking on a line's toggle switch"),
-                                shiny::tags$span(
-
-                                  HTML(
-                                    "<label class='switch'>
-                                    <input type='checkbox' checked disabled>
-                                    <span class='slider round'></span>
-                                  </label>"
-                                  )
-                                ),
-                     ),
-                     # shiny::br(),
-                     shiny::div(class = "p-2",
-                                HTML("<strong>Re-order a line</strong> by clicking on the move icon <span class='glyphicon glyphicon-move'></span> next to the line and drag and drop it")
-                     )
-          )
-        }
-      })
+      # send signal to JS of the code text to display
+      session$sendCustomMessage("set_code", paste0(user_code))
 
       # listen for JS to tell us code is ready for us to be processed
       observeEvent(input$code_ready, {
-        # message("Receiving code from JS: ", input$code_ready)
+        message("Receiving code from JS: ", input$code_ready)
         # TODO process lines function?
         # process lines
         if (!is.null(input$code_ready) && nzchar(input$code_ready)) {

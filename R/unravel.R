@@ -21,6 +21,7 @@
 #'   unravel()
 unravel <- function(code = NULL, viewer = T) {
   require(shiny)
+
   # don't evaluate code yet
   code <- substitute(code)
   # are we at the last pipe function

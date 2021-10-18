@@ -17,15 +17,6 @@ function send_toggle(message) {
   console.log("R received message from JS. " + message);
 }
 
-$(document).ready(function() {
-  console.log("main script ready!");
-  Shiny.addCustomMessageHandler('needcode', function(message) {
-    console.log("giving code to R " + message);
-    return code_input.getDoc().getValue();
-  });
-  setup_code_input_editor();
-});
-
 // For other JS events we can listen to: https://shiny.rstudio.com/articles/js-events.html
 // We're doing this so that we know shiny is fully initialized before trying to make custom
 // handler for code input editor text
@@ -34,9 +25,8 @@ $(document).on("shiny:sessioninitialized", function(event) {
 
   // handler to set the input editor's text to the one sent by R via examples dropdown menu
   Shiny.addCustomMessageHandler('set_code', function(message) {
-    console.log("Gettong code from R: " + message);
-    code_input.getDoc().setValue(message);
-    Shiny.setInputValue("datawat-code_ready", code_input.getDoc().getValue());
+    console.log("Getting code from R: " + message);
+    Shiny.setInputValue("datawat-code_ready", message);
   });
 
   // handler to send R back the code when clicking the Unravel button
