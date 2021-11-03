@@ -491,15 +491,9 @@ update_lines <- function(order, outputs, current_code_info, new_code_info, rv, s
 #' @examples
 datawatsServer <- function(id, user_code = NULL) {
   # load and attach packages
-  require(DataTutor)
   require(tidyverse)
+  require(DataTutor)
   require(babynames)
-  require(tidylog)
-  # set tidylog messages to re-route to our tidylog_cache environment so we can access it
-  options(
-    "tidylog.display" = list(DataTutor:::store_verb_summary),
-    "tidylog.callouts" = DataTutor:::store_line_callouts
-  )
   require(reactable)
   shiny::addResourcePath('www', system.file('www', package = 'DataTutor'))
   moduleServer(
