@@ -23,7 +23,7 @@ recurse_dplyr <- function(dplyr_tree, outputs = list()) {
   )
 }
 
-#' Based on the type of tidyr/dplyr function used return whether or not
+#' Based on the type of tidyr/dplyr function used, return whether or not
 #' the type of change was internal (no visible change), visible, or none.
 #'
 #' @param verb_name
@@ -66,6 +66,7 @@ get_data_change_type <- function(verb_name, prev_output, cur_output) {
     change_type <- "none"
   } else {
     change_type <- "visible"
+    # check for an internal (invisible) change
     if(!verb_name %in% c("summarize", "summarise")) {
       # rowwise case
       if ((!prev_rowwise && cur_rowwise) || (prev_rowwise && !cur_rowwise)) {
@@ -88,7 +89,13 @@ get_data_change_type <- function(verb_name, prev_output, cur_output) {
 #' If there is an error, \code{get_dplyr_intermediates} will return outputs up to that
 #' line, with an error message for the subsequent line at fault.
 #'
+#' TODO-fix: change the evaluation strategy such that you store the result of the previous
+#' operation and pipe that for .data on the next verb.
+#'
 #' @param pipeline quoted dplyr code
+#'
+#' TODO-refactor: make the returned object an R6 class or a structure list so we can have one location
+#' for modification
 #'
 #' @return list(
 #'   intermediates = list(`tibble`),
@@ -308,7 +315,7 @@ columns_in_verbs <- function(quoted) {
       )
       # only retrieve rows for which symbols were valid columns, and rename col1 + col2
       # sometimes there are no valid columns (for e.g. if referring to another dataframe)
-      # TODO it's good think what would you show in the case of both column or a dataframe referenced
+      # TODO what would you show in the case of both column or a dataframe referenced?
       # TODO also, how does one even figure out that the SYMBOL is referring to a dataframe? eval it? probably.
       # but for now, set it to NULL by default
       valid_columns <- NULL

@@ -13,6 +13,7 @@
 #' @usage lhs \%>\% rhs
 NULL
 
+# empty out the tidylog summary env initially
 tidylog_cache <- new.env(parent=emptyenv())
 
 # helper function to get the current verb summary out of tidy log
@@ -63,6 +64,14 @@ clear_callouts <- function() {
   # message("clearing callouts")
   rm(list=ls(callout_cache, all.names=TRUE), envir=callout_cache)
 }
+
+# set tidylog messages to re-route to our tidylog_cache environment so we can access it
+require(tidylog)
+# this is done after all the utility functions for getting/setting summaries are defined above
+options(
+  "tidylog.display" = list(DataTutor:::store_verb_summary),
+  "tidylog.callouts" = DataTutor:::store_line_callouts
+)
 
 #' Returns an abbreviated version of a number (K for thousndas and M for millions)
 #'
