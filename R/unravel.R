@@ -61,6 +61,17 @@ unravel <- function(code = NULL, viewer = T) {
   )
 }
 
+#' The binding function for unraveling code using the add-in.
+#'
+#' @return A shiny app
+#' @export
+unravel_addin <- function() {
+  require(tidylog)
+  ec <- rstudioapi::getSourceEditorContext()
+  selected <- ec$selection[[1]]$text
+  unravel_code(code = selected)
+}
+
 #' A variant of `unravel` to support accepting the code character instead.
 #'
 #' @param code A character
