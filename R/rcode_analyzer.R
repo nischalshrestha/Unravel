@@ -18,6 +18,11 @@ recurse_dplyr <- function(dplyr_tree, outputs = list()) {
   if (length(dplyr_tree) < 2) {
     stop("Error: Detected a verb in pipeline that is not a function call for:<br><pre><code>", rlang::expr_deparse(dplyr_tree), "</code></pre>")
   }
+  # if there are no pipes, return the tree early
+  # this will return just the expression itself for single verb calls (e.g. select(diamonds, carat))
+  if (!identical(dplyr_tree[[1]], as.symbol("%>%"))) {
+    return(list(dplyr_tree))
+  }
   return(
     append(recurse_dplyr(dplyr_tree[[2]]), base)
   )
@@ -105,6 +110,7 @@ get_data_change_type <- function(verb_name, prev_output, cur_output) {
 #' @export
 #' @examples
 #' require(tidyverse)
+#' # multiple verbs
 #' "diamonds %>%
 #'   select(carat, cut, color, clarity, price) %>%
 #'   group_by(color) %>%
@@ -112,12 +118,19 @@ get_data_change_type <- function(verb_name, prev_output, cur_output) {
 #'   arrange(desc(color))" -> pipeline
 #' quoted <- rlang::parse_expr(pipeline)
 #' outputs <- get_dplyr_intermediates(quoted)
+#'
+#' # Single verb
+#' quoted <- rlang::parse_expr("select(diamonds, carat, cut, color, clarity, price)")
+#' outputs <- get_dplyr_intermediates(quoted)
+#'
 get_dplyr_intermediates <- function(pipeline) {
   clear_verb_summary()
   clear_callouts()
   old_verb_summary <- ""
-  # only data line
-  if (inherits(pipeline, "name")) {
+
+  # check if only a name has been passed for full expression which is
+  # potentially a dataframe
+  if (inherits(pipeline, "name") && is.data.frame(eval(pipeline))) {
     output <- eval(pipeline)
     return(list(
       list(
@@ -132,9 +145,33 @@ get_dplyr_intermediates <- function(pipeline) {
     ))
   }
 
-  # if first part of ast is not a %>% just quit
-  # or if only a verb by itself was supplied (via. data argument)
-  if (!identical(pipeline[[1]], as.symbol("%>%"))) {
+  # check if we have a dataframe as first argument for single verb code
+  err <- NULL
+  tryCatch({
+      first_arg_data <- is.data.frame(eval(as.list(pipeline)[[2]]))
+    },
+    error = function(e) {
+      err <<- crayon::strip_style(e$message)
+    }
+  )
+  if (!is.null(err)) {
+    return(list(
+      list(
+        line = 1,
+        code = rlang::expr_deparse(pipeline),
+        change = "error",
+        output = NULL,
+        row = "",
+        col = "",
+        summary = paste("<strong>Summary:</strong>", err)
+      )
+    ))
+  }
+
+  # if we don't have pipes and we don't have a function that has a first argument as dataframe
+  # quit early and surface error
+  has_pipes <- identical(pipeline[[1]], as.symbol("%>%"))
+  if (!has_pipes && !first_arg_data) {
     # message("`pipeline` input is not a pipe call!")
     return(list(
       list(
@@ -144,7 +181,7 @@ get_dplyr_intermediates <- function(pipeline) {
         output = list(),
         row = "",
         col = "",
-        summary = "<strong>Summary:</strong> Invalid line! Are you missing a .data parameter for this call?"
+        summary = "<strong>Summary:</strong> Your code does not use functions that take in a dataframe."
       )
     ))
   }
@@ -170,22 +207,18 @@ get_dplyr_intermediates <- function(pipeline) {
     if (i != 1) {
       verb <- lines[[i]][[3]]
       verb_name <- rlang::expr_deparse(verb[[1]])
+    } else if (!has_pipes && first_arg_data) {
+      verb <- lines[[i]]
+      verb_name <- rlang::expr_deparse(verb[[1]])
     } else {
       verb <- lines[[i]]
       verb_name <- ""
     }
+
     # get the deparsed character version
     # NOTE: rlang::expr_deparse breaks apart long strings into multiple character vector
     # we collapse it before further processing to avoid extra \t
     deparsed <- paste0(rlang::expr_deparse(verb), collapse = "")
-
-    # TODO: try to autolink the verb to its doc in future iterations
-    # if (length(verb) > 1) {
-    #   link_verb <- downlit::autolink_url(paste0("dplyr::", verb[[1]]))
-    #   url_deparsed <- paste0("dplyr::", deparsed)
-    #   deparsed <- gsub(as.character(verb[[1]]), paste0("<a href=", link_verb, ">", verb[[1]], "</a>"), url_deparsed)
-    #   deparsed <- gsub("dplyr::", "", deparsed)
-    # }
 
     # append a pipe character %>% unless it's the last line
     if (i < length(lines)) {
@@ -195,7 +228,6 @@ get_dplyr_intermediates <- function(pipeline) {
     if (i > 1) {
       deparsed <- paste0("\t", deparsed)
     }
-    # TODO change should be more intelligent based on data properties that changed or not, and tying into internal changes
     intermediate <- list(line = i, code = deparsed, change = get_change_type(verb_name))
     err <- NULL
     tryCatch({
@@ -206,11 +238,8 @@ get_dplyr_intermediates <- function(pipeline) {
         # we would have the same summary when tidylog does not support a certain
         # verb, so let's set it to empty string if that's the case.
         verb_summary <- ifelse(is.null(verb_summary), "", verb_summary)
-        # message("verb_summary: ", verb_summary)
-        # message("old_verb_summary: ", old_verb_summary)
-        # message("verb_callouts: ", get_line_callouts())
         intermediate["callouts"] <- list(get_line_callouts())
-        if (i == 1) {
+        if (i == 1 && has_pipes) {
           verb_summary <- tidylog::get_data_summary(intermediate["output"][[1]])
         }
         intermediate["summary"] <-
@@ -221,6 +250,9 @@ get_dplyr_intermediates <- function(pipeline) {
           prev_output <- results[[i - 1]]["output"][[1]]
           cur_output <- intermediate["output"][[1]]
           change_type <- get_data_change_type(verb_name, prev_output, cur_output)
+        } else if (first_arg_data) {
+          # for single verb code simply get the change type based on verb for now
+          change_type <- get_change_type(verb_name)
         }
         intermediate["change"] <- change_type
         old_verb_summary <- verb_summary
