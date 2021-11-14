@@ -511,7 +511,7 @@ unravelServer <- function(id, user_code = NULL) {
 
       # listen for JS to tell us code is ready for us to be processed
       observeEvent(input$code_ready, {
-        message("Receiving code from JS: ", input$code_ready)
+        # message("Receiving code from JS: ", input$code_ready)
         # TODO process lines function?
         # process lines
         if (!is.null(input$code_ready) && nzchar(input$code_ready)) {

@@ -90,6 +90,6 @@ unravel_addin <- function() {
   require(tidylog)
   ec <- rstudioapi::getSourceEditorContext()
   selected <- ec$selection[[1]]$text
-  unravel_code(code = selected)
+  invoke_unravel(code = selected)
 }
 
