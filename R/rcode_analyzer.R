@@ -231,9 +231,25 @@ get_dplyr_intermediates <- function(pipeline) {
     intermediate <- list(line = i, code = deparsed, change = get_change_type(verb_name))
     err <- NULL
     tryCatch({
-        intermediate["output"] <- list(eval(lines[[i]]))
+        # set the change type for summary box
+        change_type <- "none"
+        if (i == 1) {
+          intermediate["output"] <- list(eval(lines[[i]]))
+        } else if (i > 1) {
+          prev_output <- results[[i - 1]]["output"][[1]]
+          # for the current line, take the previous output and feed it as the `.data`, and the rest of the args
+          cur_output <- do.call(verb_name, append(list(prev_output), rlang::call_args(verb)))
+          # wrap output as list so it can be stored properly
+          intermediate["output"] <- list(cur_output)
+          change_type <- get_data_change_type(verb_name, prev_output, cur_output)
+        } else if (first_arg_data) {
+          # for single verb code simply get the change type based on verb for now
+          change_type <- get_change_type(verb_name)
+        }
         intermediate["row"] <- dim(intermediate["output"][[1]])[[1]]
         intermediate["col"] <- dim(intermediate["output"][[1]])[[2]]
+        intermediate["change"] <- change_type
+        # grab the summary
         verb_summary <- get_verb_summary()
         # we would have the same summary when tidylog does not support a certain
         # verb, so let's set it to empty string if that's the case.
@@ -243,18 +259,11 @@ get_dplyr_intermediates <- function(pipeline) {
           verb_summary <- tidylog::get_data_summary(intermediate["output"][[1]])
         }
         intermediate["summary"] <-
-          ifelse(is.null(verb_summary) || identical(verb_summary, old_verb_summary), "", paste("<strong>Summary:</strong>", verb_summary))
-        # set the change type for summary box
-        change_type <- "none"
-        if (i > 1) {
-          prev_output <- results[[i - 1]]["output"][[1]]
-          cur_output <- intermediate["output"][[1]]
-          change_type <- get_data_change_type(verb_name, prev_output, cur_output)
-        } else if (first_arg_data) {
-          # for single verb code simply get the change type based on verb for now
-          change_type <- get_change_type(verb_name)
-        }
-        intermediate["change"] <- change_type
+          ifelse(
+            is.null(verb_summary) || identical(verb_summary, old_verb_summary),
+            "",
+            paste("<strong>Summary:</strong>", verb_summary)
+          )
         old_verb_summary <- verb_summary
       },
       error = function(e) {
