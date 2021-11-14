@@ -26,13 +26,11 @@ If you are interested in playing around on the web version, Unravel is hosted on
 
 ### RStudio
 
-You can unravel `dplyr` or `tidyr` (pivoting) code in a Shiny app to explore the intermediate data and data change states (no change, visible change, internal change, error). It will also allow you to perform structural edits to the code via toggles (think comment/uncomment), and reordering lines with drag and drop interaction. If you want to just run the app without any user code you can run:
+You can unravel `dplyr` or `tidyr` (pivoting) code in a Shiny app to explore the intermediate data and data change states (no change, visible change, internal change, error). It will also allow you to perform structural edits to the code via toggles (think comment/uncomment), and reordering lines with drag and drop interaction. 
 
-```r
-DataTutor::unravel()
-```
+The easiest way to use Unravel is through the Addin. Highlight the tidyverse code you want to unravel, then go to Addins -> Unravel code.
 
-Or, if you want to unravel your own code:
+You can also invoke it programmatically using the `unravel` function by wrapping or piping your code to the function:
 
 ```r
 # wrapped
