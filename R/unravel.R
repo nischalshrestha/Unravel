@@ -1,4 +1,33 @@
 
+invoke_unravel <- function(code, viewer = T) {
+  require(shiny)
+
+  ui <- fluidPage(
+    unravelUI("unravel")
+  )
+
+  server <- function(input, output, session) {
+    unravelServer("unravel", code)
+  }
+
+  # by default run on Viewer pane, else on browser
+  if (viewer) {
+    on.exit(options(shiny.launch.browser = .rs.invokeShinyPaneViewer, add = TRUE))
+  }
+
+  shinyApp(
+    ui,
+    server,
+    onStart = function() {
+      onStop(function() {
+        # detach tidylog so the outputs no longer appear
+        detach('package:tidylog')
+      })
+    },
+    options = list(quiet = TRUE)
+  )
+}
+
 #' Unravel dplyr expression for exploration. You can either wrap your dplyr/tidyr code in
 #' a call or pipe the code to unravel.
 #'
@@ -19,57 +48,23 @@
 #'   head(20) %>%
 #'   select(mpg) %>%
 #'   unravel()
-unravel <- function(code = NULL, viewer = T) {
-  require(shiny)
-
+unravel <- function(code, viewer = T) {
   # don't evaluate code yet
   code <- substitute(code)
-  # are we at the last pipe function
+  # check if we are at the last pipe function
   if (identical(code, quote(`.`))) {
     # if so, get the piped code
     code <- sys.call(1)[[2]]
   }
 
-  # by default run on Viewer pane, else on browser
-  if (viewer) {
-    on.exit(options(shiny.launch.browser = .rs.invokeShinyPaneViewer, add = TRUE))
-  }
-
+  # deparsing the code does not always produce well formatted text so we format it here
   if (!is.null(code)) {
     code <- gsub("%>% ", "%>%\n\t", paste0(trimws(rlang::expr_deparse(code)), collapse = ""))
   } else {
     code <- ""
   }
 
-  ui <- fluidPage(
-    datawatsUI("datawat")
-  )
-
-  server <- function(input, output, session) {
-    datawatsServer("datawat", code)
-  }
-
-  shinyApp(
-    ui,
-    server,
-    onStart = function() {
-      onStop(function() {
-        # detach tidylog so the outputs no longer appear
-        detach('package:tidylog')
-      })
-    }
-  )
-}
-
-#' The binding function for unraveling code using the add-in.
-#'
-#' @return A shiny app
-#' @export
-unravel_addin <- function() {
-  require(tidylog)
-  ec <- rstudioapi::getSourceEditorContext()
-  selected <- ec$selection[[1]]$text
-  unravel_code(code = selected)
+  invoke_unravel(code, viewer)
 }
 
 #' A variant of `unravel` to support accepting the code character instead.
@@ -84,29 +79,17 @@ unravel_addin <- function() {
 #' @examples
 #' unravel_code("mtcars %>% select(cyl, mpg)")
 unravel_code <- function(code = "", viewer = T) {
-  require(shiny)
-
-  # by default run on Viewer pane, else on browser
-  if (viewer) {
-    on.exit(options(shiny.launch.browser = .rs.invokeShinyPaneViewer, add = TRUE))
-  }
-
-  ui <- fluidPage(
-    datawatsUI("datawat")
-  )
-
-  server <- function(input, output, session) {
-    datawatsServer("datawat", code)
-  }
-
-  shinyApp(
-    ui,
-    server,
-    onStart = function() {
-      onStop(function() {
-        # detach tidylog so the outputs no longer appear
-        detach('package:tidylog')
-      })
-    }
-  )
+  invoke_unravel(code, viewer)
 }
+
+#' The binding function for unraveling code using the add-in.
+#'
+#' @return A shiny app
+#' @export
+unravel_addin <- function() {
+  require(tidylog)
+  ec <- rstudioapi::getSourceEditorContext()
+  selected <- ec$selection[[1]]$text
+  unravel_code(code = selected)
+}
+

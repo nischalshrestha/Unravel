@@ -2,7 +2,7 @@
 % Please edit documentation in R/rcode_analyzer.R
 \name{get_change_type}
 \alias{get_change_type}
-\title{Based on the type of tidyr/dplyr function used return whether or not
+\title{Based on the type of tidyr/dplyr function used, return whether or not
 the type of change was internal (no visible change), visible, or none.}
 \usage{
 get_change_type(verb_name)
@@ -14,7 +14,7 @@ get_change_type(verb_name)
 a character
 }
 \description{
-Based on the type of tidyr/dplyr function used return whether or not
+Based on the type of tidyr/dplyr function used, return whether or not
 the type of change was internal (no visible change), visible, or none.
 }
 \examples{

@@ -26,13 +26,13 @@ $(document).on("shiny:sessioninitialized", function(event) {
   // handler to set the input editor's text to the one sent by R via examples dropdown menu
   Shiny.addCustomMessageHandler('set_code', function(message) {
     console.log("Getting code from R: " + message);
-    Shiny.setInputValue("datawat-code_ready", message);
+    Shiny.setInputValue("unravel-code_ready", message);
   });
 
   // handler to send R back the code when clicking the Unravel button
   Shiny.addCustomMessageHandler('need_code', function(message) {
     console.log("From R: " + message);
-    Shiny.setInputValue("datawat-code_ready", code_input.getDoc().getValue());
+    Shiny.setInputValue("unravel-code_ready", code_input.getDoc().getValue());
   });
 
 });
