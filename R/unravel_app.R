@@ -283,7 +283,7 @@ create_group_item_tags <- function(lines, ns_id) {
   return(ataglist)
 }
 
-#' Datawats UI
+#' Unravel UI
 #'
 #' @param id
 #'
@@ -291,7 +291,7 @@ create_group_item_tags <- function(lines, ns_id) {
 #' @export
 #'
 #' @examples
-#' Datawats UI
+#' Unravel UI
 #'
 #' @param id A character
 #' @param dplyr_code A character
@@ -300,7 +300,7 @@ create_group_item_tags <- function(lines, ns_id) {
 #' @export
 #'
 #' @examples
-datawatsUI <- function(id) {
+unravelUI <- function(id) {
   package_path <- file.path(system.file(package = "DataTutor"))
   package_css <- file.path(package_path, "css")
   package_js <- file.path(package_path, "js")
@@ -481,7 +481,7 @@ update_lines <- function(order, outputs, current_code_info, new_code_info, rv, s
   rv$current <- length(rv$outputs)
 }
 
-#' Datawats server
+#' Unravel server
 #'
 #' @param id
 #'
@@ -489,7 +489,7 @@ update_lines <- function(order, outputs, current_code_info, new_code_info, rv, s
 #' @export
 #'
 #' @examples
-datawatsServer <- function(id, user_code = NULL) {
+unravelServer <- function(id, user_code = NULL) {
   # load and attach packages
   require(tidyverse)
   require(DataTutor)

@@ -1,5 +1,4 @@
 Name: Unravel code
-Description: Unravels tidyverse code at the cursor position
+Description: Unravels tidyverse highlighted code
 Binding: unravel_addin
 Interactive: true
-

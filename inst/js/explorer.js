@@ -1,6 +1,6 @@
 
 /*
-This script is used for setting up the editors, prompts, toggles and summary boxes for the datawat explorer.
+This script is used for setting up the editors, prompts, toggles and summary boxes for the unravel explorer.
 */
 
 var lines = {};
@@ -45,7 +45,7 @@ function setup_editors() {
       line_editor_wrapper.setAttribute("lineid", line_id);
       line_editor_wrapper.setAttribute("squareid", line_id);
       // setup summary box and row/col content elements
-      let line_summary_box = $('#datawat-' + ID)[0];
+      let line_summary_box = $('#unravel-' + ID)[0];
       let line_summary_box_col = $(line_class + '-summary-box-col')[0];
       let line_summary_box_row = $(line_class + '-summary-box-row')[0];
       let line_row_content = $(line_class + "-row-content")[0];
@@ -94,7 +94,7 @@ function setup_sortable() {
 		let new_snippets = order.map(o => [o, snippets.get(o)]);
     current_snippets = new Map(new_snippets);
     // send R the reorder keys
-    Shiny.setInputValue("datawat-reorder", Array.from(current_snippets.keys()), {priority: "event"});
+    Shiny.setInputValue("unravel-reorder", Array.from(current_snippets.keys()), {priority: "event"});
   });
 }
 
@@ -191,7 +191,7 @@ function setup_toggles() {
       line_prompt.disable();
     }
     Shiny.setInputValue(
-      "datawat-toggle",
+      "unravel-toggle",
       {
         lineid: $(this).attr('line-id'),
         checked: checked
@@ -208,7 +208,7 @@ Line + Square
 // handler to be used for each summary box click event
 function signal_square_clicked(e) {
   let square = $(this).attr('lineid');
-  Shiny.setInputValue("datawat-square", square, {priority: "event"});
+  Shiny.setInputValue("unravel-square", square, {priority: "event"});
 }
 
 // handler to be used for each line click event
@@ -228,7 +228,7 @@ function signal_line_clicked(e) {
     // the last line wrapper and callout nodes will be set here when setting up listeners
     last_line_wrapper = line.wrapper;
     last_callout_nodes = line.callout_nodes;
-    Shiny.setInputValue("datawat-line", square, {priority: "event"});
+    Shiny.setInputValue("unravel-line", square, {priority: "event"});
   }
 }
 
@@ -244,7 +244,7 @@ function setup_box_listeners() {
     line.wrapper.addEventListener("click", signal_line_clicked);
   }
   // in order for setInputValue to re-trigger upon update of lines, we add the new lines dictionary length
-  Shiny.setInputValue("datawat-need_callouts", "Gimme the callouts! ", {priority: "event"});
+  Shiny.setInputValue("unravel-need_callouts", "Gimme the callouts! ", {priority: "event"});
 }
 
 // helper function to callout parts of the code snippet
@@ -295,7 +295,7 @@ function setup_callouts(callouts) {
     }
     line.callout_nodes = line_callout_nodes;
   })
-  Shiny.setInputValue("datawat-need_prompts", "we need the prompts now ", {priority: "event"});
+  Shiny.setInputValue("unravel-need_prompts", "we need the prompts now ", {priority: "event"});
 }
 
 function send_toggle(message) {
@@ -314,7 +314,7 @@ $(document).on("shiny:sessioninitialized", function(event) {
 
   Shiny.addCustomMessageHandler('need_explorer', function(message) {
     console.log("JS is signaling R " + message);
-    Shiny.setInputValue("datawat-explorer_ready", "explorer ready!", {priority: "event"});
+    Shiny.setInputValue("unravel-explorer_ready", "explorer ready!", {priority: "event"});
   });
 
   // NOTE: callouts have to be setup before the prompts because we are relying

@@ -5,7 +5,7 @@
 \title{Unravel dplyr expression for exploration. You can either wrap your dplyr/tidyr code in
 a call or pipe the code to unravel.}
 \usage{
-unravel(code = NULL, viewer = T)
+unravel(code, viewer = T)
 }
 \arguments{
 \item{code}{a language (dplyr/tidyr code)}
