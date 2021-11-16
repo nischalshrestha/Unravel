@@ -198,7 +198,6 @@ group_item_div <- function(line, ns_id) {
   ns <- shiny::NS(ns_id)
   # line_id is for SortableJS and is just a number of the line
   line_id <- line$lineid
-  # TODO this strategy of adding pipe won't work because we need to know if the line is the last one or not, we could
   # preprocess that info ahead of time
   line_code <- line$code
   change_type <- line$change
@@ -512,41 +511,49 @@ unravelServer <- function(id, user_code = NULL) {
       # listen for JS to tell us code is ready for us to be processed
       observeEvent(input$code_ready, {
         # message("Receiving code from JS: ", input$code_ready)
-        # TODO process lines function?
+        # TODO-refactor: process lines function?
         # process lines
         if (!is.null(input$code_ready) && nzchar(input$code_ready)) {
-          quoted <- rlang::parse_expr(input$code_ready)
-          # message(quoted)
-          outputs <- get_dplyr_intermediates(quoted)
-          # str(outputs)
-          # set reactive values
-          rv$code_info <- lapply(outputs, function(x) {
-            list(lineid = x$line, code = x$code, change = x$change, row = abbrev_num(x$row), col = abbrev_num(x$col), err = x$err)
-          })
-          # TODO reset current_code_info via a Reset button
-          rv$current_code_info <- lapply(outputs, function(x) {
-            list(
-              lineid = x$line,
-              code = x$code,
-              change = x$change,
-              row = abbrev_num(x$row),
-              col = abbrev_num(x$col),
-              err = x$err,
-              checked = TRUE
-            )
-          })
-          attr(rv$current_code_info, "order") <- seq_len(length(outputs))
-          rv$callouts <- lapply(outputs, function(x) list(lineid = paste0("line", x$line), callouts = x$callouts))
-          rv$cur_callouts <- lapply(outputs, function(x) x$callouts)
-          rv$summaries <- lapply(outputs, function(x) {
-            if (!is.null(x$err)) {
-              x$summary <- x$err
+          err <- NULL
+          tryCatch({
+            # it could be possible that we receive multiple expressions
+            # in this case, we only take the first one for now
+            quoted <- rlang::parse_exprs(input$code_ready)
+            outputs <- get_dplyr_intermediates(quoted[[1]])
+            # set reactive values
+            rv$code_info <- lapply(outputs, function(x) {
+              list(lineid = x$line, code = x$code, change = x$change, row = abbrev_num(x$row), col = abbrev_num(x$col), err = x$err)
+            })
+            # TODO-enhance: reset current_code_info via a Reset button
+            # store the current code metadata for the UI/logic
+            rv$current_code_info <- lapply(outputs, function(x) {
+              list(
+                lineid = x$line,
+                code = x$code,
+                change = x$change,
+                row = abbrev_num(x$row),
+                col = abbrev_num(x$col),
+                err = x$err,
+                checked = TRUE
+              )
+            })
+            attr(rv$current_code_info, "order") <- seq_len(length(outputs))
+            rv$callouts <- lapply(outputs, function(x) list(lineid = paste0("line", x$line), callouts = x$callouts))
+            rv$cur_callouts <- lapply(outputs, function(x) x$callouts)
+            rv$summaries <- lapply(outputs, function(x) {
+              if (!is.null(x$err)) {
+                x$summary <- x$err
+              }
+              list(lineid = paste0("line", x$line), summary = x$summary)
+            })
+            rv$outputs <- lapply(outputs, function(x) list(lineid = paste0("line", x$line), output = x$output))
+            # trigger data frame output of the very last line
+            rv$current <- length(rv$outputs)
+            },
+            error = function(e) {
+              err <<- e
             }
-            list(lineid = paste0("line", x$line), summary = x$summary)
-          })
-          rv$outputs <- lapply(outputs, function(x) list(lineid = paste0("line", x$line), output = x$output))
-          # trigger data frame output of the very last line
-          rv$current <- length(rv$outputs)
+          )
         }
       });
 
@@ -629,7 +636,8 @@ unravelServer <- function(id, user_code = NULL) {
           # if we enter into the 100K range, it starts to slow down
           # message("changed data line output ", value)
           final_data <- rv$outputs[[value]]$output
-          if (!is.null(final_data) && length(final_data) >= 1) {
+          if (is.data.frame(final_data) && !is.na(final_data) && !is.null(final_data) && length(final_data) >= 1) {
+            # this is a hack to reduce the amount of total rows displayed for performance
             if (dim(final_data)[[1]] > 5e5) {
               final_data <- final_data[1:5e4, ]
             }
@@ -669,7 +677,6 @@ unravelServer <- function(id, user_code = NULL) {
       })
 
       # this input even tells us which line to (un)comment
-      # TODO trigger a revaluation of the code of enabled lines
       observeEvent(input$toggle, {
         # message("TOGGLE", input$toggle)
         # this lets us get the boolean value of the toggle from JS side!
