@@ -1,6 +1,7 @@
 
 invoke_unravel <- function(code, viewer = T) {
-  require(shiny)
+  library(shiny)
+  suppressMessages(library(tidylog))
 
   ui <- fluidPage(
     unravelUI("unravel")
@@ -87,7 +88,6 @@ unravel_code <- function(code = "", viewer = T) {
 #' @return A shiny app
 #' @export
 unravel_addin <- function() {
-  require(tidylog)
   ec <- rstudioapi::getSourceEditorContext()
   selected <- ec$selection[[1]]$text
   invoke_unravel(code = selected)

@@ -94,9 +94,6 @@ get_data_change_type <- function(verb_name, prev_output, cur_output) {
 #' If there is an error, \code{get_dplyr_intermediates} will return outputs up to that
 #' line, with an error message for the subsequent line at fault.
 #'
-#' TODO-fix: change the evaluation strategy such that you store the result of the previous
-#' operation and pipe that for .data on the next verb.
-#'
 #' @param pipeline quoted dplyr code
 #'
 #' TODO-refactor: make the returned object an R6 class or a structure list so we can have one location
@@ -231,7 +228,8 @@ get_dplyr_intermediates <- function(pipeline) {
     intermediate <- list(line = i, code = deparsed, change = get_change_type(verb_name))
     err <- NULL
     tryCatch({
-        # set the change type for summary box
+        # store the intermediate output, and set the change type based on difference
+        # between previous and current output
         change_type <- "none"
         if (i == 1) {
           intermediate["output"] <- list(eval(lines[[i]]))
@@ -246,18 +244,28 @@ get_dplyr_intermediates <- function(pipeline) {
           # for single verb code simply get the change type based on verb for now
           change_type <- get_change_type(verb_name)
         }
+        # store the dimensions of dataframe
         intermediate["row"] <- dim(intermediate["output"][[1]])[[1]]
         intermediate["col"] <- dim(intermediate["output"][[1]])[[2]]
-        intermediate["change"] <- change_type
-        # grab the summary
+        # store the function summary
         verb_summary <- get_verb_summary()
+        if(is.na(intermediate["output"])) {
+          change_type <- "error"
+          verb_summary <- "This step produced an `NA`."
+        }
+        # store the final change type
+        intermediate["change"] <- change_type
         # we would have the same summary when tidylog does not support a certain
         # verb, so let's set it to empty string if that's the case.
         verb_summary <- ifelse(is.null(verb_summary), "", verb_summary)
+        # store the column strings so we can highlight them as callouts
         intermediate["callouts"] <- list(get_line_callouts())
+        # if we have a dataframe %>% verb() expression, the 'dataframe' summary is simply
+        # the dataframe/tibble with dimensions reported (we could expand that if we want)
         if (i == 1 && has_pipes) {
           verb_summary <- tidylog::get_data_summary(intermediate["output"][[1]])
         }
+        # store the final function summary
         intermediate["summary"] <-
           ifelse(
             is.null(verb_summary) || identical(verb_summary, old_verb_summary),
@@ -270,6 +278,7 @@ get_dplyr_intermediates <- function(pipeline) {
         err <<- e
       }
     )
+    # if we have an error, strip the crayon formatting and store the error message
     if (!is.null(err)) {
       # Thought: we could make even more readable messages
       # Error: Must group by variables found in `.data`.
