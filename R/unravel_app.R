@@ -331,6 +331,7 @@ unravelUI <- function(id) {
     shiny::htmlOutput(ns("code_explorer")),
     shiny::div(
       style = "width: 100%; height: 500px; margin: 10px;",
+      shiny::htmlOutput(ns("generic_output")),
       reactable::reactableOutput(ns("line_table"))
     )
   )
@@ -490,10 +491,8 @@ update_lines <- function(order, outputs, current_code_info, new_code_info, rv, s
 #' @examples
 unravelServer <- function(id, user_code = NULL) {
   # load and attach packages
-  require(tidyverse)
-  require(DataTutor)
-  require(babynames)
-  require(reactable)
+  suppressMessages(library(reactable))
+  library(DataTutor)
   shiny::addResourcePath('www', system.file('www', package = 'DataTutor'))
   moduleServer(
     id,
@@ -504,6 +503,8 @@ unravelServer <- function(id, user_code = NULL) {
       rv$code_info <-  NULL
       rv$summaries <- list()
       rv$outputs <- NULL
+      rv$table_output <- NULL
+      rv$main_callout <- NULL
 
       # send signal to JS of the code text to display
       session$sendCustomMessage("set_code", paste0(user_code))
@@ -628,50 +629,78 @@ unravelServer <- function(id, user_code = NULL) {
         }
       })
 
-      # render a reactable of the current line output
-      output$line_table <- reactable::renderReactable({
+      # a reactive expression that sets and determines the type of data we render on the UI for code output
+      # this could be generic output like vectors and lists, or
+      # this could be data.frame / tibble
+      data <- reactive({
         value <- as.numeric(rv$current)
+        out <- NULL
         if (!is.na(value) && length(rv$outputs) > 0 && value <= length(rv$outputs)) {
           # reactable can only efficiently display data of a certain size
           # if we enter into the 100K range, it starts to slow down
           # message("changed data line output ", value)
-          final_data <- rv$outputs[[value]]$output
-          if (is.data.frame(final_data) && !is.na(final_data) && !is.null(final_data) && length(final_data) >= 1) {
+          out <- rv$outputs[[value]]$output
+          # if it's a data.frame then set the table output reactive value
+          if (is.data.frame(out)) {
             # this is a hack to reduce the amount of total rows displayed for performance
-            if (dim(final_data)[[1]] > 5e5) {
-              final_data <- final_data[1:5e4, ]
+            if (dim(out)[[1]] > 5e5) {
+              out <- out[1:5e4, ]
             }
-            # if we have a grouped dataframe, to facilitate understanding let's rearrange columns such that
-            # the grouped variables appear to the very left
-            if (is_grouped_df(final_data)) {
-              reactable::reactable(data = select(.data = final_data, group_vars(final_data), everything()) %>% as.data.frame(),
-                                   compact = TRUE,
-                                   highlight = TRUE,
-                                   bordered = TRUE,
-                                   rownames = TRUE,
-                                   defaultPageSize = 5,
-                                   # we can do a custom thing for a particular column
-                                   columns = DataTutor:::reappend(
-                                     list(.rownames = colDef(style = list(textAlign = "left"), maxWidth = 80)),
-                                     get_column_css(final_data, rv$cur_callouts[[value]]))
-                                   )
-            } else {
-              rowname_background <- list()
-              if (inherits(final_data, "rowwise_df")) {
-                rowname_background <- list(`background-color` = "lightblue");
-              }
-              reactable::reactable(data = final_data %>% as.data.frame(),
-                                   compact = TRUE,
-                                   highlight = TRUE,
-                                   bordered = TRUE,
-                                   rownames = TRUE,
-                                   defaultPageSize = 5,
-                                   # we can do a custom thing for a particular column
-                                   columns = DataTutor:::reappend(
-                                     list(.rownames = colDef(style = append(list(textAlign = "left"), rowname_background), maxWidth = 80)),
-                                     get_column_css(final_data, rv$cur_callouts[[value]]))
-                                   )
+            rv$table_output <- out
+            rv$main_callout <- rv$cur_callouts[[value]]
+          } else {
+            # NOTE: we have to set table output to NULL if it's not a data.frame, otherwise it will
+            # still appear below a generic output
+            rv$table_output <- NULL
+          }
+        }
+        out
+      })
+
+      # this is the output for non-dataframe and non-plot objects like vectors and lists
+      output$generic_output <- renderUI({
+        generic_output <- data()
+        if (!is.data.frame(generic_output)) {
+          shiny::tagList({
+            shiny::renderPrint(generic_output)
+          })
+        }
+      })
+
+      # shiny output of reactable for a data.frame / tibble
+      output$line_table <- reactable::renderReactable({
+        final_data <- rv$table_output
+        if (!is.na(final_data) && !is.null(final_data) && length(final_data) >= 1) {
+          # if we have a grouped dataframe, to facilitate understanding let's rearrange columns such that
+          # the grouped variables appear to the very left
+          if (is_grouped_df(final_data)) {
+            reactable::reactable(data = select(.data = final_data, group_vars(final_data), everything()) %>% as.data.frame(),
+                                 compact = TRUE,
+                                 highlight = TRUE,
+                                 bordered = TRUE,
+                                 rownames = TRUE,
+                                 defaultPageSize = 5,
+                                 # we can do a custom thing for a particular column
+                                 columns = DataTutor:::reappend(
+                                   list(.rownames = colDef(style = list(textAlign = "left"), maxWidth = 80)),
+                                   get_column_css(final_data, rv$main_callout))
+                                 )
+          } else {
+            rowname_background <- list()
+            if (inherits(final_data, "rowwise_df")) {
+              rowname_background <- list(`background-color` = "lightblue");
             }
+            reactable::reactable(data = final_data %>% as.data.frame(),
+                                 compact = TRUE,
+                                 highlight = TRUE,
+                                 bordered = TRUE,
+                                 rownames = TRUE,
+                                 defaultPageSize = 5,
+                                 # we can do a custom thing for a particular column
+                                 columns = DataTutor:::reappend(
+                                   list(.rownames = colDef(style = append(list(textAlign = "left"), rowname_background), maxWidth = 80)),
+                                   get_column_css(final_data, rv$main_callout))
+                                 )
           }
         }
       })
