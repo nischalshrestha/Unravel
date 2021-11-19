@@ -236,7 +236,14 @@ get_dplyr_intermediates <- function(pipeline) {
         } else if (i > 1) {
           prev_output <- results[[i - 1]]["output"][[1]]
           # for the current line, take the previous output and feed it as the `.data`, and the rest of the args
-          cur_output <- do.call(verb_name, append(list(prev_output), rlang::call_args(verb)))
+          # NOTE: because we are not evaluating a `lhs %>% rhs()`, and only `rhs()` we miss out on the '.' pronoun
+          # so this is a little hack that binds a name "." to the previous output in a new environment
+          e <- rlang::new_environment(parent = rlang::current_env())
+          e[["."]] <- prev_output
+          # construct a call for the function such that we use the previous output as the input, and rest of the args
+          call_expr <- rlang::call2(verb_name, !!!append(list(prev_output), rlang::call_args(verb)))
+          # evaluate the final function call expression within the new environment that holds the "pronoun"
+          cur_output <- eval(call_expr, envir = e)
           # wrap output as list so it can be stored properly
           intermediate["output"] <- list(cur_output)
           change_type <- get_data_change_type(verb_name, prev_output, cur_output)
