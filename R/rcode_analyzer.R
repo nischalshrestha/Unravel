@@ -142,32 +142,32 @@ get_dplyr_intermediates <- function(pipeline) {
     ))
   }
 
+  has_pipes <- identical(pipeline[[1]], as.symbol("%>%"))
   # check if we have a dataframe as first argument for single verb code
-  err <- NULL
-  tryCatch({
-      first_arg_data <- is.data.frame(eval(as.list(pipeline)[[2]]))
-    },
-    error = function(e) {
-      err <<- crayon::strip_style(e$message)
+  if (!has_pipes) {
+    err <- NULL
+    tryCatch(
+      first_arg_data <- is.data.frame(eval(as.list(pipeline)[[2]])),
+      error = function(e) {
+        err <<- crayon::strip_style(e$message)
+      }
+    )
+    if (!is.null(err)) {
+      return(list(
+        list(
+          line = 1,
+          code = rlang::expr_deparse(pipeline),
+          change = "error",
+          output = NULL,
+          row = "",
+          col = "",
+          summary = paste("<strong>Summary:</strong>", err)
+        )
+      ))
     }
-  )
-  if (!is.null(err)) {
-    return(list(
-      list(
-        line = 1,
-        code = rlang::expr_deparse(pipeline),
-        change = "error",
-        output = NULL,
-        row = "",
-        col = "",
-        summary = paste("<strong>Summary:</strong>", err)
-      )
-    ))
   }
-
   # if we don't have pipes and we don't have a function that has a first argument as dataframe
   # quit early and surface error
-  has_pipes <- identical(pipeline[[1]], as.symbol("%>%"))
   if (!has_pipes && !first_arg_data) {
     # message("`pipeline` input is not a pipe call!")
     return(list(
@@ -234,6 +234,17 @@ get_dplyr_intermediates <- function(pipeline) {
         if (i == 1) {
           intermediate["output"] <- list(eval(lines[[i]]))
         } else if (i > 1) {
+          # check if the previous line had an error, and skip evaluation if it does
+          if (identical(results[[i - 1]]$change, "error")) {
+            intermediate[["output"]] <- NULL
+            intermediate[["change"]] <- "error"
+            intermediate[["row"]] <- ""
+            intermediate[["col"]] <- ""
+            # for now, simply point out that the previous lines have an error
+            intermediate[["summary"]] <- paste("<strong>Summary:</strong>", "Previous lines have problems!")
+            results <- append(results, list(intermediate))
+            next
+          }
           prev_output <- results[[i - 1]]["output"][[1]]
           # for the current line, take the previous output and feed it as the `.data`, and the rest of the args
           # NOTE: because we are not evaluating a `lhs %>% rhs()`, and only `rhs()` we miss out on the '.' pronoun
@@ -306,7 +317,6 @@ get_dplyr_intermediates <- function(pipeline) {
       intermediate[["err"]] <- msg
       # try to retain the format as much as possible by keeping it as HTML string
       results <- append(results, list(intermediate))
-      return(results)
     }
     results <- append(results, list(intermediate))
   }
