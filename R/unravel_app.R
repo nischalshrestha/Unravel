@@ -660,7 +660,7 @@ unravelServer <- function(id, user_code = NULL) {
       # this is the output for non-dataframe and non-plot objects like vectors and lists
       output$generic_output <- renderUI({
         generic_output <- data()
-        if (!is.data.frame(generic_output)) {
+        if (!is.data.frame(generic_output) && !is.null(generic_output)) {
           shiny::tagList({
             shiny::renderPrint(generic_output)
           })
