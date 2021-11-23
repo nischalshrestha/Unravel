@@ -147,7 +147,7 @@ get_dplyr_intermediates <- function(pipeline) {
   if (!has_pipes) {
     err <- NULL
     tryCatch(
-      first_arg_data <- is.data.frame(eval(as.list(pipeline)[[2]])),
+      first_arg_data <<- is.data.frame(eval(pipeline)),
       error = function(e) {
         err <<- crayon::strip_style(e$message)
       }
@@ -175,7 +175,7 @@ get_dplyr_intermediates <- function(pipeline) {
         line = 1,
         code = rlang::expr_deparse(pipeline),
         change = "error",
-        output = list(),
+        output = NULL,
         row = "",
         col = "",
         summary = "<strong>Summary:</strong> Your code does not use functions that take in a dataframe."
@@ -258,8 +258,9 @@ get_dplyr_intermediates <- function(pipeline) {
           # wrap output as list so it can be stored properly
           intermediate["output"] <- list(cur_output)
           change_type <- get_data_change_type(verb_name, prev_output, cur_output)
-        } else if (first_arg_data) {
-          # for single verb code simply get the change type based on verb for now
+        }
+        # for single verb code simply get the change type based on verb for now
+        if (first_arg_data) {
           change_type <- get_change_type(verb_name)
         }
         # store the dimensions of dataframe
@@ -280,7 +281,7 @@ get_dplyr_intermediates <- function(pipeline) {
         intermediate["callouts"] <- list(get_line_callouts())
         # if we have a dataframe %>% verb() expression, the 'dataframe' summary is simply
         # the dataframe/tibble with dimensions reported (we could expand that if we want)
-        if (i == 1 && has_pipes) {
+        if (i == 1 && (has_pipes || first_arg_data)) {
           verb_summary <- tidylog::get_data_summary(intermediate["output"][[1]])
         }
         # store the final function summary

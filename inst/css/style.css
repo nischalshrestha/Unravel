@@ -177,15 +177,8 @@ h2 {
   cursor:pointer;
 }
 
-.list-group-item .disabled {
-  width: 80%;
-  height: 10px;
-  opacity: 0;
-  border: 1px solid #eee;
-  padding: 2px;
-  margin: 2px;
-  display: flex;
-  align-items: center;
+.list-group-item.static {
+  background-color: #eee;
 }
 
 #simpleList {
