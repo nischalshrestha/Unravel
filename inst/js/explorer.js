@@ -81,21 +81,48 @@ Sortable
 */
 
 function setup_sortable() {
-  sortable = Sortable.create(simpleList, {});
+  sortable = Sortable.create(simpleList, {
+    // we set a filter so that we can disable dragging for the first line (dataframe line)
+    // the line will have the static class on its div
+    filter: '.static'
+  });
   /* options */
   sortable.option("onUpdate", function( /**Event*/ evt) {
-    // same properties as onEnd
-    console.log("reordering");
-    let line_id = "#" + evt.item.id;
-    let order = sortable.toArray();
-    // NOTE: for some reason sortable is keeping extra order items, so we slice it
-    order = order.slice(0, Object.entries(lines).length);
-    // make new snippet order
-		let new_snippets = order.map(o => [o, snippets.get(o)]);
-    current_snippets = new Map(new_snippets);
-    // send R the reorder keys
-    Shiny.setInputValue("unravel-reorder", Array.from(current_snippets.keys()), {priority: "event"});
+    // clever trick of cancelling a reorder
+    // source: https://github.com/SortableJS/Sortable/issues/264#issuecomment-224127048
+    var oldId = evt.oldIndex,
+        newId = evt.newIndex,
+        reArrange = sortable.toArray(),
+        oldSort = sortable.toArray();
+
+    // if we are trying to reorder anything on the first line, undo the reorder
+    if (newId == 0) {
+      if (oldId < newId) {
+          for (var i = oldId; i < newId; i++)
+              reArrange[i+1] = oldSort[i];
+      } else {
+          for (var i = newId + 1; i <= oldId; i++)
+              reArrange[i-1] = oldSort[i];
+      }
+
+      reArrange[oldId] = oldSort[newId];
+      sortable.sort(reArrange);
+    } else {
+      // otherwise, let the rearrange happen and inform R
+      console.log("reordering");
+      let line_id = "#" + evt.item.id;
+      let order = sortable.toArray();
+      // NOTE: for some reason sortable is keeping extra order items, so we slice it
+      order = order.slice(0, Object.entries(lines).length);
+      // make new snippet order
+  		let new_snippets = order.map(o => [o, snippets.get(o)]);
+      current_snippets = new Map(new_snippets);
+      // send R the reorder keys
+      Shiny.setInputValue("unravel-reorder", Array.from(current_snippets.keys()), {priority: "event"});
+    }
+
   });
+
 }
 
 function hide_line_wrapper() {
@@ -146,10 +173,8 @@ function setup_prompts(summaries) {
     line_tippy.setContent(e.summary);
     line.prompt = line_tippy;
   });
-  if (has_error === false) {
-    // simulate a click on the last line to focus on it ()
-    last_line_wrapper.click();
-  }
+
+  last_line_wrapper.click();
   console.log("JS has set prompts! " + last_line_wrapper);
 }
 
@@ -216,9 +241,11 @@ function signal_line_clicked(e) {
   let square = $(this).attr('squareid');
   let line_id = $(this).attr('lineid');
   let line = lines["line" + line_id];
+  console.log("attempting clicking on line: " + line_id);
   // only if the line is enabled should we try to focus on it and let R know to display data
   if (line.checked) {
-    console.log('updating line and callouts in signal_line_clicked ');
+    //console.log('updating line and callouts in signal_line_clicked ' + );
+    console.log('updating line and callouts in signal_line_clicked: ' + line_id);
     hide_line_wrapper();
     hide_callout_nodes();
     // when showing tippy, let's callout the code editor's border to draw attention to it
@@ -349,7 +376,6 @@ $(document).on("shiny:sessioninitialized", function(event) {
     // hide the last line wrapper
     hide_line_wrapper();
     hide_callout_nodes();
-    has_error = false;
     // for each line, we need to update the summary box change type, the row, and column
     // this j counter is for setting the correct lineid for summary boxes
     let j = 1;
@@ -358,15 +384,12 @@ $(document).on("shiny:sessioninitialized", function(event) {
       let line = lines["line" + e.id];
       // always destroy the tippy instances
       line.prompt.destroy();
-      if (e.change != "invisible" && e.change != "invalid" && e.change != "error") {
+      if (e.change != "invisible" && e.change != "invalid") {
         line.prompt.enable();
         line.summary_box.setAttribute("lineid", j);
         line.wrapper.setAttribute("squareid", j);
         last_line_wrapper = line.wrapper;
         j++;
-      } else if (e.change == "error") {
-        // console.log("setting error line");
-        has_error = true;
       } else {
         line.summary_box.setAttribute("lineid", null);
         line.wrapper.setAttribute("squareid", null);

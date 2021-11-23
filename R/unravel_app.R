@@ -205,35 +205,42 @@ group_item_div <- function(line, ns_id) {
   col <- line$col
   # whereas id is for a readable identifier for JS/jquery/CSS
   id <- paste0("line", line$lineid)
-  div(class = "d-flex list-group-item", id=id, `data-id` = line_id,
-      # row div
-      div(class = "justify-content-center align-self-baseline",
-          div(class = "d-flex justify-content-center align-self-center",
-              div(class = "row", style = "font-size:0.8em;",
-                  HTML("&nbsp;")
-              )
-          ),
-          div(class = glue::glue("{id}-summary-box-row d-flex empty-square justify-content-center"),
-              div(class=glue::glue("{id}-row-content align-self-center"), style="font-size: 0.8em;",
-                  # update element
-                  HTML(row)
-              )
-          )
-      ),
-      # column div + square div
-      div(class = "justify-content-center align-self-baseline",
-          div(class = glue::glue("{id}-summary-box-col d-flex justify-content-center align-self-center"),
-              div(class = glue::glue("{id}-col-content row"), style = "font-size:0.8em;",
-                  # update element
-                  HTML(col)
-              )
-          ),
-          # update element (class of square)
-          summary_button(ns_id, id, line_id, change_type)
-      ),
+  is_verb_line <- line_id != 1L
+  core_divs <- list(
+    # row div
+    div(class = "justify-content-center align-self-baseline",
+        div(class = "d-flex justify-content-center align-self-center",
+            div(class = "row", style = "font-size:0.8em;",
+                HTML("&nbsp;")
+            )
+        ),
+        div(class = glue::glue("{id}-summary-box-row d-flex empty-square justify-content-center"),
+            div(class=glue::glue("{id}-row-content align-self-center"), style="font-size: 0.8em;",
+                # update element
+                HTML(row)
+            )
+        )
+    ),
+    # column div + square div
+    div(class = "justify-content-center align-self-baseline",
+        div(class = glue::glue("{id}-summary-box-col d-flex justify-content-center align-self-center"),
+            div(class = glue::glue("{id}-col-content row"), style = "font-size:0.8em;",
+                # update element
+                HTML(col)
+            )
+        ),
+        # update element (class of square)
+        summary_button(ns_id, id, line_id, change_type)
+    )
+  )
+  disabled <- ifelse(is_verb_line, "", "static")
+  core_divs <- append(
+    core_divs,
+    list(
       # glyphicon
+      # add the move icon if it's not the first line, else make it transparent
       div(class=glue::glue("{id}-glyph d-flex justify-content-center align-self-center"),
-          span(class="glyphicon glyphicon-move", style="opacity:1;")
+          span(class=glue::glue("glyphicon glyphicon-move {disabled}"), style=glue::glue("opacity:{as.integer(is_verb_line)};"))
       ),
       # codemirror empty div above
       div(class="d-flex justify-content-center align-self-center", style="padding:0.5em;",
@@ -245,25 +252,38 @@ group_item_div <- function(line, ns_id) {
         class = "verb",
         id = id,
         lineid = line_id
-      ),
-      # toggle checkbox
-      div(style="opacity:1; padding-right:0.25em;",
-          div(class="d-flex justify-content-center align-self-center",
-              div(style="font-size: 0.8em;", HTML("&nbsp;"))
-          ),
-          # the value of `checked` is not meaningful, the existence of attribute turns on toggle by default
-          shiny::tags$label(
-            class = "switch",
-            shiny::tags$input(
-              type = "checkbox",
-              class = "slider",
-              `toggle-id` = id,
-              `line-id` = line_id,
-              `checked` = TRUE
-            ),
-            span(class="slider round")
-          )
       )
+    )
+  )
+
+  if (is_verb_line) {
+    core_divs <- append(
+      core_divs,
+      list(
+        # toggle checkbox
+        div(style="opacity:1; padding-right:0.25em;",
+            div(class="d-flex justify-content-center align-self-center",
+                div(style="font-size: 0.8em;", HTML("&nbsp;"))
+            ),
+            # the value of `checked` is not meaningful, the existence of attribute turns on toggle by default
+            shiny::tags$label(
+              class = "switch",
+              shiny::tags$input(
+                type = "checkbox",
+                class = "slider",
+                `toggle-id` = id,
+                `line-id` = line_id,
+                `checked` = TRUE
+              ),
+              span(class="slider round")
+            )
+        )
+      )
+    )
+  }
+  # if it's the data line (first line), disable it for SortableJS so we can't move it
+  div(class = glue::glue("d-flex list-group-item {disabled}"), id=id, `data-id` = line_id,
+    core_divs
   )
 }
 
