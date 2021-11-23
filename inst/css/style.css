@@ -147,6 +147,16 @@ h2 {
   padding-right: 0em;
 }
 
+.glyphicon-move.static {
+  font-size: 1em;
+  color: #2c3745;
+  cursor: pointer;
+  margin-top: 0.5em;
+  padding-left: 0.5em;
+  padding-right: 0em;
+}
+
+
 .list-group {
   width: auto;
   display: flex;
