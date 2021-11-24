@@ -394,22 +394,20 @@ generate_code_info_outputs <- function(order, rv) {
     return(NULL)
   }
 
-  # get new code
-  # FIXME just strip and then re-apply
+  # format the code by stripping and re-applying `%>%`
   new_code_info <- lapply(seq_len(length(new_code_info)), function(i) {
-    if (i < length(new_code_info) && !grepl("%>%", new_code_info[[i]]$code)) {
-      # if in between lines and it doesn't have pipes, add it
+    new_code_info[[i]]$code <- gsub("%>%", "", new_code_info[[i]]$code)
+    new_code_info[[i]]
+  })
+  new_code_info <- lapply(seq_len(length(new_code_info)), function(i) {
+    if (i < length(new_code_info)) {
       new_code_info[[i]]$code <- paste(new_code_info[[i]]$code, "%>%")
-    } else if (i == length(new_code_info) && grepl("%>%", new_code_info[[i]]$code)) {
-      # if last line and it contains pipe, remove it
-      new_code_info[[i]]$code <- unlist(strsplit(new_code_info[[i]]$code, split = "%>%"))
     }
     new_code_info[[i]]
   })
   new_code_source <- paste0(lapply(new_code_info, function(x) x$code), collapse = "\n")
   quoted <- rlang::parse_expr(new_code_source)
   # message("producing new code info")
-  # str(quoted)
 
   # get new code intermediate info
   outputs <- get_output_intermediates(quoted)
