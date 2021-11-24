@@ -10,7 +10,7 @@
 test_that("One liner functions", {
   # only dataframe
   expect_equal(
-    get_output_intermediates(rlang::expr(diamonds)),
+    get_output_intermediates(quote(diamonds)),
     list(
       list(
         line = 1,
@@ -26,7 +26,7 @@ test_that("One liner functions", {
 
   # invalid isolated function
   expect_equal(
-    get_output_intermediates(rlang::expr(mean(1:2))),
+    get_output_intermediates(quote(mean(1:2))),
     list(
       list(
         line = 1,
@@ -39,7 +39,7 @@ test_that("One liner functions", {
 
   # single verb
   expect_equal(
-    get_output_intermediates(rlang::expr(select(diamonds, carat, cut, color, clarity, price))),
+    get_output_intermediates(quote(select(diamonds, carat, cut, color, clarity, price))),
     list(
       list(
         line = 1,
@@ -55,9 +55,8 @@ test_that("One liner functions", {
   )
 })
 
-
 test_that("Multiple functions", {
-  pipeline <- rlang::expr(
+  pipeline <- quote(
     diamonds %>%
       select(carat, cut, color, clarity, price) %>%
       group_by(color) %>%
@@ -134,7 +133,7 @@ test_that("Multiple functions", {
 })
 
 test_that("Evaluation is deterministic", {
-  pipeline <- rlang::expr(
+  pipeline <- quote(
     data.frame(replicate(5, sample(0:1, 5, rep = TRUE))) %>%
       select(everything()) %>%
       group_by(X1)
@@ -184,7 +183,7 @@ test_that("Evaluation is deterministic", {
 })
 
 test_that("Properly analyzes problematic code", {
-  pipeline <- rlang::expr(
+  pipeline <- quote(
     diamonds %>%
       mean() %>%
       select(carat, cut, color, clarity, price)
@@ -223,6 +222,80 @@ test_that("Properly analyzes problematic code", {
       code = "\tselect(carat, cut, color, clarity, price)",
       change = "error",
       summary = "<strong>Summary:</strong> Previous lines have problems!"
+    )
+  )
+})
+
+test_that("Data pronouns can be accessed", {
+  pipeline <- quote(
+    mtcars %>%
+      split(.$cyl)
+  )
+  expect_equal(
+    get_output_intermediates(pipeline),
+    list(
+      list(
+        line = 1,
+        code = "mtcars %>%",
+        change = "none",
+        output = mtcars,
+        row = 32,
+        col = 11,
+        callouts = NULL,
+        summary = "<strong>Summary:</strong> data.frame with <span class='number'>32</span> rows and <span class='number'>11</span> columns"
+      ),
+      list(
+        line = 2,
+        code = "\tsplit(.$cyl)",
+        change = "visible",
+        output = mtcars %>% split(.$cyl),
+        callouts = NULL,
+        summary = "<strong>Summary:</strong> "
+      )
+    )
+  )
+
+  # one with .data pronoun should work as well
+  pipeline <- quote(
+    mtcars %>%
+      names() %>%
+      map(~ count(mtcars, .data[[.x]]))
+  )
+  # NOTE: `test_that` uses an `rlang::enquo()` underneath the hood which seems
+  # to fail to capture expressions that reference params of lambda like `.x`
+  # so, we are capture the output of that to compare the last line here
+  last_output <- mtcars %>%
+    names() %>%
+    map(~ count(mtcars, .data[[.x]]))
+  expect_equal(
+    get_output_intermediates(pipeline),
+    list(
+      list(
+        line = 1,
+        code = "mtcars %>%",
+        change = "none",
+        output = mtcars,
+        row = 32,
+        col = 11,
+        callouts = NULL,
+        summary = "<strong>Summary:</strong> data.frame with <span class='number'>32</span> rows and <span class='number'>11</span> columns"
+      ),
+      list(
+        line = 2,
+        code = "\tnames() %>%",
+        change = "visible",
+        output = mtcars %>% names(),
+        callouts = NULL,
+        summary = "<strong>Summary:</strong> "
+      ),
+      list(
+        line = 3,
+        code = "\tmap(~count(mtcars, .data[[.x]]))",
+        change = "visible",
+        output = last_output,
+        callouts = list(),
+        summary = "<strong>Summary:</strong> <code class='code'>count</code> changed the dataframe shape from <span class = 'number'>[32 x 11]</span> to <span class = 'visible-change number'>[6 x 2]</span>.  The data is now ungrouped."
+      )
     )
   )
 })

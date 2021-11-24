@@ -10,6 +10,7 @@
   suppressMessages({
     library(dplyr)
     library(tidyr)
+    library(purrr)
     library(tidylog)
   })
   # set tidylog messages to re-route to our tidylog_cache environment so we can access it
