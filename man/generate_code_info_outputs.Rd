@@ -2,16 +2,20 @@
 % Please edit documentation in R/unravel_app.R
 \name{generate_code_info_outputs}
 \alias{generate_code_info_outputs}
-\title{Given line order, and the reactive values, generate}
+\title{Given line order, and the reactive values, generate new intermediate outputs
+for Unravel}
 \usage{
 generate_code_info_outputs(order, rv)
 }
 \arguments{
-\item{rv}{}
+\item{order}{numeric vector}
+
+\item{rv}{reactive values}
 }
 \value{
 
 }
 \description{
-Given line order, and the reactive values, generate
+Given line order, and the reactive values, generate new intermediate outputs
+for Unravel
 }

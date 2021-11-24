@@ -89,12 +89,12 @@ get_data_change_type <- function(verb_name, prev_output, cur_output) {
   return(change_type)
 }
 
-#' Given a quoted dplyr chained code, return a list of intermediate outputs.
+#' Given an expression of fluent code using `%>%`, return a list of intermediate outputs.
 #'
-#' If there is an error, \code{get_dplyr_intermediates} will return outputs up to that
+#' If there is an error, \code{get_output_intermediates} will return outputs up to that
 #' line, with an error message for the subsequent line at fault.
 #'
-#' @param pipeline quoted dplyr code
+#' @param pipeline quoted code
 #'
 #' TODO-refactor: make the returned object an R6 class or a structure list so we can have one location
 #' for modification
@@ -114,13 +114,13 @@ get_data_change_type <- function(verb_name, prev_output, cur_output) {
 #'   summarise(n = n(), price = mean(price)) %>%
 #'   arrange(desc(color))" -> pipeline
 #' quoted <- rlang::parse_expr(pipeline)
-#' outputs <- get_dplyr_intermediates(quoted)
+#' outputs <- get_output_intermediates(quoted)
 #'
 #' # Single verb
 #' quoted <- rlang::parse_expr("select(diamonds, carat, cut, color, clarity, price)")
-#' outputs <- get_dplyr_intermediates(quoted)
+#' outputs <- get_output_intermediates(quoted)
 #'
-get_dplyr_intermediates <- function(pipeline) {
+get_output_intermediates <- function(pipeline) {
   clear_verb_summary()
   clear_callouts()
   old_verb_summary <- ""
@@ -158,9 +158,6 @@ get_dplyr_intermediates <- function(pipeline) {
           line = 1,
           code = rlang::expr_deparse(pipeline),
           change = "error",
-          output = NULL,
-          row = "",
-          col = "",
           summary = paste("<strong>Summary:</strong>", err)
         )
       ))
@@ -175,9 +172,6 @@ get_dplyr_intermediates <- function(pipeline) {
         line = 1,
         code = rlang::expr_deparse(pipeline),
         change = "error",
-        output = NULL,
-        row = "",
-        col = "",
         summary = "<strong>Summary:</strong> Your code does not use functions that take in a dataframe."
       )
     ))
@@ -236,12 +230,10 @@ get_dplyr_intermediates <- function(pipeline) {
         } else if (i > 1) {
           # check if the previous line had an error, and skip evaluation if it does
           if (identical(results[[i - 1]]$change, "error")) {
-            intermediate[["output"]] <- NULL
-            intermediate[["change"]] <- "error"
-            intermediate[["row"]] <- ""
-            intermediate[["col"]] <- ""
+            intermediate["output"] <- NULL
+            intermediate["change"] <- "error"
             # for now, simply point out that the previous lines have an error
-            intermediate[["summary"]] <- paste("<strong>Summary:</strong>", "Previous lines have problems!")
+            intermediate["summary"] <- paste("<strong>Summary:</strong>", "Previous lines have problems!")
             results <- append(results, list(intermediate))
             next
           }
@@ -260,7 +252,7 @@ get_dplyr_intermediates <- function(pipeline) {
           change_type <- get_data_change_type(verb_name, prev_output, cur_output)
         }
         # for single verb code simply get the change type based on verb for now
-        if (first_arg_data) {
+        if (!has_pipes && first_arg_data) {
           change_type <- get_change_type(verb_name)
         }
         # store the dimensions of dataframe
@@ -348,7 +340,7 @@ get_dplyr_intermediates <- function(pipeline) {
 #' @noRd
 columns_in_verbs <- function(quoted) {
   lines <- recurse_dplyr(quoted)
-  outputs <- get_dplyr_intermediates(quoted)
+  outputs <- get_output_intermediates(quoted)
   all_columns <- list()
   for (i in seq_len(length(lines))) {
     if (!inherits(lines[[i]], "name")) {

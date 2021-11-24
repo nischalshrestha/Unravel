@@ -316,7 +316,6 @@ create_group_item_tags <- function(lines, ns_id) {
 #' @param dplyr_code A character
 #'
 #' @return
-#' @export
 #'
 #' @examples
 unravelUI <- function(id) {
@@ -372,15 +371,13 @@ get_output <- function(target, lineid) {
   Filter(function(x) x$line == lineid, target)
 }
 
-#' Given line order, and the reactive values, generate
+#' Given line order, and the reactive values, generate new intermediate outputs
+#' for Unravel
 #'
-#' @param order
-#' @param rv
+#' @param order numeric vector
+#' @param rv reactive values
 #'
 #' @return
-#' @export
-#'
-#' @examples
 generate_code_info_outputs <- function(order, rv) {
   new_code_info <- rv$current_code_info[order]
   # only grab the enabled lines
@@ -398,6 +395,7 @@ generate_code_info_outputs <- function(order, rv) {
   }
 
   # get new code
+  # FIXME just strip and then re-apply
   new_code_info <- lapply(seq_len(length(new_code_info)), function(i) {
     if (i < length(new_code_info) && !grepl("%>%", new_code_info[[i]]$code)) {
       # if in between lines and it doesn't have pipes, add it
@@ -414,7 +412,7 @@ generate_code_info_outputs <- function(order, rv) {
   # str(quoted)
 
   # get new code intermediate info
-  outputs <- get_dplyr_intermediates(quoted)
+  outputs <- get_output_intermediates(quoted)
   # we might run across an error while processing an invalid pipeline, for
   # this case we will get back the error message, a character, so we do this
   # silly check for now so that we return early and the UI does not know any better
@@ -436,7 +434,7 @@ generate_code_info_outputs <- function(order, rv) {
 #' reactive values and sends UI information to the JS side.
 #'
 #' @param order A numeric vector
-#' @param outputs A list of outputs from `get_dplyr_intermediates`
+#' @param outputs A list of outputs from `get_output_intermediates`
 #' @param current_code_info The current code info list structure
 #' @param new_code_info The new code info list structure
 #' @param session The Shiny session
@@ -540,7 +538,7 @@ unravelServer <- function(id, user_code = NULL) {
             # it could be possible that we receive multiple expressions
             # in this case, we only take the first one for now
             quoted <- rlang::parse_exprs(input$code_ready)
-            outputs <- get_dplyr_intermediates(quoted[[1]])
+            outputs <- get_output_intermediates(quoted[[1]])
             # set reactive values
             rv$code_info <- lapply(outputs, function(x) {
               list(lineid = x$line, code = x$code, change = x$change, row = abbrev_num(x$row), col = abbrev_num(x$col), err = x$err)
