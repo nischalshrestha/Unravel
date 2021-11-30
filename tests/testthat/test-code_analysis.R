@@ -1,11 +1,5 @@
-
-# TODO test these
-# more complex expressions (e.g. across()) where we need to unravel further
-# starwars %>%
-#   select(species, sex, gender, homeworld) %>%
-#   group_by(species) %>%
-#   filter(n() > 1) %>%
-#   summarise(across(c(sex, gender, homeworld), ~ length(unique(.x))))
+require(tidyverse)
+require(DataTutor)
 
 test_that("One liner functions", {
   # only dataframe
@@ -54,6 +48,7 @@ test_that("One liner functions", {
     )
   )
 })
+
 
 test_that("Multiple functions", {
   pipeline <- quote(
@@ -294,8 +289,64 @@ test_that("Data pronouns can be accessed", {
         change = "visible",
         output = last_output,
         callouts = list(),
-        summary = "<strong>Summary:</strong> <code class='code'>count</code> changed the dataframe shape from <span class = 'number'>[32 x 11]</span> to <span class = 'visible-change number'>[6 x 2]</span>.  The data is now ungrouped."
+        summary = "<strong>Summary:</strong> <code class='code'>count</code> changed the dataframe shape from <span class = 'number'>[32 x 11]</span> to <span class = 'visible-change number'>[6 x 2]</span>. The data is now ungrouped."
       )
     )
   )
 })
+
+test_that("Nested expressions can be unraveled", {
+    across_expr <- quote(
+      iris %>%
+        as_tibble() %>%
+        mutate(across(c(Sepal.Length, Sepal.Width), round))
+    )
+
+    expected_outputs <- list(
+      iris,
+      iris %>% as_tibble(),
+      iris %>% as_tibble() %>% mutate(across(c(Sepal.Length, Sepal.Width), round))
+    )
+
+    outputs <- get_output_intermediates(across_expr)
+
+    expect_equal(
+      outputs,
+      list(
+        list(
+          line = 1,
+          code = "iris %>%",
+          change = "none",
+          output = expected_outputs[[1]],
+          row = 150,
+          col = 5,
+          callouts = NULL,
+          summary = "<strong>Summary:</strong> data.frame with <span class='number'>150</span> rows and <span class='number'>5</span> columns"
+        ),
+        list(
+          line = 2,
+          code = "\tas_tibble() %>%",
+          change = "none",
+          output = expected_outputs[[2]],
+          row = 150,
+          col = 5,
+          callouts = NULL,
+          summary = "<strong>Summary:</strong> "
+        ),
+        list(
+          line = 3,
+          code = "\tmutate(across(c(Sepal.Length, Sepal.Width), round))",
+          change = "visible",
+          output = expected_outputs[[3]],
+          row = 150,
+          col = 5,
+          callouts = list(
+            list(word = "Sepal.Length", change = "visible-change"),
+            list(word = "Sepal.Width", change = "visible-change")
+          ),
+          summary = "<strong>Summary:</strong>  <code class='code'>mutate</code> changed <span class='number'>133</span> values (<span class='number'>89%</span>) of '<code class='code visible-change'>Sepal.Length</code>' (previously <span class='number'>0</span> <span class='number'>NA</span>s, now <span class='number'>0</span> new <span class='number'>NA</span>s); changed <span class='number'>122</span> values (<span class='number'>81%</span>) of '<code class='code visible-change'>Sepal.Width</code>' (previously <span class='number'>0</span> <span class='number'>NA</span>s, now <span class='number'>0</span> new <span class='number'>NA</span>s)."
+        )
+      )
+    )
+  })
+

@@ -73,8 +73,10 @@ get_data_change_type <- function(verb_name, prev_output, cur_output) {
     change_type <- "visible"
     # check for an internal (invisible) change
     if(!verb_name %in% c("summarize", "summarise")) {
-      # rowwise case
-      if ((!prev_rowwise && cur_rowwise) || (prev_rowwise && !cur_rowwise)) {
+      if (verb_name %in% c("as_tibble", "as.tibble")) {
+        change_type <- "none"
+      } else if ((!prev_rowwise && cur_rowwise) || (prev_rowwise && !cur_rowwise)) {
+        # rowwise case
         change_type <- "internal"
       } else if(
         (verb_name %in% c("group_by", "ungroup")) &&
@@ -360,10 +362,10 @@ columns_in_verbs <- function(quoted) {
               out <- NULL
               if (i == 1) {
                 # for first line, we just subset the first output line (dataframe)
-                out <- outputs[[i]][[s]]
+                out <- outputs[[i]]$output[[s]]
               } else {
                 # for subsequent lines, we subset previous output line (dataframe)
-                out <- outputs[[i - 1]][[s]]
+                out <- outputs[[i - 1]]$output[[s]]
               }
               !is.null(out)
             },
