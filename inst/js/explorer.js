@@ -284,13 +284,13 @@ function setup_box_listeners() {
     // by both a mouse event and programmatically.
     // if there was already an event listener for click, remove the listener
     line.summary_box.removeEventListener("mouseenter", signal_square_clicked);
-    line.summary_box.removeEventListener("click", signal_square_clicked);
     line.summary_box.addEventListener("mouseenter", signal_square_clicked);
+    line.summary_box.removeEventListener("click", signal_square_clicked);
     line.summary_box.addEventListener("click", signal_square_clicked);
 
     line.wrapper.removeEventListener("mouseenter", signal_line_clicked);
-    line.wrapper.removeEventListener("click", signal_line_clicked);
     line.wrapper.addEventListener("mouseenter", signal_line_clicked);
+    line.wrapper.removeEventListener("click", signal_line_clicked);
     line.wrapper.addEventListener("click", signal_line_clicked);
   }
   // in order for setInputValue to re-trigger upon update of lines, we add the new lines dictionary length
