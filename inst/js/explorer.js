@@ -94,7 +94,6 @@ function setup_sortable() {
         newId = evt.newIndex,
         reArrange = sortable.toArray(),
         oldSort = sortable.toArray();
-
     // if we are trying to reorder anything on the first line, undo the reorder
     if (newId == 0) {
       if (oldId < newId) {
@@ -104,7 +103,6 @@ function setup_sortable() {
           for (var i = newId + 1; i <= oldId; i++)
               reArrange[i-1] = oldSort[i];
       }
-
       reArrange[oldId] = oldSort[newId];
       sortable.sort(reArrange);
     } else {
@@ -142,38 +140,36 @@ function hide_callout_nodes() {
 /*
 Prompts
 */
-
 function setup_prompts(summaries) {
   console.log("setting up prompts...");
-  summaries.forEach(e => {
-    let key = e.lineid;
-    let line = lines[key];
-    let line_tippy = tippy(line.summary_box, {
-      theme: 'light',
-      allowHTML: true,
-      placement: 'bottom',
-      interactive: true,
-      delay: [50, 50],
-      trigger: 'click',
-      onShow(instance) {
-        // hide the last line wrapper and callout nodes
-        hide_line_wrapper();
-        hide_callout_nodes();
-        // when showing tippy, let's callout the code editor's border to draw attention to it
-        line.wrapper.style.border = "2px solid black";
-        // enable the callout words, e.g:
-        line.callout_nodes.map(node => node.className = node.id);
-        last_line_wrapper = line.wrapper;
-        last_callout_nodes = line.callout_nodes;
-      },
-      onHide(instance) {
-        // we won't disable anything for now but keeping this in case
-      }
-    });
-    line_tippy.setContent(e.summary);
-    line.prompt = line_tippy;
-  });
-
+  for (let i = 0; i < summaries.length; i++) {
+    summary_obj = summaries[i]
+    if (summary_obj.summary != "") {
+      let key = summary_obj.lineid;
+      let line = lines[key];
+      let line_tippy = tippy(line.summary_box, {
+        theme: 'light',
+        allowHTML: true,
+        placement: 'bottom',
+        interactive: true,
+        delay: [50, 50],
+        trigger: 'mouseenter click',
+        onShow(instance) {
+          // hide the last line wrapper and callout nodes
+          hide_line_wrapper();
+          hide_callout_nodes();
+          // when showing tippy, let's callout the code editor's border to draw attention to it
+          line.wrapper.style.border = "2px solid black";
+          // enable the callout words, e.g:
+          line.callout_nodes.map(node => node.className = node.id);
+          last_line_wrapper = line.wrapper;
+          last_callout_nodes = line.callout_nodes;
+        }
+      });
+      line_tippy.setContent(summary_obj.summary);
+      line.prompt = line_tippy;
+    }
+  }
   last_line_wrapper.click();
   console.log("JS has set prompts! " + last_line_wrapper);
 }
@@ -204,7 +200,9 @@ function setup_toggles() {
     	line_summary_box.style.opacity = "1";
     	line_summary_box_col.style.opacity = "1";
     	line_summary_box_row.style.opacity = "1";
-    	line_prompt.enable();
+    	if (line.prompt !== undefined) {
+    	  line_prompt.enable();
+    	}
     	last_line_wrapper = line_editor_wrapper;
     } else {
       // else hide or dim elements
@@ -213,7 +211,9 @@ function setup_toggles() {
       line_summary_box.style.opacity = "0";
       line_summary_box_col.style.opacity = "0";
       line_summary_box_row.style.opacity = "0";
-      line_prompt.disable();
+      if (line.prompt !== undefined) {
+        line_prompt.disable();
+      }
     }
     Shiny.setInputValue(
       "unravel-toggle",
@@ -229,11 +229,25 @@ function setup_toggles() {
 /*
 Line + Square
 */
-
 // handler to be used for each summary box click event
 function signal_square_clicked(e) {
-  let square = $(this).attr('lineid');
-  Shiny.setInputValue("unravel-square", square, {priority: "event"});
+  let key = $(this).attr('lineid');
+  // if there were no function summaries (not supported yet) which means no tippy instance
+  // go ahead and trigger what would've been triggered with the instance
+  let line = lines['line' + key]
+  if (line.prompt === undefined) {
+    // hide the last line wrapper and callout nodes
+    hide_line_wrapper();
+    hide_callout_nodes();
+    // when showing tippy, let's callout the code editor's border to draw attention to it
+    line.wrapper.style.border = "2px solid black";
+    // enable the callout words, e.g:
+    line.callout_nodes.map(node => node.className = node.id);
+    last_line_wrapper = line.wrapper;
+    last_callout_nodes = line.callout_nodes;
+  }
+
+  Shiny.setInputValue("unravel-square", key, {priority: "event"});
 }
 
 // handler to be used for each line click event
@@ -264,10 +278,19 @@ function setup_box_listeners() {
   console.log("setting up box listeners...");
   for (const [key, value] of Object.entries(lines)) {
     let line = lines[key];
+    // we're adding both a click and a mouseenter so that the user can
+    // either chose to click on a line or click on it
+    // NOTE: this is redundant currently until we find a better way to trigger
+    // by both a mouse event and programmatically.
     // if there was already an event listener for click, remove the listener
+    line.summary_box.removeEventListener("mouseenter", signal_square_clicked);
     line.summary_box.removeEventListener("click", signal_square_clicked);
+    line.summary_box.addEventListener("mouseenter", signal_square_clicked);
     line.summary_box.addEventListener("click", signal_square_clicked);
+
+    line.wrapper.removeEventListener("mouseenter", signal_line_clicked);
     line.wrapper.removeEventListener("click", signal_line_clicked);
+    line.wrapper.addEventListener("mouseenter", signal_line_clicked);
     line.wrapper.addEventListener("click", signal_line_clicked);
   }
   // in order for setInputValue to re-trigger upon update of lines, we add the new lines dictionary length
@@ -383,9 +406,13 @@ $(document).on("shiny:sessioninitialized", function(event) {
       e = data[i];
       let line = lines["line" + e.id];
       // always destroy the tippy instances
-      line.prompt.destroy();
+      if (line.prompt !== undefined) {
+        line.prompt.destroy();
+      }
       if (e.change != "invisible" && e.change != "invalid") {
-        line.prompt.enable();
+        if (line.prompt !== undefined) {
+          line.prompt.enable();
+        }
         line.summary_box.setAttribute("lineid", j);
         line.wrapper.setAttribute("squareid", j);
         last_line_wrapper = line.wrapper;

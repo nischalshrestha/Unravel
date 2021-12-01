@@ -268,9 +268,6 @@ get_output_intermediates <- function(pipeline) {
         }
         # store the final change type
         intermediate["change"] <- change_type
-        # we would have the same summary when tidylog does not support a certain
-        # verb, so let's set it to empty string if that's the case.
-        verb_summary <- ifelse(is.null(verb_summary), "", verb_summary)
         # store the column strings so we can highlight them as callouts
         intermediate["callouts"] <- list(get_line_callouts())
         # if we have a dataframe %>% verb() expression, the 'dataframe' summary is simply
@@ -278,7 +275,8 @@ get_output_intermediates <- function(pipeline) {
         if (i == 1 && (has_pipes || first_arg_data)) {
           verb_summary <- tidylog::get_data_summary(intermediate["output"][[1]])
         }
-        # store the final function summary
+        # store the final function summary and set it to empty string if we do not yet have
+        # a summary support for the function
         intermediate["summary"] <-
           ifelse(
             is.null(verb_summary) || identical(verb_summary, old_verb_summary),

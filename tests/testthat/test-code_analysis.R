@@ -183,7 +183,11 @@ test_that("Properly analyzes problematic code", {
       mean() %>%
       select(carat, cut, color, clarity, price)
   )
-  outputs <- get_output_intermediates(pipeline)
+  # suppress the warning for the testthat output but expect the warning is produced
+  suppressWarnings({
+    expect_warning(get_output_intermediates(pipeline), "argument is not numeric or logical: returning NA")
+    outputs <- get_output_intermediates(pipeline)
+  })
   # succesful line with dataframe
   expect_equal(
     outputs[[1]],
@@ -245,7 +249,7 @@ test_that("Data pronouns can be accessed", {
         change = "visible",
         output = mtcars %>% split(.$cyl),
         callouts = NULL,
-        summary = "<strong>Summary:</strong> "
+        summary = ""
       )
     )
   )
@@ -281,7 +285,7 @@ test_that("Data pronouns can be accessed", {
         change = "visible",
         output = mtcars %>% names(),
         callouts = NULL,
-        summary = "<strong>Summary:</strong> "
+        summary = ""
       ),
       list(
         line = 3,
@@ -331,7 +335,7 @@ test_that("Nested expressions can be unraveled", {
           row = 150,
           col = 5,
           callouts = NULL,
-          summary = "<strong>Summary:</strong> "
+          summary = ""
         ),
         list(
           line = 3,
