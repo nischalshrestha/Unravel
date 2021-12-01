@@ -20,10 +20,6 @@ watch the [talk](https://youtu.be/wJ77e39XVEs) I gave on the tool at UIST 2021.
 
 ## Usage
 
-### Web
-
-If you are interested in playing around on the web version, Unravel is hosted on shinyapps [here](https://nshrest.shinyapps.io/datawhats). This version includes some examples snippets (dropdown) that you can explore, as well as a simple text editor (without any R support yet) that will allow you to explore your own dplyr/tidyr code.
-
 ### RStudio
 
 You can unravel `dplyr` or `tidyr` (pivoting) code in a Shiny app to explore the intermediate data and data change states (no change, visible change, internal change, error). It will also allow you to perform structural edits to the code via toggles (think comment/uncomment), and reordering lines with drag and drop interaction. 
