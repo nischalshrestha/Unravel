@@ -21,6 +21,7 @@ Unravel dplyr expression for exploration. You can either wrap your dplyr/tidyr c
 a call or pipe the code to unravel.
 }
 \examples{
+\dontrun{
 unravel(
   mtcars \%>\%
     head(20) \%>\%
@@ -30,4 +31,5 @@ mtcars \%>\%
   head(20) \%>\%
   select(mpg) \%>\%
   unravel()
+}
 }

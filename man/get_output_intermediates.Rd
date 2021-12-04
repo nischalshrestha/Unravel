@@ -2,29 +2,29 @@
 % Please edit documentation in R/code_analysis.R
 \name{get_output_intermediates}
 \alias{get_output_intermediates}
-\title{Given an expression of fluent code using `%>%`, return a list of intermediate outputs.}
+\title{Given an expression of fluent code, return a list of intermediate outputs.}
 \usage{
 get_output_intermediates(pipeline)
 }
 \arguments{
-\item{pipeline}{quoted code
+\item{pipeline}{an \code{expression}
 
 TODO-refactor: make the returned object an R6 class or a structure list so we can have one location
 for modification}
 }
 \value{
-list(
-  intermediates = list(`tibble`),
+\code{list(
+  intermediates = list(tibble),
   error = character(),
-)
+)}
 }
 \description{
 If there is an error, \code{get_output_intermediates} will return outputs up to that
 line, with an error message for the subsequent line at fault.
 }
 \examples{
+\dontrun{
 require(tidyverse)
-# multiple verbs
 "diamonds \%>\%
   select(carat, cut, color, clarity, price) \%>\%
   group_by(color) \%>\%
@@ -33,8 +33,7 @@ require(tidyverse)
 quoted <- rlang::parse_expr(pipeline)
 outputs <- get_output_intermediates(quoted)
 
-# Single verb
 quoted <- rlang::parse_expr("select(diamonds, carat, cut, color, clarity, price)")
 outputs <- get_output_intermediates(quoted)
-
+}
 }

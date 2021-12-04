@@ -9,7 +9,7 @@ by doing the series of append calls for you.}
 reappend(...)
 }
 \arguments{
-\item{...}{}
+\item{...}{a series of lists}
 }
 \value{
 named list
@@ -21,4 +21,5 @@ by doing the series of append calls for you.
 }
 \examples{
 reappend(list(a = 1), list(b = 2))
+
 }

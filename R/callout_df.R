@@ -21,10 +21,10 @@ get_change_css <- function(change) {
 #'   e.g., list(list(word = "carat", change = "internal-change"), list(word = "cut", change = "visible-change"))
 #'
 #' @return a list structure to supply for reactable(columns = ...)
-#' @export
 #'
 #' @examples
 #' get_column_css(mtcars %>% group_by(cyl), list(word = "cyl", change = "internal-change"))
+#' @noRd
 get_column_css <- function(data, callout_words) {
   if (length(callout_words) < 1) {
     return(list())
@@ -72,31 +72,3 @@ get_column_css <- function(data, callout_words) {
   columns_css
 }
 
-# final_data <- diamonds %>% group_by(color)
-# col_defs <- get_column_css(
-#   data = final_data,
-#   callout_words = list(
-#     # list(word = "carat", change = "internal-change"),
-#     list(word = "color", change = "internal-change")
-#     # list(word = "cut", change = "internal-change")
-#   )
-# )
-#
-# # we should automatically rearrange data if grouping
-# if (is_grouped_df(final_data)) {
-#   reactable(
-#     data = select(.data = final_data, group_vars(final_data), everything()) %>% as.data.frame(),
-#     rownames = TRUE,
-#     # we can do a custom thing for a particular column
-#     columns = DataTutor:::reappend(
-#       list(.rownames = colDef(style = list(textAlign = "left"), maxWidth = 80)),
-#       col_defs
-#     )
-#   )
-# } else {
-#   reactable(
-#     data = final_data,
-#     # we can do a custom thing for a particular column
-#     columns = col_defs
-#   )
-# }

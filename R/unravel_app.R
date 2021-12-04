@@ -1,20 +1,31 @@
-library(shiny)
-library(tidyverse)
+
+#' @importFrom shiny observe
+#' @importFrom shiny observeEvent
+#' @importFrom shiny reactive
+#' @importFrom shiny reactiveValues
+#' @importFrom shiny div
+#' @importFrom shiny span
+#' @importFrom shiny fluidPage
+#' @importFrom shiny shinyApp
+#' @importFrom shiny tags
+#' @importFrom shiny moduleServer
+#' @importFrom shiny renderUI
+#' @importFrom shiny onStop
+#' @importFrom reactable colDef
+#' @importFrom utils getParseData
+NULL
 
 ### Shiny App logic
 
 #' Creates a summary button
 #'
-#' @param ns_id
-#' @param inputId
-#' @param lineid
-#' @param change_type
-#' @param value
+#' @param ns_id the \code{character} namespace id
+#' @param inputId the \code{character} id for the button
+#' @param lineid the \code{integer} id for the line
+#' @param change_type the \code{character} for the change types
+#' @param value the starting \code{integer} value for the button (0 by default)
 #'
-#' @return
-#' @export
-#'
-#' @examples
+#' @return \code{shiny::tags$button}
 summary_button <- function(ns_id, inputId, lineid, change_type, value = 0) {
   ns <- shiny::NS(ns_id)
   tags$button(id = ns(inputId),
@@ -35,13 +46,11 @@ summary_button <- function(ns_id, inputId, lineid, change_type, value = 0) {
 #' - Item Toggle ID: <id>-toggle
 #' - Item CodeMirror ID: <id>-code_mirror
 #'
-#' @param id the character id for the particular group item
+#' @param line the list containing information about a particular line
 #' @param ns_id the character for the Shiny module namespace id
 #'
-#' @return a shiny::div
-#' @export
-#'
-#' @examples
+#' @return \code{shiny::div}
+#' @noRd
 group_item_div <- function(line, ns_id) {
   ns <- shiny::NS(ns_id)
   # line_id is for SortableJS and is just a number of the line
@@ -56,25 +65,25 @@ group_item_div <- function(line, ns_id) {
   is_verb_line <- line_id != 1L
   core_divs <- list(
     # row div
-    div(class = "justify-content-center align-self-baseline",
-        div(class = "d-flex justify-content-center align-self-center",
-            div(class = "row", style = "font-size:0.8em;",
-                HTML("&nbsp;")
+    shiny::div(class = "justify-content-center align-self-baseline",
+        shiny::div(class = "d-flex justify-content-center align-self-center",
+            shiny::div(class = "row", style = "font-size:0.8em;",
+                shiny::HTML("&nbsp;")
             )
         ),
-        div(class = glue::glue("{id}-summary-box-row d-flex empty-square justify-content-center"),
-            div(class=glue::glue("{id}-row-content align-self-center"), style="font-size: 0.8em;",
+        shiny::div(class = glue::glue("{id}-summary-box-row d-flex empty-square justify-content-center"),
+            shiny::div(class=glue::glue("{id}-row-content align-self-center"), style="font-size: 0.8em;",
                 # update element
-                HTML(row)
+                shiny::HTML(row)
             )
         )
     ),
     # column div + square div
-    div(class = "justify-content-center align-self-baseline",
-        div(class = glue::glue("{id}-summary-box-col d-flex justify-content-center align-self-center"),
-            div(class = glue::glue("{id}-col-content row"), style = "font-size:0.8em;",
+    shiny::div(class = "justify-content-center align-self-baseline",
+        shiny::div(class = glue::glue("{id}-summary-box-col d-flex justify-content-center align-self-center"),
+            shiny::div(class = glue::glue("{id}-col-content row"), style = "font-size:0.8em;",
                 # update element
-                HTML(col)
+                shiny::HTML(col)
             )
         ),
         # update element (class of square)
@@ -87,12 +96,12 @@ group_item_div <- function(line, ns_id) {
     list(
       # glyphicon
       # add the move icon if it's not the first line, else make it transparent
-      div(class=glue::glue("{id}-glyph d-flex justify-content-center align-self-center"),
-          span(class=glue::glue("glyphicon glyphicon-move {disabled}"), style=glue::glue("opacity:{as.integer(is_verb_line)};"))
+      shiny::div(class=glue::glue("{id}-glyph d-flex justify-content-center align-self-center"),
+          shiny::span(class=glue::glue("glyphicon glyphicon-move {disabled}"), style=glue::glue("opacity:{as.integer(is_verb_line)};"))
       ),
       # codemirror empty div above
-      div(class="d-flex justify-content-center align-self-center", style="padding:0.5em;",
-          div(class="row", style="font-size: 1em;", HTML("&nbsp;"))
+      shiny::div(class="d-flex justify-content-center align-self-center", style="padding:0.5em;",
+          div(class="row", style="font-size: 1em;", shiny::HTML("&nbsp;"))
       ),
       # codemirror div (gets dynamically created); fixedPage keeps the width=100%
       shiny::tags$textarea(
@@ -109,9 +118,9 @@ group_item_div <- function(line, ns_id) {
       core_divs,
       list(
         # toggle checkbox
-        div(style="opacity:1; padding-right:0.25em;",
-            div(class="d-flex justify-content-center align-self-center",
-                div(style="font-size: 0.8em;", HTML("&nbsp;"))
+        shiny::div(style="opacity:1; padding-right:0.25em;",
+            shiny::div(class="d-flex justify-content-center align-self-center",
+                shiny::div(style="font-size: 0.8em;", shiny::HTML("&nbsp;"))
             ),
             # the value of `checked` is not meaningful, the existence of attribute turns on toggle by default
             shiny::tags$label(
@@ -130,20 +139,18 @@ group_item_div <- function(line, ns_id) {
     )
   }
   # if it's the data line (first line), disable it for SortableJS so we can't move it
-  div(class = glue::glue("d-flex list-group-item {disabled}"), id=id, `data-id` = line_id,
+  shiny::div(class = glue::glue("d-flex list-group-item {disabled}"), id=id, `data-id` = line_id,
     core_divs
   )
 }
 
 #' Helper function to create a group item div for SortableJS
 #'
-#' @param lines
-#' @param ns_id
+#' @param lines a `list(list(...))` containig information for all of the lines
+#' @param ns_id a `character` id for the shiny module namespace
 #'
-#' @return
-#' @export
-#'
-#' @examples
+#' @return `shiny::tagList`
+#' @noRd
 create_group_item_tags <- function(lines, ns_id) {
   ataglist <- lapply(lines, group_item_div, ns_id = ns_id)
   class(ataglist) <- c("shiny.tag.list", "list")
@@ -152,20 +159,10 @@ create_group_item_tags <- function(lines, ns_id) {
 
 #' Unravel UI
 #'
-#' @param id
+#' @param id A \code{character}
 #'
-#' @return
-#' @export
-#'
-#' @examples
-#' Unravel UI
-#'
-#' @param id A character
-#' @param dplyr_code A character
-#'
-#' @return
-#'
-#' @examples
+#' @return \code{shiny::fixedPage}
+#' @noRd
 unravelUI <- function(id) {
   package_path <- file.path(system.file(package = "DataTutor"))
   package_css <- file.path(package_path, "css")
@@ -228,7 +225,8 @@ get_output <- function(target, lineid) {
 #' @param order numeric vector
 #' @param rv reactive values
 #'
-#' @return
+#' @return \code{list(new_code_info = list(list(...)), outputs = list(...))}
+#' @noRd
 generate_code_info_outputs <- function(order, rv) {
   new_code_info <- rv$current_code_info[order]
   # only grab the enabled lines
@@ -350,16 +348,20 @@ update_lines <- function(order, outputs, current_code_info, new_code_info, rv, s
 
 #' Unravel server
 #'
-#' @param id
+#' @param id the app \code{character} id
+#' @param user_code the \code{character} code text
 #'
-#' @return
-#' @export
+#' @importFrom utils getParseData
+#'
+#' @return there are no values returned for this module server function
 #'
 #' @examples
+#' \dontrun{
+#' unravelServer("unravel", "mtcars %>% select(cyl)")
+#' }
+#' @export
 unravelServer <- function(id, user_code = NULL) {
   # load and attach packages
-  suppressMessages(library(reactable))
-  library(DataTutor)
   shiny::addResourcePath('www', system.file('www', package = 'DataTutor'))
   moduleServer(
     id,
@@ -541,14 +543,14 @@ unravelServer <- function(id, user_code = NULL) {
           # if we have a grouped dataframe, to facilitate understanding let's rearrange columns such that
           # the grouped variables appear to the very left
           if (is_grouped_df(final_data)) {
-            reactable::reactable(data = select(.data = final_data, group_vars(final_data), everything()) %>% as.data.frame(),
+            reactable::reactable(data = dplyr::select(.data = final_data, group_vars(final_data), dplyr::everything()) %>% as.data.frame(),
                                  compact = TRUE,
                                  highlight = TRUE,
                                  bordered = TRUE,
                                  rownames = TRUE,
                                  defaultPageSize = 5,
                                  # we can do a custom thing for a particular column
-                                 columns = DataTutor:::reappend(
+                                 columns = reappend(
                                    list(.rownames = colDef(style = list(textAlign = "left"), maxWidth = 80)),
                                    get_column_css(final_data, rv$main_callout))
                                  )
@@ -564,7 +566,7 @@ unravelServer <- function(id, user_code = NULL) {
                                  rownames = TRUE,
                                  defaultPageSize = 5,
                                  # we can do a custom thing for a particular column
-                                 columns = DataTutor:::reappend(
+                                 columns = reappend(
                                    list(.rownames = colDef(style = append(list(textAlign = "left"), rowname_background), maxWidth = 80)),
                                    get_column_css(final_data, rv$main_callout))
                                  )

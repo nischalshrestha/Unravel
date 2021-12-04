@@ -7,11 +7,18 @@
 unravelServer(id, user_code = NULL)
 }
 \arguments{
-\item{id}{}
+\item{id}{the app \code{character} id}
+
+\item{user_code}{the \code{character} code text}
 }
 \value{
-
+there are no values returned for this module server function
 }
 \description{
 Unravel server
+}
+\examples{
+\dontrun{
+unravelServer("unravel", "mtcars \%>\% select(cyl)")
+}
 }

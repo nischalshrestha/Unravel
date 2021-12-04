@@ -1,5 +1,3 @@
-require(tidyverse)
-require(DataTutor)
 
 test_that("One liner functions", {
   # only dataframe
@@ -48,7 +46,6 @@ test_that("One liner functions", {
     )
   )
 })
-
 
 test_that("Multiple functions", {
   pipeline <- quote(

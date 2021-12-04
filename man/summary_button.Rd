@@ -7,10 +7,18 @@
 summary_button(ns_id, inputId, lineid, change_type, value = 0)
 }
 \arguments{
-\item{value}{}
+\item{ns_id}{the \code{character} namespace id}
+
+\item{inputId}{the \code{character} id for the button}
+
+\item{lineid}{the \code{integer} id for the line}
+
+\item{change_type}{the \code{character} for the change types}
+
+\item{value}{the starting \code{integer} value for the button (0 by default)}
 }
 \value{
-
+\code{shiny::tags$button}
 }
 \description{
 Creates a summary button

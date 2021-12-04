@@ -1,5 +1,5 @@
 Package: DataTutor
-Title: An Ecosystem of Data Science Code Comprehension Tools
+Title: Data Science Code Comprehension Tools
 Version: 0.0.0.9000
 Date: 2021-03-01
 Authors@R: 
@@ -7,19 +7,28 @@ Authors@R:
            family = "Shrestha",
            role = c("aut", "cre"),
            email = "nsrocker92@gmail.com")
-Description: DataTutor provides a set of tools to facilitate comprehension and debugging R code for Data Science
+Description: 
+    DataTutor provides a set of tools to facilitate comprehension and debugging R code for Data Science. These tools
+    are designed to be run inside RStudio as Shiny apps, which are accessed through Addins.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
+Depends:
+    tidyverse,
+    dplyr,
+    reactable,
+    tidylog,
+    shiny
 Imports:
     magrittr,
-    tidyverse,
-    shiny,
     here,
+    tidylog,
     babynames,
     gapminder,
-    reactable,
-    tidylog
+    rstudioapi,
+    rlang,
+    glue,
+    crayon
 Remotes:
     nischalshrestha/tidylog
 RoxygenNote: 7.1.1

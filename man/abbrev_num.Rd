@@ -18,4 +18,5 @@ We won't do more than millions of rows for now.
 \examples{
 abbrev_num(1950) # 1.95K
 abbrev_num(1950000) # 1.95M
+
 }

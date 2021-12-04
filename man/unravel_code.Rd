@@ -19,5 +19,7 @@ A shiny app
 A variant of `unravel` to support accepting the code character instead.
 }
 \examples{
+\dontrun{
 unravel_code("mtcars \%>\% select(cyl, mpg)")
+}
 }

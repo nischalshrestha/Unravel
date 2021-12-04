@@ -69,12 +69,13 @@ clear_callouts <- function() {
 #'
 #' We won't do more than millions of rows for now.
 #'
-#' @export
 #' @param x a numeric
 #' @return a character
 #' @examples
 #' abbrev_num(1950) # 1.95K
 #' abbrev_num(1950000) # 1.95M
+#'
+#' @export
 abbrev_num <- function(x) {
   if (is.null(x)) {
     return("")
@@ -92,12 +93,14 @@ abbrev_num <- function(x) {
 #' Instead of doing nested append calls, this will automate that
 #' by doing the series of append calls for you.
 #'
-#' @param ...
+#' @param ... a series of lists
 #'
 #' @return named list
 #'
 #' @examples
 #' reappend(list(a = 1), list(b = 2))
+#'
+#' @export
 reappend <- function(...) {
   myList <- list()
   items <- list(...)

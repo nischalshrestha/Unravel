@@ -8,7 +8,7 @@ the type of change was internal (no visible change), visible, or none.}
 get_change_type(verb_name)
 }
 \arguments{
-\item{verb_name}{}
+\item{verb_name}{the \code{character} representing the function name}
 }
 \value{
 a character
@@ -18,5 +18,7 @@ Based on the type of tidyr/dplyr function used, return whether or not
 the type of change was internal (no visible change), visible, or none.
 }
 \examples{
+\dontrun{
 get_change_type("group_by")
+}
 }

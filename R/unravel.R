@@ -1,7 +1,5 @@
 
 invoke_unravel <- function(code, viewer = T) {
-  library(shiny)
-  suppressMessages(library(tidylog))
 
   ui <- fluidPage(
     unravelUI("unravel")
@@ -22,6 +20,7 @@ invoke_unravel <- function(code, viewer = T) {
     onStart = function() {
       onStop(function() {
         # detach tidylog so the outputs no longer appear
+        detach('package:DataTutor')
         detach('package:tidylog')
       })
     },
@@ -37,9 +36,9 @@ invoke_unravel <- function(code, viewer = T) {
 #'   This is `TRUE` by default so it's fluid going between editor and viewer rather than window.
 #'
 #' @return A shiny app
-#' @export
 #'
 #' @examples
+#' \dontrun{
 #' unravel(
 #'   mtcars %>%
 #'     head(20) %>%
@@ -49,6 +48,8 @@ invoke_unravel <- function(code, viewer = T) {
 #'   head(20) %>%
 #'   select(mpg) %>%
 #'   unravel()
+#' }
+#' @export
 unravel <- function(code, viewer = T) {
   # don't evaluate code yet
   code <- substitute(code)
@@ -75,10 +76,12 @@ unravel <- function(code, viewer = T) {
 #'   This is `TRUE` by default so it's fluid going between editor and viewer rather than window.
 #'
 #' @return A shiny app
-#' @export
 #'
 #' @examples
+#' \dontrun{
 #' unravel_code("mtcars %>% select(cyl, mpg)")
+#' }
+#' @export
 unravel_code <- function(code = "", viewer = T) {
   invoke_unravel(code, viewer)
 }

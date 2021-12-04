@@ -2,8 +2,8 @@
 % Please edit documentation in R/code_analysis.R
 \name{recurse_dplyr}
 \alias{recurse_dplyr}
-\title{Given a quoted dplyr chain code, return a list of intermediate expressions, including
-the dataframe name expression.}
+\title{Given a quoted dplyr chain code, return a list of intermediate expressions.
+The returned list would include the dataframe name expression.}
 \usage{
 recurse_dplyr(dplyr_tree, outputs = list())
 }
@@ -13,12 +13,9 @@ recurse_dplyr(dplyr_tree, outputs = list())
 \item{outputs}{list}
 }
 \value{
-[`language`]
+a list
 }
 \description{
-Given a quoted dplyr chain code, return a list of intermediate expressions, including
-the dataframe name expression.
-}
-\examples{
-recurse_dplyr(rlang::parse_expr("mtcars \%>\% select(cyl)"))
+Given a quoted dplyr chain code, return a list of intermediate expressions.
+The returned list would include the dataframe name expression.
 }
