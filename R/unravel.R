@@ -20,7 +20,7 @@ invoke_unravel <- function(code, viewer = T) {
     onStart = function() {
       onStop(function() {
         # detach tidylog so the outputs no longer appear
-        detach('package:DataTutor')
+        detach('package:Unravel')
         detach('package:tidylog')
       })
     },

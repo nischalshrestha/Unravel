@@ -1,5 +1,5 @@
-Package: DataTutor
-Title: Data Science Code Comprehension Tools
+Package: Unravel
+Title: A fluent code explorer for R
 Version: 0.0.0.9000
 Date: 2021-03-01
 Authors@R: 
@@ -8,8 +8,9 @@ Authors@R:
            role = c("aut", "cre"),
            email = "nsrocker92@gmail.com")
 Description: 
-    DataTutor provides a set of tools to facilitate comprehension and debugging R code for Data Science. These tools
-    are designed to be run inside RStudio as Shiny apps, which are accessed through Addins.
+    Unravel is an R package and Addin designed to help data scientists understand and explore tidyverse R code 
+    which makes use of the fluent interface (function composition). Unravel is designed to run inside 
+    RStudio as a Shiny app accessed through Addins or programmatically.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true

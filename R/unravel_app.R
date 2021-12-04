@@ -164,7 +164,7 @@ create_group_item_tags <- function(lines, ns_id) {
 #' @return \code{shiny::fixedPage}
 #' @noRd
 unravelUI <- function(id) {
-  package_path <- file.path(system.file(package = "DataTutor"))
+  package_path <- file.path(system.file(package = "Unravel"))
   package_css <- file.path(package_path, "css")
   package_js <- file.path(package_path, "js")
   # namespace for module
@@ -362,7 +362,7 @@ update_lines <- function(order, outputs, current_code_info, new_code_info, rv, s
 #' @export
 unravelServer <- function(id, user_code = NULL) {
   # load and attach packages
-  shiny::addResourcePath('www', system.file('www', package = 'DataTutor'))
+  shiny::addResourcePath('www', system.file('www', package = 'Unravel'))
   moduleServer(
     id,
     function(input, output, session) {

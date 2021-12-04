@@ -1,4 +1,4 @@
-# Unravel: A fluent code explorer for R Tidyverse code.
+# Unravel: A fluent code explorer for R.
 
 <!-- badges: start -->
 [![lifecycle](https://img.shields.io/badge/lifecycle-experimental-blue.svg)](https://www.tidyverse.org/lifecycle/#experimental)

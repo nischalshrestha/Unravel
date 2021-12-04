@@ -1,4 +1,4 @@
 library(testthat)
-library(DataTutor)
+library(Unravel)
 
-test_check("DataTutor")
+test_check("Unravel")
