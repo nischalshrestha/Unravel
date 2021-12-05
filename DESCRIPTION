@@ -23,7 +23,6 @@ Depends:
 Imports:
     magrittr,
     here,
-    tidylog,
     babynames,
     gapminder,
     rstudioapi,

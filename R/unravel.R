@@ -18,10 +18,11 @@ invoke_unravel <- function(code, viewer = T) {
     ui,
     server,
     onStart = function() {
+      # if Unravel was attached, detach it upon exit so tidylog is not masking tidyverse functions
       onStop(function() {
-        # detach tidylog so the outputs no longer appear
-        detach('package:Unravel')
-        detach('package:tidylog')
+        attached <- search()
+        if ('package:Unravel' %in% attached)
+          detach('package:Unravel')
       })
     },
     options = list(quiet = TRUE)
