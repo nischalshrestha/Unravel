@@ -67,9 +67,10 @@ In the extension, I have added some enhancements (like data shape summary for ev
 
 # Related tools
 
-There are several other similar tools that provide a better understanding of tidyverse code, which you may find useful as well:
+There are several other similar tools that provide inspection and/or summary of tidyverse code operations and intermediates, which you may find useful as well:
 
 - [tidylog](https://github.com/elbersb/tidylog): a drop-in solution that logs summaries of steps through `message()` on console output
-- [breakerofchains](https://github.com/MilesMcBain/breakerofchains): an Addin that allows inspection of steps through cursor placement in editor
+- [ViewPipeSteps](https://github.com/daranzolin/ViewPipeSteps): an RStudio Addin that opens up tabs of intermediate outputs 
+- [breakerofchains](https://github.com/MilesMcBain/breakerofchains): an RStudio/VSCode Addin that allows inspection of steps through cursor placement in editor
 - [datamations](https://github.com/microsoft/datamations): a framework to generate and visualize pipeline steps through explanations/animations
 - [Tidy Data Tutor](https://tidydatatutor.com): visualizations of tidyverse code focusing on visualizing how each step transforms dataframes
