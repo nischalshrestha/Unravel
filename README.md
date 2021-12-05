@@ -22,7 +22,7 @@ Unravel also produces **automated function summaries** accessed through the data
 
 You can also **perform structural edits** to the code via toggles (comment/uncomment), and reordering lines with drag and drop interactions.
 
-Note: The first expression or line has to produce a `data.frame` or `tibble` and is locked such that you can't reorder it and other operations can't be reordered before the first line.
+Note: The first expression or line is treated as the data source, so the line in the UI is locked such that you can't reorder it and other operations can't be reordered before the first line.
 
 ### RStudio
 
