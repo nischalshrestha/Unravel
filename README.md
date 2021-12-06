@@ -24,7 +24,7 @@ You can also **perform structural edits** to the code via toggles (comment/uncom
 
 Note: The first expression or line is treated as the data source, so the line in the UI is locked such that you can't reorder it and other operations can't be reordered before the first line.
 
-### RStudio
+### RStudio IDE
 
 The easiest way to use Unravel is through the Addin. Highlight the tidyverse code you want to unravel, then go to Addins -\> Unravel code.
 
@@ -57,7 +57,50 @@ mtcars %>%
   Unravel::unravel(viewer = FALSE)
 ```
 
-Keep in mind, it's very early so trying things on your own code/data might not work.
+### Get chain outputs
+
+You can also programmatically collect the intermediate outputs of the tidyverse code into a list structure with `get_chain_outputs`:
+
+``` {.r}
+get_chain_outputs(rlang::expr(
+  mtcars %>%
+    group_by(cyl) %>% 
+    summarise(mean_mpg = mean(mpg))
+))
+```
+
+which returns:
+
+    [[1]]
+                         mpg cyl  disp  hp drat    wt  qsec vs am gear carb
+    Mazda RX4           21.0   6 160.0 110 3.90 2.620 16.46  0  1    4    4
+    Mazda RX4 Wag       21.0   6 160.0 110 3.90 2.875 17.02  0  1    4    4
+    Datsun 710          22.8   4 108.0  93 3.85 2.320 18.61  1  1    4    1
+    Hornet 4 Drive      21.4   6 258.0 110 3.08 3.215 19.44  1  0    3    1
+    Hornet Sportabout   18.7   8 360.0 175 3.15 3.440 17.02  0  0    3    2
+    Valiant             18.1   6 225.0 105 2.76 3.460 20.22  1  0    3    1
+    ...
+
+    [[2]]
+    # A tibble: 32 x 11
+    # Groups:   cyl [3]
+         mpg   cyl  disp    hp  drat    wt  qsec    vs    am  gear  carb
+       <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>
+     1  21       6  160    110  3.9   2.62  16.5     0     1     4     4
+     2  21       6  160    110  3.9   2.88  17.0     0     1     4     4
+     3  22.8     4  108     93  3.85  2.32  18.6     1     1     4     1
+     4  21.4     6  258    110  3.08  3.22  19.4     1     0     3     1
+     5  18.7     8  360    175  3.15  3.44  17.0     0     0     3     2
+     6  18.1     6  225    105  2.76  3.46  20.2     1     0     3     1
+    ...
+
+    [[3]]
+    # A tibble: 3 x 2
+        cyl mean_mpg
+      <dbl>    <dbl>
+    1     4     26.7
+    2     6     19.7
+    3     8     15.1
 
 ### What verbs have summaries?
 
@@ -69,8 +112,8 @@ In the extension, I have added some enhancements (like data shape summary for ev
 
 There are several other similar tools that provide inspection and/or summary of tidyverse code operations and intermediates, which you may find useful as well:
 
-- [tidylog](https://github.com/elbersb/tidylog): a drop-in solution that logs summaries of steps through `message()` on console output
-- [ViewPipeSteps](https://github.com/daranzolin/ViewPipeSteps): an RStudio Addin that opens up tabs of intermediate outputs 
-- [breakerofchains](https://github.com/MilesMcBain/breakerofchains): an RStudio/VSCode Addin that allows inspection of steps through cursor placement in editor
-- [datamations](https://github.com/microsoft/datamations): a framework to generate and visualize pipeline steps through explanations/animations
-- [Tidy Data Tutor](https://tidydatatutor.com): visualizations of tidyverse code focusing on visualizing how each step transforms dataframes
+-   [tidylog](https://github.com/elbersb/tidylog): a drop-in solution that logs summaries of steps through `message()` on console output
+-   [ViewPipeSteps](https://github.com/daranzolin/ViewPipeSteps): an RStudio Addin that opens up tabs of intermediate outputs
+-   [breakerofchains](https://github.com/MilesMcBain/breakerofchains): an RStudio/VSCode Addin that allows inspection of steps through cursor placement in editor
+-   [datamations](https://github.com/microsoft/datamations): a framework to generate and visualize pipeline steps through explanations/animations
+-   [Tidy Data Tutor](https://tidydatatutor.com): visualizations of tidyverse code focusing on visualizing how each step transforms dataframes

@@ -2,6 +2,7 @@
 
 export("%>%")
 export(abbrev_num)
+export(get_chain_outputs)
 export(get_change_type)
 export(get_output_intermediates)
 export(reappend)

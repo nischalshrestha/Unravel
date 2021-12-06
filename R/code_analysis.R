@@ -320,3 +320,36 @@ get_output_intermediates <- function(pipeline) {
   return(results)
 }
 
+#' Given an tidyverse code expression, this will return a list of all of the outputs.
+#' It calls \code{get_output_intermediates} to return a simpler representation of all
+#' of the intermediate outputs. We simply extract the outputs only from the larger
+#' intermediate data structure.
+#'
+#' @param pipeline tidyverse code expression
+#'
+#' @return a list of outputs corresponding to each verb in tidyverse code
+#'
+#'
+#' @examples
+#' \dontrun{
+#' require(tidyverse)
+#' quoted <- rlang::parse_expr(
+#' diamonds %>%
+#'   select(carat, cut, color, clarity, price) %>%
+#'   group_by(color) %>%
+#'   summarise(n = n(), price = mean(price)) %>%
+#'   arrange(desc(color))
+#' )
+#' outputs <- get_chain_outputs(quoted)
+#' }
+#' @export
+get_chain_outputs <- function(pipeline) {
+  all_intermediates <- get_output_intermediates(pipeline)
+  only_outputs <- list()
+  return(
+    lapply(all_intermediates, function(intermediate) {
+      intermediate$output
+    })
+  )
+}
+

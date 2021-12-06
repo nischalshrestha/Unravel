@@ -124,6 +124,23 @@ test_that("Multiple functions", {
   )
 })
 
+test_that("Extracting all outputs work", {
+  pipeline <- quote(
+    diamonds %>%
+      select(carat, cut, color, clarity, price) %>%
+      group_by(color)
+  )
+
+  expect_equal(
+    get_chain_outputs(pipeline),
+    list(
+      diamonds,
+      diamonds %>% select(carat, cut, color, clarity, price),
+      diamonds %>% select(carat, cut, color, clarity, price) %>% group_by(color)
+    )
+  )
+})
+
 test_that("Evaluation is deterministic", {
   pipeline <- quote(
     data.frame(replicate(5, sample(0:1, 5, rep = TRUE))) %>%
@@ -297,57 +314,56 @@ test_that("Data pronouns can be accessed", {
 })
 
 test_that("Nested expressions can be unraveled", {
-    across_expr <- quote(
-      iris %>%
-        as_tibble() %>%
-        mutate(across(c(Sepal.Length, Sepal.Width), round))
-    )
+  across_expr <- quote(
+    iris %>%
+      as_tibble() %>%
+      mutate(across(c(Sepal.Length, Sepal.Width), round))
+  )
 
-    expected_outputs <- list(
-      iris,
-      iris %>% as_tibble(),
-      iris %>% as_tibble() %>% mutate(across(c(Sepal.Length, Sepal.Width), round))
-    )
+  expected_outputs <- list(
+    iris,
+    iris %>% as_tibble(),
+    iris %>% as_tibble() %>% mutate(across(c(Sepal.Length, Sepal.Width), round))
+  )
 
-    outputs <- get_output_intermediates(across_expr)
+  outputs <- get_output_intermediates(across_expr)
 
-    expect_equal(
-      outputs,
+  expect_equal(
+    outputs,
+    list(
       list(
-        list(
-          line = 1,
-          code = "iris %>%",
-          change = "none",
-          output = expected_outputs[[1]],
-          row = 150,
-          col = 5,
-          callouts = NULL,
-          summary = "<strong>Summary:</strong> data.frame with <span class='number'>150</span> rows and <span class='number'>5</span> columns"
+        line = 1,
+        code = "iris %>%",
+        change = "none",
+        output = expected_outputs[[1]],
+        row = 150,
+        col = 5,
+        callouts = NULL,
+        summary = "<strong>Summary:</strong> data.frame with <span class='number'>150</span> rows and <span class='number'>5</span> columns"
+      ),
+      list(
+        line = 2,
+        code = "\tas_tibble() %>%",
+        change = "none",
+        output = expected_outputs[[2]],
+        row = 150,
+        col = 5,
+        callouts = NULL,
+        summary = ""
+      ),
+      list(
+        line = 3,
+        code = "\tmutate(across(c(Sepal.Length, Sepal.Width), round))",
+        change = "visible",
+        output = expected_outputs[[3]],
+        row = 150,
+        col = 5,
+        callouts = list(
+          list(word = "Sepal.Length", change = "visible-change"),
+          list(word = "Sepal.Width", change = "visible-change")
         ),
-        list(
-          line = 2,
-          code = "\tas_tibble() %>%",
-          change = "none",
-          output = expected_outputs[[2]],
-          row = 150,
-          col = 5,
-          callouts = NULL,
-          summary = ""
-        ),
-        list(
-          line = 3,
-          code = "\tmutate(across(c(Sepal.Length, Sepal.Width), round))",
-          change = "visible",
-          output = expected_outputs[[3]],
-          row = 150,
-          col = 5,
-          callouts = list(
-            list(word = "Sepal.Length", change = "visible-change"),
-            list(word = "Sepal.Width", change = "visible-change")
-          ),
-          summary = "<strong>Summary:</strong>  <code class='code'>mutate</code> changed <span class='number'>133</span> values (<span class='number'>89%</span>) of '<code class='code visible-change'>Sepal.Length</code>' (previously <span class='number'>0</span> <span class='number'>NA</span>s, now <span class='number'>0</span> new <span class='number'>NA</span>s); changed <span class='number'>122</span> values (<span class='number'>81%</span>) of '<code class='code visible-change'>Sepal.Width</code>' (previously <span class='number'>0</span> <span class='number'>NA</span>s, now <span class='number'>0</span> new <span class='number'>NA</span>s)."
-        )
+        summary = "<strong>Summary:</strong>  <code class='code'>mutate</code> changed <span class='number'>133</span> values (<span class='number'>89%</span>) of '<code class='code visible-change'>Sepal.Length</code>' (previously <span class='number'>0</span> <span class='number'>NA</span>s, now <span class='number'>0</span> new <span class='number'>NA</span>s); changed <span class='number'>122</span> values (<span class='number'>81%</span>) of '<code class='code visible-change'>Sepal.Width</code>' (previously <span class='number'>0</span> <span class='number'>NA</span>s, now <span class='number'>0</span> new <span class='number'>NA</span>s)."
       )
     )
-  })
-
+  )
+})
