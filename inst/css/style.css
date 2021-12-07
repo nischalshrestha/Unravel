@@ -108,6 +108,18 @@ h2 {
   cursor:pointer
 }
 
+.internal-rect {
+  border: 1px dashed black;
+  width: 2em;
+  height: 0.8em;
+  margin-top: 0.8em;
+  background-color: lightblue;
+}
+
+.internal-rect:hover{
+  cursor:pointer
+}
+
 .none-square {
   border: 1px dashed black;
   width: 2em;
@@ -116,6 +128,18 @@ h2 {
 }
 
 .none-square:hover{
+  cursor:pointer
+}
+
+.none-rect {
+  border: 1px dashed black;
+  width: 2em;
+  height: 0.8em;
+  margin-top: 0.8em;
+  background-color: grey;
+}
+
+.none-rect:hover{
   cursor:pointer
 }
 
@@ -130,10 +154,29 @@ h2 {
   cursor:pointer
 }
 
+.visible-rect {
+  border: 1px dashed black;
+  width: 2em;
+  height: 0.8em;
+  margin-top: 0.8em;
+  background-color: #fff1ce;
+}
+
+.visible-rect:hover{
+  cursor:pointer
+}
+
 .empty-square {
   width: 3em;
   height: 2em;
-  /* padding-top: 90%; */
+  align-items: right;
+}
+
+.empty-rect {
+  width: 3em;
+  height: 0.8em;
+  margin-top: 0.8em;
+  align-items: right;
 }
 
 /* Sortable styles */

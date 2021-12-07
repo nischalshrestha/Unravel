@@ -26,11 +26,11 @@ NULL
 #' @param value the starting \code{integer} value for the button (0 by default)
 #'
 #' @return \code{shiny::tags$button}
-summary_button <- function(ns_id, inputId, lineid, change_type, value = 0) {
+summary_button <- function(ns_id, inputId, lineid, change_type, square_css = "square", value = 0) {
   ns <- shiny::NS(ns_id)
   tags$button(id = ns(inputId),
               `lineid` = lineid,
-              class = glue::glue("d-flex {change_type}-square noSelect justify-content-center"),
+              class = glue::glue("d-flex {change_type}-{square_css} noSelect justify-content-center"),
               style = "color:transparent; cursor:pointer;",
               type = "button", as.character(value))
 }
@@ -63,6 +63,8 @@ group_item_div <- function(line, ns_id) {
   # whereas id is for a readable identifier for JS/jquery/CSS
   id <- paste0("line", line$lineid)
   is_verb_line <- line_id != 1L
+  # if the col is empty it means we have a list/vector so let's prep css class name for that
+  square_css <- ifelse(nzchar(col), "square", "rect")
   core_divs <- list(
     # row div
     shiny::div(class = "justify-content-center align-self-baseline",
@@ -71,7 +73,7 @@ group_item_div <- function(line, ns_id) {
                 shiny::HTML("&nbsp;")
             )
         ),
-        shiny::div(class = glue::glue("{id}-summary-box-row d-flex empty-square justify-content-center"),
+        shiny::div(class = glue::glue("{id}-summary-box-row d-flex empty-{square_css} justify-content-center"),
             shiny::div(class=glue::glue("{id}-row-content align-self-center"), style="font-size: 0.8em;",
                 # update element
                 shiny::HTML(row)
@@ -87,7 +89,7 @@ group_item_div <- function(line, ns_id) {
             )
         ),
         # update element (class of square)
-        summary_button(ns_id, id, line_id, change_type)
+        summary_button(ns_id, id, line_id, change_type, square_css)
     )
   )
   disabled <- ifelse(is_verb_line, "", "static")

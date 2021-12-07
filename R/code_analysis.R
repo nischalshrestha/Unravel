@@ -1,5 +1,4 @@
 
-
 #' @importFrom dplyr is_grouped_df
 #' @importFrom dplyr group_vars
 NULL
@@ -78,7 +77,7 @@ get_data_change_type <- function(verb_name, prev_output, cur_output) {
     # check for an internal (invisible) change
     if(!verb_name %in% c("summarize", "summarise")) {
       if (verb_name %in% c("as_tibble", "as.tibble")) {
-        change_type <- "none"
+        change_type <- "internal"
       } else if ((!prev_rowwise && cur_rowwise) || (prev_rowwise && !cur_rowwise)) {
         # rowwise case
         change_type <- "internal"
@@ -264,6 +263,12 @@ get_output_intermediates <- function(pipeline) {
         # store the dimensions of dataframe
         intermediate["row"] <- dim(intermediate["output"][[1]])[[1]]
         intermediate["col"] <- dim(intermediate["output"][[1]])[[2]]
+        # if the data was not a dataframe, grab the length (for now lists/vectors)
+        # Note: we will need a different way to support complex types like ggplot2 objects
+        if (is.null(intermediate$row)) {
+          intermediate["row"] <- length(intermediate["output"][[1]])
+        }
+
         # store the function summary
         verb_summary <- get_verb_summary()
         if(is.na(intermediate["output"])) {
@@ -276,7 +281,7 @@ get_output_intermediates <- function(pipeline) {
         intermediate["callouts"] <- list(get_line_callouts())
         # if we have a dataframe %>% verb() expression, the 'dataframe' summary is simply
         # the dataframe/tibble with dimensions reported (we could expand that if we want)
-        if (i == 1 && (has_pipes || first_arg_data)) {
+        if ((i == 1 && (has_pipes || first_arg_data)) || is.null(verb_summary)) {
           verb_summary <- tidylog::get_data_summary(intermediate["output"][[1]])
         }
         # store the final function summary and set it to empty string if we do not yet have

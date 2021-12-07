@@ -11,7 +11,7 @@ test_that("One liner functions", {
         output = diamonds,
         row = 53940,
         col = 10,
-        summary = "<strong>Summary:</strong> tibble with <span class='number'>53,940</span> rows and <span class='number'>10</span> columns"
+        summary = "<strong>Summary:</strong> tibble with <span class='number'>53,940</span> rows and <span class='number'>10</span> columns."
       )
     )
   )
@@ -41,7 +41,7 @@ test_that("One liner functions", {
         row = 53940,
         col = 5,
         callouts = list(),
-        summary = "<strong>Summary:</strong> tibble with <span class='number'>53,940</span> rows and <span class='number'>5</span> columns"
+        summary = "<strong>Summary:</strong> tibble with <span class='number'>53,940</span> rows and <span class='number'>5</span> columns."
       )
     )
   )
@@ -66,7 +66,7 @@ test_that("Multiple functions", {
         row = 53940,
         col = 10,
         callouts = NULL,
-        summary = "<strong>Summary:</strong> tibble with <span class='number'>53,940</span> rows and <span class='number'>10</span> columns"
+        summary = "<strong>Summary:</strong> tibble with <span class='number'>53,940</span> rows and <span class='number'>10</span> columns."
       ),
       list(
         line = 2,
@@ -160,7 +160,7 @@ test_that("Evaluation is deterministic", {
         row = 5,
         col = 5,
         callouts = NULL,
-        summary = "<strong>Summary:</strong> data.frame with <span class='number'>5</span> rows and <span class='number'>5</span> columns"
+        summary = "<strong>Summary:</strong> data.frame with <span class='number'>5</span> rows and <span class='number'>5</span> columns."
       ),
       list(
         line = 2,
@@ -213,7 +213,7 @@ test_that("Properly analyzes problematic code", {
       row = 53940,
       col = 10,
       callouts = NULL,
-      summary = "<strong>Summary:</strong> tibble with <span class='number'>53,940</span> rows and <span class='number'>10</span> columns"
+      summary = "<strong>Summary:</strong> tibble with <span class='number'>53,940</span> rows and <span class='number'>10</span> columns."
     )
   )
   # culprit line with error
@@ -255,15 +255,16 @@ test_that("Data pronouns can be accessed", {
         row = 32,
         col = 11,
         callouts = NULL,
-        summary = "<strong>Summary:</strong> data.frame with <span class='number'>32</span> rows and <span class='number'>11</span> columns"
+        summary = "<strong>Summary:</strong> data.frame with <span class='number'>32</span> rows and <span class='number'>11</span> columns."
       ),
       list(
         line = 2,
         code = "\tsplit(.$cyl)",
         change = "visible",
         output = mtcars %>% split(.$cyl),
+        row = 3,
         callouts = NULL,
-        summary = ""
+        summary = "<strong>Summary:</strong> A list with <span class='number'>3</span> elements."
       )
     )
   )
@@ -291,21 +292,23 @@ test_that("Data pronouns can be accessed", {
         row = 32,
         col = 11,
         callouts = NULL,
-        summary = "<strong>Summary:</strong> data.frame with <span class='number'>32</span> rows and <span class='number'>11</span> columns"
+        summary = "<strong>Summary:</strong> data.frame with <span class='number'>32</span> rows and <span class='number'>11</span> columns."
       ),
       list(
         line = 2,
         code = "\tnames() %>%",
         change = "visible",
         output = mtcars %>% names(),
+        row = 11,
         callouts = NULL,
-        summary = ""
+        summary = "<strong>Summary:</strong> A character vector."
       ),
       list(
         line = 3,
         code = "\tmap(~count(mtcars, .data[[.x]]))",
         change = "visible",
         output = last_output,
+        row = 11,
         callouts = list(),
         summary = "<strong>Summary:</strong> <code class='code'>count</code> changed the dataframe shape from <span class = 'number'>[32 x 11]</span> to <span class = 'visible-change number'>[6 x 2]</span>. The data is now ungrouped."
       )
@@ -339,17 +342,17 @@ test_that("Nested expressions can be unraveled", {
         row = 150,
         col = 5,
         callouts = NULL,
-        summary = "<strong>Summary:</strong> data.frame with <span class='number'>150</span> rows and <span class='number'>5</span> columns"
+        summary = "<strong>Summary:</strong> data.frame with <span class='number'>150</span> rows and <span class='number'>5</span> columns."
       ),
       list(
         line = 2,
         code = "\tas_tibble() %>%",
-        change = "none",
+        change = "internal",
         output = expected_outputs[[2]],
         row = 150,
         col = 5,
         callouts = NULL,
-        summary = ""
+        summary = "<strong>Summary:</strong> tibble with <span class='number'>150</span> rows and <span class='number'>5</span> columns."
       ),
       list(
         line = 3,
