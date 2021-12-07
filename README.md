@@ -8,7 +8,7 @@
 
 **NOTE:** The package is early on in its lifecycle and is still undergoing development. But, if you are ever so curious, you can install it with:
 
-``` {.r}
+```r
 devtools::install_github('nischalshrestha/Unravel')
 ```
 
@@ -32,7 +32,7 @@ The easiest way to use Unravel is through the Addin. Highlight the tidyverse cod
 
 You can also invoke it programmatically using the `unravel` function by wrapping or piping your code to the function:
 
-``` {.r}
+```r
 # wrapped
 Unravel::unravel(
   mtcars %>%
@@ -50,18 +50,18 @@ mtcars %>%
 
 This will open up the app on the Viewer pane in RStudio by default. But, if you want to respect your currently chosen browser window, you can add a `viewer = FALSE`:
 
-``` {.r}
+```r
 mtcars %>%
   group_by(cyl) %>% 
   summarise(mean_mpg = mean(mpg)) %>%
   Unravel::unravel(viewer = FALSE)
 ```
 
-### Get chain outputs
+### Chain outputs
 
 You can also programmatically collect the intermediate outputs of the tidyverse code into a list structure with `get_chain_outputs`:
 
-``` {.r}
+```r
 get_chain_outputs(rlang::expr(
   mtcars %>%
     group_by(cyl) %>% 
