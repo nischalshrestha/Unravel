@@ -230,8 +230,10 @@ get_output_intermediates <- function(pipeline) {
         # store the intermediate output, and set the change type based on difference
         # between previous and current output
         change_type <- "none"
+        data_changed <- FALSE
         if (i == 1) {
           intermediate["output"] <- list(eval(lines[[i]]))
+          data_changed <- TRUE
         } else if (i > 1) {
           # check if the previous line had an error, and skip evaluation if it does
           if (identical(results[[i - 1]]$change, "error")) {
@@ -255,6 +257,7 @@ get_output_intermediates <- function(pipeline) {
           # wrap output as list so it can be stored properly
           intermediate["output"] <- list(cur_output)
           change_type <- get_data_change_type(verb_name, prev_output, cur_output)
+          data_changed <- !identical(prev_output, cur_output)
         }
         # for single verb code simply get the change type based on verb for now
         if (!has_pipes && first_arg_data) {
@@ -288,9 +291,9 @@ get_output_intermediates <- function(pipeline) {
         # a summary support for the function
         intermediate["summary"] <-
           ifelse(
-            is.null(verb_summary) || identical(verb_summary, old_verb_summary),
-            "",
-            paste("<strong>Summary:</strong>", verb_summary)
+            data_changed,
+            paste("<strong>Summary:</strong>", verb_summary),
+            ""
           )
         old_verb_summary <- verb_summary
       },

@@ -409,6 +409,7 @@ $(document).on("shiny:sessioninitialized", function(event) {
       if (line.prompt !== undefined) {
         line.prompt.destroy();
       }
+      let shape = (e.col !== "") ? "-square" : "-rect"
       if (e.change != "invisible" && e.change != "invalid") {
         if (line.prompt !== undefined) {
           line.prompt.enable();
@@ -421,7 +422,7 @@ $(document).on("shiny:sessioninitialized", function(event) {
         line.summary_box.setAttribute("lineid", null);
         line.wrapper.setAttribute("squareid", null);
       }
-      new_summary_class = `d-flex noSelect justify-content-center ${e.change}-square`;
+      new_summary_class = `d-flex noSelect justify-content-center ${e.change}${shape}`;
       line.summary_box.className = new_summary_class;
       line.line_row_content.innerHTML = (e.row == "") ? "&nbsp;" : e.row;
       line.line_col_content.innerHTML = (e.col == "") ? "&nbsp;" : e.col;

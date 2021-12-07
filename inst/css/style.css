@@ -91,7 +91,21 @@ h2 {
   background-color: transparent;
 }
 
+.invalid-rect {
+  border: 0px dashed transparent;
+  width: 2em;
+  height: 2em;
+  color: transparent;
+  background-color: transparent;
+}
+
 .error-square {
+  width: 2em;
+  height: 2em;
+  background: #fb8072;
+}
+
+.error-rect {
   width: 2em;
   height: 2em;
   background: #fb8072;
