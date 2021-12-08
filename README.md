@@ -48,14 +48,22 @@ mtcars %>%
 
 ![](man/figures/example.png)
 
-This will open up the app on the Viewer pane in RStudio by default. But, if you want to respect your currently chosen browser window, you can add a `viewer = FALSE`:
+This will open up the app on the Viewer pane in RStudio by default. But, if you want to respect your currently chosen browser window, you can pass `viewer = FALSE`.
+
+### Other data types
+
+It's also possible to unravel code where steps may produce non-dataframe outputs such as lists or vectors. For example, if we unravel the following code:
 
 ```r
 mtcars %>%
-  group_by(cyl) %>% 
-  summarise(mean_mpg = mean(mpg)) %>%
-  Unravel::unravel(viewer = FALSE)
+  names() %>%
+  map(~ count(mtcars, .data[[.x]]))
 ```
+
+![](man/figures/list_example.png)
+
+![](man/figures/list_summary.png)
+
 
 ### Chain outputs
 
