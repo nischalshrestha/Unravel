@@ -60,7 +60,7 @@ mtcars %>%
   map(~ count(mtcars, .data[[.x]]))
 ```
 
-The UI now indicates list/vectors as a slimmer rectangle:
+The UI now visualizes list/vectors as a slimmer, wider rectangle with only its length reported on the left:
 
 ![](man/figures/list_example.png)
 
