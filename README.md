@@ -28,7 +28,9 @@ Note: The first expression or line is treated as the data source, so the line in
 
 The easiest way to use Unravel is through the Addin. Highlight the tidyverse code you want to unravel, then go to Addins -\> Unravel code.
 
-![](man/figures/addin.png)
+![](man/figures/demo.gif)
+
+This will open up the app on the Viewer pane in RStudio by default. But, if you want to respect your currently chosen browser window, you can pass `viewer = FALSE`.
 
 You can also invoke it programmatically using the `unravel` function by wrapping or piping your code to the function:
 
@@ -45,10 +47,6 @@ mtcars %>%
   summarise(mean_mpg = mean(mpg)) %>%
   Unravel::unravel()
 ```
-
-![](man/figures/example.png)
-
-This will open up the app on the Viewer pane in RStudio by default. But, if you want to respect your currently chosen browser window, you can pass `viewer = FALSE`.
 
 ### Other data types
 

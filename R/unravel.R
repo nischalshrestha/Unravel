@@ -1,5 +1,6 @@
 
 invoke_unravel <- function(code, viewer = T) {
+  require(Unravel)
 
   ui <- fluidPage(
     unravelUI("unravel")
