@@ -60,7 +60,11 @@ mtcars %>%
   map(~ count(mtcars, .data[[.x]]))
 ```
 
+The UI now indicates list/vectors as a slimmer rectangle:
+
 ![](man/figures/list_example.png)
+
+The summaries for lists currently only report the number of elements, but in the future will include more details especially as we add support for `{purrr}` functions.
 
 ![](man/figures/list_summary.png)
 
