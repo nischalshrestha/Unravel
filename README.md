@@ -18,7 +18,7 @@ devtools::install_github('nischalshrestha/Unravel')
 
 With Unravel, you can unravel `dplyr` or `tidyr` code which opens up a Shiny app in RStudio. You can then hover over the lines to **inspect the intermediate outputs** (typically dataframes) of the tidyverse code. Both the code and output will be highlighted according to what type of **changes occurred** (no change, visible change, internal change, error).
 
-Unravel also produces **automated function summaries** accessed through the dataframe box. Each function summary (if supported --- see below) describe how the function transformed the previous dataframe in terms of dimensions (shape), whether or not changes were visible or internal (for e.g. grouping).
+Unravel also produces **automated function summaries** accessed through the dataframe box. Each function summary (if supported --- see [below](#what-verbs-have-summaries)) describe how the function transformed the previous dataframe in terms of dimensions (shape), whether or not changes were visible or internal (for e.g. grouping).
 
 You can also **perform structural edits** to the code via toggles (comment/uncomment), and reordering lines with drag and drop interactions.
 
@@ -26,9 +26,11 @@ Note: The first expression or line is treated as the data source, so the line in
 
 ### RStudio IDE
 
-The easiest way to use Unravel is through the Addin. Highlight the tidyverse code you want to unravel, then go to Addins -\> Unravel code.
+The easiest way to use Unravel is to highlight the tidyverse code you want to unravel, then go to Addins -\> Unravel code.
 
-![](man/figures/demo.gif)
+<p align="center">
+  <img src="man/figures/demo.gif" alt="Sublime's custom image"/>
+</p>
 
 This will open up the app on the Viewer pane in RStudio by default. But, if you want to respect your currently chosen browser window, you can pass `viewer = FALSE`.
 
