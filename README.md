@@ -22,8 +22,6 @@ Unravel also produces **automated function summaries** accessed through the data
 
 You can also **perform structural edits** to the code via toggles (comment/uncomment), and reordering lines with drag and drop interactions.
 
-Note: The first expression or line is treated as the data source, so the line in the UI is locked such that you can't reorder it and other operations can't be reordered before the first line.
-
 ### RStudio IDE
 
 The easiest way to use Unravel is to highlight the tidyverse code you want to unravel, then go to Addins -\> Unravel code.
@@ -32,7 +30,9 @@ The easiest way to use Unravel is to highlight the tidyverse code you want to un
   <img src="man/figures/demo.gif" alt="Sublime's custom image"/>
 </p>
 
-This will open up the app on the Viewer pane in RStudio by default. But, if you want to respect your currently chosen browser window, you can pass `viewer = FALSE`.
+This will open up the app on the Viewer pane in RStudio by default. But, if you want to respect your currently chosen browser window, you can pass `viewer = FALSE`. 
+
+This style of coding always involves starting with a source of data. So, the first expression or line is "locked" such that you can't enable/dsiable or reorder it and other operations can't be reordered before the first line (as shown at the end of the GIF above).
 
 You can also invoke it programmatically using the `unravel` function by wrapping or piping your code to the function:
 
