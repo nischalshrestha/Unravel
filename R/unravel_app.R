@@ -13,6 +13,7 @@
 #' @importFrom shiny onStop
 #' @importFrom reactable colDef
 #' @importFrom utils getParseData
+#' @importFrom ggplot2 is.ggplot
 NULL
 
 ### Shiny App logic
@@ -200,8 +201,9 @@ unravelUI <- function(id) {
     shiny::htmlOutput(ns("code_explorer")),
     shiny::div(
       style = "width: 100%; height: 500px; margin: 10px;",
-      shiny::htmlOutput(ns("generic_output")),
-      reactable::reactableOutput(ns("line_table"))
+      shiny::plotOutput(ns("plot_output")),
+      reactable::reactableOutput(ns("line_table")),
+      shiny::htmlOutput(ns("generic_output"))
     )
   )
 }
@@ -245,14 +247,27 @@ generate_code_info_outputs <- function(order, rv) {
     return(NULL)
   }
 
-  # format the code by stripping and re-applying `%>%`
+  # format the code by stripping and re-applying `%>%` / `+`
   new_code_info <- lapply(seq_len(length(new_code_info)), function(i) {
-    new_code_info[[i]]$code <- gsub("%>%", "", new_code_info[[i]]$code)
+    classes <- new_code_info[[i]]$class
+    code <- new_code_info[[i]]$code
+    classes <- new_code_info[[i]]$class
+    # split the string then only keep the strings besides the last one (%>% or +)
+    split_code <- unlist(strsplit(code, " "))
+    trim <- ifelse(length(split_code) > 1, 1, 0)
+    new_code_info[[i]]$code <- paste0(split_code[1:length(split_code) - trim], collapse=" ")
     new_code_info[[i]]
   })
+  # then, apply it on every line except the last
   new_code_info <- lapply(seq_len(length(new_code_info)), function(i) {
     if (i < length(new_code_info)) {
-      new_code_info[[i]]$code <- paste(new_code_info[[i]]$code, "%>%")
+      classes <- new_code_info[[i]]$class
+      new_code_info[[i]]$code <-
+        if ("ggplot" %in% classes) {
+          paste0(new_code_info[[i]]$code, " +")
+        } else {
+          paste0(new_code_info[[i]]$code, " %>%")
+        }
     }
     new_code_info[[i]]
   })
@@ -278,6 +293,8 @@ generate_code_info_outputs <- function(order, rv) {
 
   list(new_code_info = new_code_info, outputs = outputs)
 }
+
+
 
 #' Helper function that updates line information for R Shiny
 #' reactive values and sends UI information to the JS side.
@@ -376,6 +393,7 @@ unravelServer <- function(id, user_code = NULL) {
       rv$outputs <- NULL
       rv$table_output <- NULL
       rv$main_callout <- NULL
+      rv$plot_output <- NULL
 
       # send signal to JS of the code text to display
       session$sendCustomMessage("set_code", paste0(user_code))
@@ -394,7 +412,15 @@ unravelServer <- function(id, user_code = NULL) {
             outputs <- get_output_intermediates(quoted[[1]])
             # set reactive values
             rv$code_info <- lapply(outputs, function(x) {
-              list(lineid = x$line, code = x$code, change = x$change, row = abbrev_num(x$row), col = abbrev_num(x$col), err = x$err)
+              list(
+                lineid = x$line,
+                code = x$code,
+                change = x$change,
+                row = abbrev_num(x$row),
+                col = abbrev_num(x$col),
+                err = x$err,
+                class = x$class
+              )
             })
             # TODO-enhance: reset current_code_info via a Reset button
             # store the current code metadata for the UI/logic
@@ -406,7 +432,8 @@ unravelServer <- function(id, user_code = NULL) {
                 row = abbrev_num(x$row),
                 col = abbrev_num(x$col),
                 err = x$err,
-                checked = TRUE
+                checked = TRUE,
+                class = x$class
               )
             })
             attr(rv$current_code_info, "order") <- seq_len(length(outputs))
@@ -517,24 +544,32 @@ unravelServer <- function(id, user_code = NULL) {
             if (dim(out)[[1]] > 5e5) {
               out <- out[1:5e4, ]
             }
+            rv$plot_output <- NULL
             rv$table_output <- out
             rv$main_callout <- rv$cur_callouts[[value]]
-          } else {
+          } else if (is.ggplot(out)) {
             # NOTE: we have to set table output to NULL if it's not a data.frame, otherwise it will
             # still appear below a generic output
             rv$table_output <- NULL
+            rv$plot_output <- out
           }
         }
         out
       })
 
-      # this is the output for non-dataframe and non-plot objects like vectors and lists
-      output$generic_output <- renderUI({
+      # this is the output for non-dataframe objects like ggplot objects, or vectors and lists
+      output$generic_output <- renderPrint({
         generic_output <- data()
-        if (!is.data.frame(generic_output) && !is.null(generic_output)) {
-          shiny::tagList({
-            shiny::renderPrint(generic_output)
-          })
+        if (!is.null(generic_output)) {
+          generic_output
+        }
+      })
+
+      # this is the output for non-dataframe objects like ggplot objects, or vectors and lists
+      output$plot_output <- renderPlot({
+        plot_obj <- rv$plot_output
+        if (!is.null(plot_obj)) {
+          plot_obj
         }
       })
 
@@ -544,6 +579,7 @@ unravelServer <- function(id, user_code = NULL) {
         if (!is.na(final_data) && !is.null(final_data) && length(final_data) >= 1) {
           # if we have a grouped dataframe, to facilitate understanding let's rearrange columns such that
           # the grouped variables appear to the very left
+          # TODO refactor and remove duplication here: `data` and `columns` are the only varying args here.
           if (is_grouped_df(final_data)) {
             reactable::reactable(data = dplyr::select(.data = final_data, group_vars(final_data), dplyr::everything()) %>% as.data.frame(),
                                  compact = TRUE,

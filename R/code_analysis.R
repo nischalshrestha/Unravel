@@ -21,7 +21,8 @@ recurse_dplyr <- function(dplyr_tree, outputs = list()) {
   }
   # if there are no pipes, return the tree early
   # this will return just the expression itself for single verb calls (e.g. select(diamonds, carat))
-  if (!identical(dplyr_tree[[1]], as.symbol("%>%"))) {
+  if (!identical(dplyr_tree[[1]], as.symbol("%>%")) &&
+      !identical(dplyr_tree[[1]], as.symbol("+"))) {
     return(list(dplyr_tree))
   }
   return(
@@ -147,12 +148,14 @@ get_output_intermediates <- function(pipeline) {
     ))
   }
 
-  has_pipes <- identical(pipeline[[1]], as.symbol("%>%"))
+  has_pipes <- identical(pipeline[[1]], as.symbol("%>%")) || identical(pipeline[[1]], as.symbol("+"))
   # check if we have a dataframe as first argument for single verb code
   if (!has_pipes) {
     err <- NULL
-    tryCatch(
-      first_arg_data <<- is.data.frame(eval(pipeline)),
+    tryCatch({
+        output <<- eval(pipeline)
+        first_arg_data <<- is.data.frame(output)
+      },
       error = function(e) {
         err <<- crayon::strip_style(e$message)
       }
@@ -169,8 +172,8 @@ get_output_intermediates <- function(pipeline) {
     }
   }
   # if we don't have pipes and we don't have a function that has a first argument as dataframe
-  # quit early and surface error
-  if (!has_pipes && !first_arg_data) {
+  # quit early and surface error, unless it's a ggplot object
+  if (!has_pipes && !first_arg_data && !"ggplot" %in% class(output)) {
     # message("`pipeline` input is not a pipe call!")
     return(list(
       list(
@@ -215,15 +218,7 @@ get_output_intermediates <- function(pipeline) {
     # NOTE: rlang::expr_deparse breaks apart long strings into multiple character vector
     # we collapse it before further processing to avoid extra \t
     deparsed <- paste0(rlang::expr_deparse(verb), collapse = "")
-
-    # append a pipe character %>% unless it's the last line
-    if (i < length(lines)) {
-      deparsed <- paste0(deparsed, " %>%")
-    }
-    # also append a tab character if not the first line
-    if (i > 1) {
-      deparsed <- paste0("\t", deparsed)
-    }
+    # setup the intermediate list with initial information
     intermediate <- list(line = i, code = deparsed, change = get_change_type(verb_name))
     err <- NULL
     tryCatch({
@@ -250,29 +245,51 @@ get_output_intermediates <- function(pipeline) {
           # so this is a little hack that binds a name "." to the previous output in a new environment
           e <- rlang::new_environment(parent = rlang::current_env())
           e[["."]] <- prev_output
-          # construct a call for the function such that we use the previous output as the input, and rest of the args
-          call_expr <- rlang::call2(verb_name, !!!append(list(prev_output), rlang::call_args(verb)))
-          # evaluate the final function call expression within the new environment that holds the "pronoun"
-          cur_output <- eval(call_expr, envir = e)
+          # `ggplot` breaks the function(.data = ..., ...) formula, and uses some type of operator overloading
+          # so we have to evaluate the ggplot to the current line code text instead
+          # TODO: this does not yet gather the ggplot to layer yet
+          if ("ggplot" %in% class(prev_output)) {
+            call_expr_text <- paste0(results[[i - 1]]$code, deparsed)
+            cur_output <- eval(parse(text = call_expr_text), envir = e)
+          } else {
+            # construct a call for the function such that we use the previous output as the input, and rest of the args
+            call_expr <- rlang::call2(verb_name, !!!append(list(prev_output), rlang::call_args(verb)))
+            # evaluate the final function call expression within the new environment that holds the "pronoun"
+            cur_output <- eval(call_expr, envir = e)
+          }
           # wrap output as list so it can be stored properly
           intermediate["output"] <- list(cur_output)
           change_type <- get_data_change_type(verb_name, prev_output, cur_output)
           data_changed <- !identical(prev_output, cur_output)
         }
+
+        out <- intermediate["output"][[1]]
+        intermediate["class"] <- list(class(out))
+        # append a \t and a pipe character %>% or ggplot + unless it's the last line
+        deparsed <- ifelse(i != 1, paste0("\t", deparsed), deparsed)
+        if (i < length(lines)) {
+          if ("ggplot" %in% class(out)) {
+            intermediate["code"] <- paste0(deparsed, " +")
+          } else {
+            intermediate["code"] <- paste0(deparsed, " %>%")
+          }
+        } else {
+          intermediate["code"] <- deparsed
+        }
+        # store the dimensions of dataframe (don't if it was non-dataframe)
+        intermediate["row"] <- dim(out)[[1]]
+        intermediate["col"] <- dim(out)[[2]]
+        # if the data was not a dataframe, grab the length (for now lists/vectors)
+        # Note: we will need a different way to support complex types like ggplot2 objects
+        if (is.null(intermediate$row) && is.vector(out)) {
+          intermediate["row"] <- length(out)
+        }
+
+        # store the function summary
         # for single verb code simply get the change type based on verb for now
         if (!has_pipes && first_arg_data) {
           change_type <- get_change_type(verb_name)
         }
-        # store the dimensions of dataframe
-        intermediate["row"] <- dim(intermediate["output"][[1]])[[1]]
-        intermediate["col"] <- dim(intermediate["output"][[1]])[[2]]
-        # if the data was not a dataframe, grab the length (for now lists/vectors)
-        # Note: we will need a different way to support complex types like ggplot2 objects
-        if (is.null(intermediate$row)) {
-          intermediate["row"] <- length(intermediate["output"][[1]])
-        }
-
-        # store the function summary
         verb_summary <- get_verb_summary()
         if(is.na(intermediate["output"])) {
           change_type <- "error"
@@ -285,7 +302,7 @@ get_output_intermediates <- function(pipeline) {
         # if we have a dataframe %>% verb() expression, the 'dataframe' summary is simply
         # the dataframe/tibble with dimensions reported (we could expand that if we want)
         if ((i == 1 && (has_pipes || first_arg_data)) || is.null(verb_summary)) {
-          verb_summary <- tidylog::get_data_summary(intermediate["output"][[1]])
+          verb_summary <- tidylog::get_data_summary(out)
         }
         # store the final function summary and set it to empty string if we do not yet have
         # a summary support for the function
