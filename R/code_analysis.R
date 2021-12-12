@@ -131,6 +131,11 @@ get_output_intermediates <- function(pipeline) {
   clear_callouts()
   old_verb_summary <- ""
 
+  # if code is an assignment expression, grab the value (rhs)
+  if (!is.symbol(pipeline) && identical(pipeline[[1]], as.symbol("<-"))) {
+    pipeline <- pipeline[[3]]
+  }
+
   # check if only a name has been passed for full expression which is
   # potentially a dataframe
   if (inherits(pipeline, "name") && is.data.frame(eval(pipeline))) {
@@ -218,6 +223,8 @@ get_output_intermediates <- function(pipeline) {
     # NOTE: rlang::expr_deparse breaks apart long strings into multiple character vector
     # we collapse it before further processing to avoid extra \t
     deparsed <- paste0(rlang::expr_deparse(verb), collapse = "")
+    # append a \t and a pipe character %>% or ggplot + unless it's the last line
+    deparsed <- ifelse(i != 1, paste0("\t", deparsed), deparsed)
     # setup the intermediate list with initial information
     intermediate <- list(line = i, code = deparsed, change = get_change_type(verb_name))
     err <- NULL
@@ -235,7 +242,7 @@ get_output_intermediates <- function(pipeline) {
             intermediate["output"] <- NULL
             intermediate["change"] <- "error"
             # for now, simply point out that the previous lines have an error
-            intermediate["summary"] <- paste("<strong>Summary:</strong>", "Previous lines have problems!")
+            intermediate["summary"] <- "<strong>Summary:</strong> Previous lines have problems!"
             results <- append(results, list(intermediate))
             next
           }
@@ -264,9 +271,6 @@ get_output_intermediates <- function(pipeline) {
         }
 
         out <- intermediate["output"][[1]]
-        intermediate["class"] <- list(class(out))
-        # append a \t and a pipe character %>% or ggplot + unless it's the last line
-        deparsed <- ifelse(i != 1, paste0("\t", deparsed), deparsed)
         if (i < length(lines)) {
           if ("ggplot" %in% class(out)) {
             intermediate["code"] <- paste0(deparsed, " +")
@@ -308,8 +312,8 @@ get_output_intermediates <- function(pipeline) {
         # a summary support for the function
         intermediate["summary"] <-
           ifelse(
-            data_changed,
-            paste("<strong>Summary:</strong>", verb_summary),
+            data_changed || !is.null(verb_summary),
+            paste0("<strong>Summary:</strong> ", verb_summary, collapse = ""),
             ""
           )
         old_verb_summary <- verb_summary
