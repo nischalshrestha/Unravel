@@ -11,7 +11,7 @@ test_that("One liner functions", {
         output = diamonds,
         row = 53940,
         col = 10,
-        summary = "<strong>Summary:</strong> tibble with <span class='number'>53,940</span> rows and <span class='number'>10</span> columns."
+        summary = "<strong>Summary:</strong> A tibble with <span class='number'>53,940</span> rows and <span class='number'>10</span> columns."
       )
     )
   )
@@ -41,7 +41,7 @@ test_that("One liner functions", {
         row = 53940,
         col = 5,
         callouts = list(),
-        summary = "<strong>Summary:</strong> tibble with <span class='number'>53,940</span> rows and <span class='number'>5</span> columns."
+        summary = "<strong>Summary:</strong> A tibble with <span class='number'>53,940</span> rows and <span class='number'>5</span> columns."
       )
     )
   )
@@ -66,7 +66,7 @@ test_that("Multiple functions", {
         row = 53940,
         col = 10,
         callouts = NULL,
-        summary = "<strong>Summary:</strong> tibble with <span class='number'>53,940</span> rows and <span class='number'>10</span> columns."
+        summary = "<strong>Summary:</strong> A tibble with <span class='number'>53,940</span> rows and <span class='number'>10</span> columns."
       ),
       list(
         line = 2,
@@ -160,7 +160,7 @@ test_that("Evaluation is deterministic", {
         row = 5,
         col = 5,
         callouts = NULL,
-        summary = "<strong>Summary:</strong> data.frame with <span class='number'>5</span> rows and <span class='number'>5</span> columns."
+        summary = "<strong>Summary:</strong> A data.frame with <span class='number'>5</span> rows and <span class='number'>5</span> columns."
       ),
       list(
         line = 2,
@@ -172,7 +172,7 @@ test_that("Evaluation is deterministic", {
         row = 5,
         col = 5,
         callouts = list(),
-        summary = "<strong>Summary:</strong>  <code class='code'>select</code> resulted in no changes."
+        summary = "<strong>Summary:</strong> <code class='code'>select</code> resulted in no changes."
       ),
       list(
         line = 3,
@@ -213,7 +213,7 @@ test_that("Properly analyzes problematic code", {
       row = 53940,
       col = 10,
       callouts = NULL,
-      summary = "<strong>Summary:</strong> tibble with <span class='number'>53,940</span> rows and <span class='number'>10</span> columns."
+      summary = "<strong>Summary:</strong> A tibble with <span class='number'>53,940</span> rows and <span class='number'>10</span> columns."
     )
   )
   # culprit line with error
@@ -255,7 +255,7 @@ test_that("Data pronouns can be accessed", {
         row = 32,
         col = 11,
         callouts = NULL,
-        summary = "<strong>Summary:</strong> data.frame with <span class='number'>32</span> rows and <span class='number'>11</span> columns."
+        summary = "<strong>Summary:</strong> A data.frame with <span class='number'>32</span> rows and <span class='number'>11</span> columns."
       ),
       list(
         line = 2,
@@ -264,14 +264,14 @@ test_that("Data pronouns can be accessed", {
         output = mtcars %>% split(.$cyl),
         row = 3,
         callouts = NULL,
-        summary = "<strong>Summary:</strong> A list with <span class='number'>3</span> elements."
+        summary = "<strong>Summary:</strong> A list containing <span class='number'>3</span> elements."
       )
     )
   )
 
   # one with .data pronoun should work as well
   pipeline <- quote(
-    mtcars %>%
+    group_n <- mtcars %>%
       names() %>%
       map(~ count(mtcars, .data[[.x]]))
   )
@@ -292,7 +292,7 @@ test_that("Data pronouns can be accessed", {
         row = 32,
         col = 11,
         callouts = NULL,
-        summary = "<strong>Summary:</strong> data.frame with <span class='number'>32</span> rows and <span class='number'>11</span> columns."
+        summary = "<strong>Summary:</strong> A data.frame with <span class='number'>32</span> rows and <span class='number'>11</span> columns."
       ),
       list(
         line = 2,
@@ -301,7 +301,7 @@ test_that("Data pronouns can be accessed", {
         output = mtcars %>% names(),
         row = 11,
         callouts = NULL,
-        summary = "<strong>Summary:</strong> A character vector."
+        summary = "<strong>Summary:</strong> A character vector, containing <span class='number'>11</span> elements."
       ),
       list(
         line = 3,
@@ -314,6 +314,51 @@ test_that("Data pronouns can be accessed", {
       )
     )
   )
+})
+
+test_that("Assignment expressions with a dataframe value can be unraveled", {
+  pipeline <- quote(
+    group_n <- mtcars %>%
+      names() %>%
+      map(~ count(mtcars, .data[[.x]]))
+  )
+  last_output <- mtcars %>%
+    names() %>%
+    map(~ count(mtcars, .data[[.x]]))
+  expect_equal(
+    get_output_intermediates(pipeline),
+    list(
+      list(
+        line = 1,
+        code = "mtcars %>%",
+        change = "none",
+        output = mtcars,
+        row = 32,
+        col = 11,
+        callouts = NULL,
+        summary = "<strong>Summary:</strong> A data.frame with <span class='number'>32</span> rows and <span class='number'>11</span> columns."
+      ),
+      list(
+        line = 2,
+        code = "\tnames() %>%",
+        change = "visible",
+        output = mtcars %>% names(),
+        row = 11,
+        callouts = NULL,
+        summary = "<strong>Summary:</strong> A character vector, containing <span class='number'>11</span> elements."
+      ),
+      list(
+        line = 3,
+        code = "\tmap(~count(mtcars, .data[[.x]]))",
+        change = "visible",
+        output = last_output,
+        row = 11,
+        callouts = list(),
+        summary = "<strong>Summary:</strong> <code class='code'>count</code> changed the dataframe shape from <span class = 'number'>[32 x 11]</span> to <span class = 'visible-change number'>[6 x 2]</span>. The data is now ungrouped."
+      )
+    )
+  )
+
 })
 
 test_that("Nested expressions can be unraveled", {
@@ -342,7 +387,7 @@ test_that("Nested expressions can be unraveled", {
         row = 150,
         col = 5,
         callouts = NULL,
-        summary = "<strong>Summary:</strong> data.frame with <span class='number'>150</span> rows and <span class='number'>5</span> columns."
+        summary = "<strong>Summary:</strong> A data.frame with <span class='number'>150</span> rows and <span class='number'>5</span> columns."
       ),
       list(
         line = 2,
@@ -352,7 +397,7 @@ test_that("Nested expressions can be unraveled", {
         row = 150,
         col = 5,
         callouts = NULL,
-        summary = "<strong>Summary:</strong> tibble with <span class='number'>150</span> rows and <span class='number'>5</span> columns."
+        summary = "<strong>Summary:</strong> A tibble with <span class='number'>150</span> rows and <span class='number'>5</span> columns."
       ),
       list(
         line = 3,
@@ -365,7 +410,7 @@ test_that("Nested expressions can be unraveled", {
           list(word = "Sepal.Length", change = "visible-change"),
           list(word = "Sepal.Width", change = "visible-change")
         ),
-        summary = "<strong>Summary:</strong>  <code class='code'>mutate</code> changed <span class='number'>133</span> values (<span class='number'>89%</span>) of '<code class='code visible-change'>Sepal.Length</code>' (previously <span class='number'>0</span> <span class='number'>NA</span>s, now <span class='number'>0</span> new <span class='number'>NA</span>s); changed <span class='number'>122</span> values (<span class='number'>81%</span>) of '<code class='code visible-change'>Sepal.Width</code>' (previously <span class='number'>0</span> <span class='number'>NA</span>s, now <span class='number'>0</span> new <span class='number'>NA</span>s)."
+        summary = "<strong>Summary:</strong> <code class='code'>mutate</code> changed <span class='number'>133</span> values (<span class='number'>89%</span>) of '<code class='code visible-change'>Sepal.Length</code>' (previously <span class='number'>0</span> <span class='number'>NA</span>s, now <span class='number'>0</span> new <span class='number'>NA</span>s); changed <span class='number'>122</span> values (<span class='number'>81%</span>) of '<code class='code visible-change'>Sepal.Width</code>' (previously <span class='number'>0</span> <span class='number'>NA</span>s, now <span class='number'>0</span> new <span class='number'>NA</span>s)"
       )
     )
   )

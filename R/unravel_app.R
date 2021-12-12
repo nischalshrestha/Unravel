@@ -13,6 +13,7 @@
 #' @importFrom shiny onStop
 #' @importFrom reactable colDef
 #' @importFrom utils getParseData
+#' @importFrom ggplot2 is.ggplot
 NULL
 
 ### Shiny App logic
@@ -174,7 +175,7 @@ unravelUI <- function(id) {
   shiny::fixedPage(
     # fontawesome (for glyphicon for move)
     shiny::tags$style("@import url(https://use.fontawesome.com/releases/v5.7.2/css/all.css);"),
-    # <script src=></script>
+    # Sortable.js
     tags$head(tags$script(src="https://raw.githack.com/SortableJS/Sortable/master/Sortable.js")),
     shiny::tags$body(
       # bootstrap stuff
@@ -184,9 +185,6 @@ unravelUI <- function(id) {
       shiny::includeScript(file.path(package_js, "codemirror.js")),
       shiny::includeCSS(file.path(package_css, "codemirror.css")),
       shiny::includeScript(file.path(package_js, "r.js")),
-      # Sortable.js
-      # shiny::tags$script("https://raw.githack.com/SortableJS/Sortable/master/Sortable.js"),
-      # shiny::includeScript(file.path(package_js, "Sortable.js")),
       # custom css
       shiny::includeCSS(file.path(package_css, "style.css")),
       # custom js for exploration of code
@@ -200,152 +198,10 @@ unravelUI <- function(id) {
     shiny::htmlOutput(ns("code_explorer")),
     shiny::div(
       style = "width: 100%; height: 500px; margin: 10px;",
-      shiny::htmlOutput(ns("generic_output")),
+      shiny::verbatimTextOutput(ns("generic_output")),
       reactable::reactableOutput(ns("line_table"))
     )
   )
-}
-
-# helper function for grabbing a particular new code
-get_code <- function(target, id) {
-  result <- Filter(function(x) x$lineid == id, target)
-  if (length(result) > 0) {
-    return(result[[1]]$code)
-  } else {
-    return(result)
-  }
-}
-
-# helper function for grabbing a particular new output
-get_output <- function(target, lineid) {
-  Filter(function(x) x$line == lineid, target)
-}
-
-#' Given line order, and the reactive values, generate new intermediate outputs
-#' for Unravel
-#'
-#' @param order numeric vector
-#' @param rv reactive values
-#'
-#' @return \code{list(new_code_info = list(list(...)), outputs = list(...))}
-#' @noRd
-generate_code_info_outputs <- function(order, rv) {
-  new_code_info <- rv$current_code_info[order]
-  # only grab the enabled lines
-  new_code_info <- Filter(
-    function(x) {
-      return(isTRUE(x$checked))
-    },
-    new_code_info
-  )
-
-  # if no lines are enabled return early
-  if (length(new_code_info) == 0) {
-    rv$outputs <- list()
-    return(NULL)
-  }
-
-  # format the code by stripping and re-applying `%>%`
-  new_code_info <- lapply(seq_len(length(new_code_info)), function(i) {
-    new_code_info[[i]]$code <- gsub("%>%", "", new_code_info[[i]]$code)
-    new_code_info[[i]]
-  })
-  new_code_info <- lapply(seq_len(length(new_code_info)), function(i) {
-    if (i < length(new_code_info)) {
-      new_code_info[[i]]$code <- paste(new_code_info[[i]]$code, "%>%")
-    }
-    new_code_info[[i]]
-  })
-  new_code_source <- paste0(lapply(new_code_info, function(x) x$code), collapse = "\n")
-  quoted <- rlang::parse_expr(new_code_source)
-  # message("producing new code info")
-
-  # get new code intermediate info
-  outputs <- get_output_intermediates(quoted)
-  # we might run across an error while processing an invalid pipeline, for
-  # this case we will get back the error message, a character, so we do this
-  # silly check for now so that we return early and the UI does not know any better
-  # it will just show the last error'd line
-  if (!inherits(outputs, "list")) {
-    return(NULL)
-  }
-
-  # update the default lineid
-  outputs <- lapply(seq_len(length(outputs)), function(i) {
-    outputs[[i]]$line <- new_code_info[[i]]$lineid
-    outputs[[i]]
-  })
-
-  list(new_code_info = new_code_info, outputs = outputs)
-}
-
-#' Helper function that updates line information for R Shiny
-#' reactive values and sends UI information to the JS side.
-#'
-#' @param order A numeric vector
-#' @param outputs A list of outputs from `get_output_intermediates`
-#' @param current_code_info The current code info list structure
-#' @param new_code_info The new code info list structure
-#' @param session The Shiny session
-#'
-#' @return
-#'
-#' @noRd
-update_lines <- function(order, outputs, current_code_info, new_code_info, rv, session) {
-  # prep data to send JS about box change type, row, and col
-  new_rv_code_info <- lapply(current_code_info, function(x) {
-    out <- get_output(outputs, x$lineid)
-    # error occurred before this line
-    if (length(out) == 0) {
-      # reset states
-      x$change = "invalid" # this is different from error, so we'll call it invalid
-      x$row = ""
-      x$col = ""
-      x$summary = ""
-      x$output = NULL
-      x$callouts = NULL
-    } else {
-      # no error before this line
-      new_rv <- out[[1]]
-      # check if we need to update the code text for one of the editors regarding %>%
-      new_code <- get_code(new_code_info, x$lineid)
-      # check for error for this line
-      if (!is.null(new_rv$err)) {
-        # set error states
-        x$code = new_code
-        x$change = new_rv$change
-        x$row = abbrev_num(new_rv$row)
-        x$col = abbrev_num(new_rv$col)
-        x$summary = new_rv$err
-        x$output = NULL
-        x$callouts = NULL
-      } else {
-        # if no error, update states
-        x$code = new_code
-        x$change = new_rv$change
-        x$row = abbrev_num(new_rv$row)
-        x$col = abbrev_num(new_rv$col)
-        x$summary = new_rv$summary
-        x$output = new_rv$output
-        x$callouts = new_rv$callouts
-      }
-    }
-    x
-  })
-  new_rv_code_info <- new_rv_code_info[order]
-  send_js_code_info <- lapply(new_rv_code_info, function(x) {
-    list(id = x$lineid, code = x$code, change = x$change, row = x$row, col = x$col)
-  })
-  # NOTE: this starts the sequence again of requesting callouts, then prompts
-  session$sendCustomMessage("update_line", send_js_code_info)
-
-  # update the summaries, callouts, and outputs as well
-  rv$summaries <- lapply(new_rv_code_info, function(x) list(lineid = paste0("line", x$lineid), summary = x$summary))
-  rv$callouts <- lapply(new_rv_code_info, function(x) list(lineid = paste0("line", x$lineid), callouts = x$callouts))
-  rv$outputs <- lapply(outputs, function(x) list(id = x$line, lineid = paste0("line", x$line), output = x$output))
-  rv$cur_callouts <- lapply(outputs, function(x) x$callouts)
-  # update the data display to the last enabled output
-  rv$current <- length(rv$outputs)
 }
 
 #' Unravel server
@@ -374,6 +230,7 @@ unravelServer <- function(id, user_code = NULL) {
       rv$code_info <-  NULL
       rv$summaries <- list()
       rv$outputs <- NULL
+      rv$generic_output <- NULL
       rv$table_output <- NULL
       rv$main_callout <- NULL
 
@@ -394,7 +251,15 @@ unravelServer <- function(id, user_code = NULL) {
             outputs <- get_output_intermediates(quoted[[1]])
             # set reactive values
             rv$code_info <- lapply(outputs, function(x) {
-              list(lineid = x$line, code = x$code, change = x$change, row = abbrev_num(x$row), col = abbrev_num(x$col), err = x$err)
+              list(
+                lineid = x$line,
+                code = x$code,
+                change = x$change,
+                row = abbrev_num(x$row),
+                col = abbrev_num(x$col),
+                err = x$err,
+                class = class(x$output)
+              )
             })
             # TODO-enhance: reset current_code_info via a Reset button
             # store the current code metadata for the UI/logic
@@ -406,7 +271,8 @@ unravelServer <- function(id, user_code = NULL) {
                 row = abbrev_num(x$row),
                 col = abbrev_num(x$col),
                 err = x$err,
-                checked = TRUE
+                checked = TRUE,
+                class = class(x$output)
               )
             })
             attr(rv$current_code_info, "order") <- seq_len(length(outputs))
@@ -507,71 +373,83 @@ unravelServer <- function(id, user_code = NULL) {
         value <- as.numeric(rv$current)
         out <- NULL
         if (!is.na(value) && length(rv$outputs) > 0 && value <= length(rv$outputs)) {
-          # reactable can only efficiently display data of a certain size
-          # if we enter into the 100K range, it starts to slow down
-          # message("changed data line output ", value)
           out <- rv$outputs[[value]]$output
           # if it's a data.frame then set the table output reactive value
           if (is.data.frame(out)) {
+            # reactable can only efficiently display data of a certain size
+            # if we enter into the 100K range, it starts to slow down
             # this is a hack to reduce the amount of total rows displayed for performance
             if (dim(out)[[1]] > 5e5) {
               out <- out[1:5e4, ]
             }
+            rv$generic_output <- NULL
             rv$table_output <- out
             rv$main_callout <- rv$cur_callouts[[value]]
           } else {
             # NOTE: we have to set table output to NULL if it's not a data.frame, otherwise it will
             # still appear below a generic output
             rv$table_output <- NULL
+            rv$generic_output <- out
           }
         }
         out
       })
 
-      # this is the output for non-dataframe and non-plot objects like vectors and lists
-      output$generic_output <- renderUI({
+      # this is the output for non-dataframe objects like ggplot objects, or vectors and lists
+      output$generic_output <- renderPrint({
         generic_output <- data()
-        if (!is.data.frame(generic_output) && !is.null(generic_output)) {
-          shiny::tagList({
-            shiny::renderPrint(generic_output)
-          })
+        if (!is.null(generic_output) && !is.data.frame(generic_output) && !is.ggplot(generic_output)) {
+          return(generic_output)
         }
       })
 
       # shiny output of reactable for a data.frame / tibble
       output$line_table <- reactable::renderReactable({
-        final_data <- rv$table_output
-        if (!is.na(final_data) && !is.null(final_data) && length(final_data) >= 1) {
+        final_data <- data()
+        if (is.data.frame(final_data) && !is.na(final_data) && !is.null(final_data) && length(final_data) >= 1) {
           # if we have a grouped dataframe, to facilitate understanding let's rearrange columns such that
           # the grouped variables appear to the very left
+          common_args <-
+            list(compact = TRUE,
+                 highlight = TRUE,
+                 bordered = TRUE,
+                 rownames = TRUE,
+                 defaultPageSize = 5)
           if (is_grouped_df(final_data)) {
-            reactable::reactable(data = dplyr::select(.data = final_data, group_vars(final_data), dplyr::everything()) %>% as.data.frame(),
-                                 compact = TRUE,
-                                 highlight = TRUE,
-                                 bordered = TRUE,
-                                 rownames = TRUE,
-                                 defaultPageSize = 5,
-                                 # we can do a custom thing for a particular column
-                                 columns = reappend(
-                                   list(.rownames = colDef(style = list(textAlign = "left"), maxWidth = 80)),
-                                   get_column_css(final_data, rv$main_callout))
-                                 )
+            return(
+              do.call(
+                reactable::reactable,
+                append(
+                  common_args,
+                  list(
+                    data = dplyr::select(.data = final_data, group_vars(final_data), dplyr::everything()) %>% as.data.frame(),
+                    # we can do a custom thing for a particular column
+                    columns = reappend(
+                      list(.rownames = colDef(style = list(textAlign = "left"), maxWidth = 80)),
+                      get_column_css(final_data, rv$main_callout))
+                    )
+                  )
+                )
+              )
           } else {
             rowname_background <- list()
             if (inherits(final_data, "rowwise_df")) {
               rowname_background <- list(`background-color` = "lightblue");
             }
-            reactable::reactable(data = final_data %>% as.data.frame(),
-                                 compact = TRUE,
-                                 highlight = TRUE,
-                                 bordered = TRUE,
-                                 rownames = TRUE,
-                                 defaultPageSize = 5,
-                                 # we can do a custom thing for a particular column
-                                 columns = reappend(
-                                   list(.rownames = colDef(style = append(list(textAlign = "left"), rowname_background), maxWidth = 80)),
-                                   get_column_css(final_data, rv$main_callout))
-                                 )
+            return(
+              do.call(
+                reactable::reactable,
+                append(
+                  common_args,
+                  list(
+                    data = final_data %>% as.data.frame(),
+                    columns = reappend(
+                      list(.rownames = colDef(style = append(list(textAlign = "left"), rowname_background), maxWidth = 80)),
+                      get_column_css(final_data, rv$main_callout))
+                  )
+                )
+              )
+            )
           }
         }
       })
