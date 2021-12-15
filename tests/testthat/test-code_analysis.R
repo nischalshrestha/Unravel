@@ -358,10 +358,13 @@ test_that("Assignment expressions with a dataframe value can be unraveled", {
       )
     )
   )
-
 })
 
 test_that("Nested expressions can be unraveled", {
+
+  # TODO investigate why test yields different result when using data pronouns in expression like .x
+
+  # single across expression modifying multiple columns
   across_expr <- quote(
     iris %>%
       as_tibble() %>%
@@ -375,7 +378,6 @@ test_that("Nested expressions can be unraveled", {
   )
 
   outputs <- get_output_intermediates(across_expr)
-
   expect_equal(
     outputs,
     list(
@@ -411,6 +413,125 @@ test_that("Nested expressions can be unraveled", {
           list(word = "Sepal.Width", change = "visible-change")
         ),
         summary = "<strong>Summary:</strong> <code class='code'>mutate</code> changed <span class='number'>133</span> values (<span class='number'>89%</span>) of '<code class='code visible-change'>Sepal.Length</code>' (previously <span class='number'>0</span> <span class='number'>NA</span>s, now <span class='number'>0</span> new <span class='number'>NA</span>s); changed <span class='number'>122</span> values (<span class='number'>81%</span>) of '<code class='code visible-change'>Sepal.Width</code>' (previously <span class='number'>0</span> <span class='number'>NA</span>s, now <span class='number'>0</span> new <span class='number'>NA</span>s)"
+      )
+    )
+  )
+
+  # two across but one is not rly modifying (`hp`)
+  two_across_expr <- quote(
+    mtcars %>%
+      mutate(across(mpg, ~ round(.x)), across(hp, ~ round(.x)))
+  )
+  expected_outputs <- list(
+    mtcars,
+    mtcars %>%
+      mutate(across(mpg, ~ round(.x)), across(hp, ~ round(.x)))
+  )
+
+  outputs <- get_output_intermediates(two_across_expr)
+  expect_equal(
+    outputs,
+    list(
+      list(
+        line = 1,
+        code = "mtcars %>%",
+        change = "none",
+        output = expected_outputs[[1]],
+        row = 32,
+        col = 11,
+        callouts = NULL,
+        summary = "<strong>Summary:</strong> A data.frame with <span class='number'>32</span> rows and <span class='number'>11</span> columns."
+      ),
+      list(
+        line = 2,
+        code = "\tmutate(across(mpg, ~round(.x)), across(hp, ~round(.x)))",
+        change = "visible",
+        output = expected_outputs[[2]],
+        row = 32,
+        col = 11,
+        callouts = list(list(word = "mpg", change = "visible-change")),
+        summary = "<strong>Summary:</strong> <code class='code'>mutate</code> changed <span class='number'>28</span> values (<span class='number'>88%</span>) of '<code class='code visible-change'>mpg</code>' (previously <span class='number'>0</span> <span class='number'>NA</span>s, now <span class='number'>0</span> new <span class='number'>NA</span>s)"
+      )
+    )
+  )
+
+  # two across that modifies selected columns
+  two_across_mod_expr <- quote(
+    mtcars %>%
+      mutate(across(mpg, ~ round(.x)), across(disp, ~ round(.x)))
+  )
+  expected_outputs <- list(
+    mtcars,
+    mtcars %>%
+      mutate(across(mpg, ~ round(.x)), across(disp, ~ round(.x)))
+  )
+
+  outputs <- get_output_intermediates(two_across_mod_expr)
+  expect_equal(
+    outputs,
+    list(
+      list(
+        line = 1,
+        code = "mtcars %>%",
+        change = "none",
+        output = expected_outputs[[1]],
+        row = 32,
+        col = 11,
+        callouts = NULL,
+        summary = "<strong>Summary:</strong> A data.frame with <span class='number'>32</span> rows and <span class='number'>11</span> columns."
+      ),
+      list(
+        line = 2,
+        code = "\tmutate(across(mpg, ~round(.x)), across(disp, ~round(.x)))",
+        change = "visible",
+        output = expected_outputs[[2]],
+        row = 32,
+        col = 11,
+        callouts = list(
+          list(word = "mpg", change = "visible-change"),
+          list(word = "disp", change = "visible-change")
+        ),
+        summary = "<strong>Summary:</strong> <code class='code'>mutate</code> changed <span class='number'>28</span> values (<span class='number'>88%</span>) of '<code class='code visible-change'>mpg</code>' (previously <span class='number'>0</span> <span class='number'>NA</span>s, now <span class='number'>0</span> new <span class='number'>NA</span>s); changed <span class='number'>13</span> values (<span class='number'>41%</span>) of '<code class='code visible-change'>disp</code>' (previously <span class='number'>0</span> <span class='number'>NA</span>s, now <span class='number'>0</span> new <span class='number'>NA</span>s)"
+      )
+    )
+  )
+
+  # mixing creation via across and modification with key value args
+  across_new_expr <- quote(
+    mtcars %>%
+      mutate(across(mpg, ~ round(.x)), mpg_round = round(mpg))
+  )
+  expected_outputs <- list(
+    mtcars,
+    mtcars %>%
+      mutate(across(mpg, ~ round(.x)), mpg_round = round(mpg))
+  )
+  outputs <- get_output_intermediates(across_new_expr)
+  expect_equal(
+    outputs,
+    list(
+      list(
+        line = 1,
+        code = "mtcars %>%",
+        change = "none",
+        output = expected_outputs[[1]],
+        row = 32,
+        col = 11,
+        callouts = NULL,
+        summary = "<strong>Summary:</strong> A data.frame with <span class='number'>32</span> rows and <span class='number'>11</span> columns."
+      ),
+      list(
+        line = 2,
+        code = "\tmutate(across(mpg, ~round(.x)), mpg_round = round(mpg))",
+        change = "visible",
+        output = expected_outputs[[2]],
+        row = 32,
+        col = 12,
+        callouts = list(
+          list(word = "mpg", change = "visible-change"),
+          list(word = "mpg_round", change = "visible-change")
+        ),
+        summary = "<strong>Summary:</strong> <code class='code'>mutate</code> changed the dataframe shape from <span class = 'number'>[32 x 11]</span> to <span class = 'visible-change number'>[32 x 12]</span>. <code class='code'>mutate</code> changed <span class='number'>28</span> values (<span class='number'>88%</span>) of '<code class='code visible-change'>mpg</code>' (previously <span class='number'>0</span> <span class='number'>NA</span>s, now <span class='number'>0</span> new <span class='number'>NA</span>s); added new variable <code class='code visible-change'>mpg_round</code> (double) with <span class='number'>18</span> unique values and <span class='number'>0%</span> <span class='number'>NA</span>s"
       )
     )
   )
