@@ -27,6 +27,7 @@ NULL
 #' @param value the starting \code{integer} value for the button (0 by default)
 #'
 #' @return \code{shiny::tags$button}
+#' @noRd
 summary_button <- function(ns_id, inputId, lineid, change_type, square_css = "square", value = 0) {
   ns <- shiny::NS(ns_id)
   tags$button(id = ns(inputId),
@@ -217,7 +218,7 @@ unravelUI <- function(id) {
 #' \dontrun{
 #' unravelServer("unravel", "mtcars %>% select(cyl)")
 #' }
-#' @export
+#' @noRd
 unravelServer <- function(id, user_code = NULL) {
   # load and attach packages
   shiny::addResourcePath('www', system.file('www', package = 'Unravel'))
