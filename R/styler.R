@@ -1,0 +1,71 @@
+
+# style all the lines of dplyr style code
+style_dplyr_code <- function(quoted) {
+  # extract parts of the chain
+  chains <- recurse_dplyr(quoted)
+  # only extract the lines after the dataframe line
+  op_chains <- lapply(
+    chains[2:length(chains)],
+    function(x) x[[3]]
+  )
+  # collect and format all lines
+  final_code_text <- vapply(
+    op_chains,
+    function(expr) style_long_line(expr),
+    character(1)
+  )
+  # combine the dataframe line with the other lines with pipes/newlines
+  paste0(c(chains[[1]], final_code_text), collapse=" %>%\n")
+}
+
+# style a long line such that arguments get placed in their own newlines
+# if they cross a certain character length threshold (default of 50 chars)
+# return the formmated string
+style_long_line <- function(expr, char_threshold = 50) {
+  # determine if the whole line char length exceeds threshold
+  exceeds_t <- stringr::str_count(rlang::expr_deparse(expr)) > char_threshold
+  # if it exceeds length, proceed to style
+  if (exceeds_t) {
+    # extract function name and the arguments
+    func_name <- expr[[1]]
+    select_args <- rlang::call_args(expr)
+    # prep parts of the final string
+    top_level <-
+    arg_line <- ""
+
+    char_count <- 0
+    # maintains the total vector of args to be placed on their own lines
+    args_list <- c()
+    # the current vector of args that hits threshold
+    arg_line <- c()
+    for (i in seq_len(length(select_args))) {
+      arg <- rlang::expr_deparse(select_args[[i]])
+      char_count <- char_count + stringr::str_count(arg)
+      # if threshold has been reached
+      # reset the char count and
+      arg_line <- paste0(c(arg_line, arg), collapse = ", ")
+      if (char_count >= char_threshold) {
+        char_count <- 0
+        args_list <- indent_line(args_list, arg_line)
+        arg_line <- c()
+      } else if (i == length(select_args)) {
+        # if we've run out of args then go ahead and create the last line
+        args_list <- indent_line(args_list, arg_line)
+      }
+    }
+    return(
+      paste0(
+        c(paste0("\t", func_name, "("), args_list, "\t)"),
+        collapse ="\n"
+      )
+    )
+  }
+  return(paste0("\t", rlang::expr_deparse(expr)))
+}
+
+# helper function to indent a line with args
+indent_line <- function(args_list, line) {
+  indented <- paste0("\t\t", line)
+  paste0(c(args_list, indented), collapse = ",\n")
+}
+
