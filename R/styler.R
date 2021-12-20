@@ -1,6 +1,6 @@
 
 # style all the lines of dplyr style code
-style_dplyr_code <- function(quoted) {
+style_dplyr_code <- function(quoted, char_threshold = 50) {
   # extract parts of the chain
   chains <- recurse_dplyr(quoted)
   # only extract the lines after the dataframe line
@@ -11,7 +11,7 @@ style_dplyr_code <- function(quoted) {
   # collect and format all lines
   final_code_text <- vapply(
     op_chains,
-    function(expr) style_long_line(expr),
+    function(expr) style_long_line(expr, char_threshold),
     character(1)
   )
   # combine the dataframe line with the other lines with pipes/newlines
@@ -21,11 +21,11 @@ style_dplyr_code <- function(quoted) {
 # style a long line such that arguments get placed in their own newlines
 # if they cross a certain character length threshold (default of 50 chars)
 # return the formmated string
-style_long_line <- function(expr, char_threshold = 50) {
+style_long_line <- function(expr, char_threshold) {
   # determine if the whole line char length exceeds threshold
   exceeds_t <- stringr::str_count(rlang::expr_deparse(expr)) > char_threshold
   # if it exceeds length, proceed to style
-  if (exceeds_t) {
+  if (any(exceeds_t)) {
     # extract function name and the arguments
     func_name <- expr[[1]]
     select_args <- rlang::call_args(expr)
@@ -40,6 +40,12 @@ style_long_line <- function(expr, char_threshold = 50) {
     arg_line <- c()
     for (i in seq_len(length(select_args))) {
       arg <- rlang::expr_deparse(select_args[[i]])
+      # NOTE: since we could have named args we need to
+      # make sure we include the argument name
+      names <- names(select_args[i])
+      if (nchar(names) > 0) {
+        arg <- paste0(c(names, select_args[i]), collapse = " = ")
+      }
       char_count <- char_count + stringr::str_count(arg)
       # if threshold has been reached
       # reset the char count and
