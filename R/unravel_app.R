@@ -69,8 +69,8 @@ group_item_div <- function(line, ns_id) {
   square_css <- ifelse(nzchar(col), "square", "rect")
   core_divs <- list(
     # row div
-    shiny::div(class = "justify-content-center align-self-baseline",
-        shiny::div(class = "d-flex justify-content-center align-self-center",
+    shiny::div(class = "justify-content-center align-self-center",
+        shiny::div(class = "d-flex justify-content-center align-self-baseline",
             shiny::div(class = "row", style = "font-size:0.8em;",
                 shiny::HTML("&nbsp;")
             )
@@ -83,7 +83,7 @@ group_item_div <- function(line, ns_id) {
         )
     ),
     # column div + square div
-    shiny::div(class = "justify-content-center align-self-baseline",
+    shiny::div(class = "justify-content-center align-self-center",
         shiny::div(class = glue::glue("{id}-summary-box-col d-flex justify-content-center align-self-center"),
             shiny::div(class = glue::glue("{id}-col-content row"), style = "font-size:0.8em;",
                 # update element
@@ -248,8 +248,9 @@ unravelServer <- function(id, user_code = NULL) {
           tryCatch({
             # it could be possible that we receive multiple expressions
             # in this case, we only take the first one for now
-            quoted <- rlang::parse_exprs(input$code_ready)
-            outputs <- get_output_intermediates(quoted[[1]])
+            message(input$code_ready)
+            quoted <- rlang::parse_expr(input$code_ready)
+            outputs <- get_output_intermediates(quoted)
             # set reactive values
             rv$code_info <- lapply(outputs, function(x) {
               list(

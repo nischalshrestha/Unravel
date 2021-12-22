@@ -9,7 +9,7 @@ Authors@R:
            email = "nsrocker92@gmail.com")
 Description: 
     Unravel is an R package and Addin designed to help data scientists understand and explore tidyverse R code 
-    which makes use of the fluent interface (function composition). Unravel is designed to run inside 
+    which makes use of the fluent interface to compose functions using pipes. Unravel is designed to run inside 
     RStudio as a Shiny app accessed through Addins or programmatically.
 License: MIT + file LICENSE
 Encoding: UTF-8

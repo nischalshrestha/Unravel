@@ -223,11 +223,8 @@ h2 {
 .list-group-item {
   width: 100%;
   height: auto;
-  /*border: 1px solid #eee;*/
-  padding: 0px;
-  margin: 0px;
+  padding: 0.25em;
   display: flex;
-  /* align-items: center; */
 }
 
 .list-group-item:hover {

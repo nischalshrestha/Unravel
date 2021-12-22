@@ -28,10 +28,10 @@ generate_code_info_outputs <- function(order, rv) {
     classes <- new_code_info[[i]]$class
     code <- new_code_info[[i]]$code
     classes <- new_code_info[[i]]$class
-    # split the string then only keep the strings besides the last one (%>% or +)
-    split_code <- unlist(strsplit(code, " "))
-    trim <- ifelse(length(split_code) > 1, 1, 0)
-    new_code_info[[i]]$code <- paste0(split_code[1:length(split_code) - trim], collapse=" ")
+    # replace any %>% and + at the end of the line
+    code <- gsub("%>%\\s*$", "", code)
+    code <- gsub("\\+\\s*$", "", code)
+    new_code_info[[i]]$code <- code
     new_code_info[[i]]
   })
   # then, apply it on every line except the last

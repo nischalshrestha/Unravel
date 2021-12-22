@@ -224,7 +224,7 @@ get_output_intermediates <- function(pipeline) {
     # we collapse it before further processing to avoid extra \t
     deparsed <- paste0(rlang::expr_deparse(verb), collapse = "")
     # append a \t and a pipe character %>% or ggplot + unless it's the last line
-    deparsed <- ifelse(i != 1, paste0("\t", deparsed), deparsed)
+    deparsed <- ifelse(i != 1, style_long_line(verb), deparsed)
     # setup the intermediate list with initial information
     intermediate <- list(line = i, code = deparsed, change = get_change_type(verb_name))
     err <- NULL
