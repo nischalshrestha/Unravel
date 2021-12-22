@@ -21,18 +21,18 @@ style_dplyr_code <- function(quoted, char_threshold = 50) {
 # style a long line such that arguments get placed in their own newlines
 # if they cross a certain character length threshold (default of 50 chars)
 # return the formmated string
-style_long_line <- function(expr, char_threshold) {
-  # determine if the whole line char length exceeds threshold
-  exceeds_t <- stringr::str_count(rlang::expr_deparse(expr)) > char_threshold
+style_long_line <- function(expr, char_threshold = 50) {
+  # determine if the whole line char length exceeds threshold (including the function part e.g. "mutate")
+  exceeds_t <- stringr::str_count(rlang::expr_deparse(expr)) > (char_threshold + 10)
   # if it exceeds length, proceed to style
   if (any(exceeds_t)) {
     # extract function name and the arguments
     func_name <- expr[[1]]
     select_args <- rlang::call_args(expr)
     # prep parts of the final string
-    top_level <-
     arg_line <- ""
-
+    # keep track of the previous arg expr char count
+    prev_count <- 0
     char_count <- 0
     # maintains the total vector of args to be placed on their own lines
     args_list <- c()
@@ -46,11 +46,12 @@ style_long_line <- function(expr, char_threshold) {
       if (nchar(names) > 0) {
         arg <- paste0(c(names, select_args[i]), collapse = " = ")
       }
-      char_count <- char_count + stringr::str_count(arg)
-      # if threshold has been reached
-      # reset the char count and
+      arg_char_count <- stringr::str_count(arg)
+      char_count <- char_count + arg_char_count
+      # if threshold has been reached either based on total char count
+      # or on char count with the previous arg count, reset
       arg_line <- paste0(c(arg_line, arg), collapse = ", ")
-      if (char_count >= char_threshold) {
+      if (char_count >= char_threshold || (char_count + prev_count) >= char_threshold) {
         char_count <- 0
         args_list <- indent_line(args_list, arg_line)
         arg_line <- c()
@@ -58,6 +59,7 @@ style_long_line <- function(expr, char_threshold) {
         # if we've run out of args then go ahead and create the last line
         args_list <- indent_line(args_list, arg_line)
       }
+      prev_count <- arg_char_count
     }
     return(
       paste0(

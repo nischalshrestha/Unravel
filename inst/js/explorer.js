@@ -34,9 +34,9 @@ function setup_editors() {
         readOnly: 'nocursor',
         styleActiveLine: false,
         lineNumbers: false,
-        firstLineNumber: 1
+        firstLineNumber: 1,
+        viewportMargin: Infinity
       });
-      line_editor.setSize(null, 50);
       let line_class = '.' + ID;
       let line_id = index + 1;
       let line_glyph = $(line_class + '-glyph')[0];
