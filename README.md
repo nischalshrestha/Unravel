@@ -11,6 +11,7 @@ Unravel is an R package / Addin designed to help data scientists understand and 
 **NOTE:** The package is early on in its lifecycle and is still undergoing development. But, you can install it with:
 
 ```r
+# install.packages('devtools')
 devtools::install_github('nischalshrestha/Unravel')
 ```
 
