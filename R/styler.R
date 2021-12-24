@@ -1,4 +1,10 @@
 
+# helper function to indent a line with args
+indent_line <- function(args_list, line) {
+  indented <- paste0("\t\t", line)
+  paste0(c(args_list, indented), collapse = ",\n")
+}
+
 # style all the lines of dplyr style code
 style_dplyr_code <- function(quoted, char_threshold = 50) {
   # extract parts of the chain
@@ -23,7 +29,7 @@ style_dplyr_code <- function(quoted, char_threshold = 50) {
 # return the formmated string
 style_long_line <- function(expr, char_threshold = 50) {
   # determine if the whole line char length exceeds threshold (including the function part e.g. "mutate")
-  exceeds_t <- stringr::str_count(rlang::expr_deparse(expr)) > (char_threshold + 10)
+  exceeds_t <- nchar(paste0(rlang::expr_deparse(expr))) > (char_threshold + 10)
   # if it exceeds length, proceed to style
   if (any(exceeds_t)) {
     # extract function name and the arguments
@@ -46,7 +52,7 @@ style_long_line <- function(expr, char_threshold = 50) {
       if (nchar(names) > 0) {
         arg <- paste0(c(names, select_args[i]), collapse = " = ")
       }
-      arg_char_count <- stringr::str_count(arg)
+      arg_char_count <- nchar(arg)
       char_count <- char_count + arg_char_count
       # if threshold has been reached either based on total char count
       # or on char count with the previous arg count, reset
@@ -69,11 +75,5 @@ style_long_line <- function(expr, char_threshold = 50) {
     )
   }
   return(paste0("\t", rlang::expr_deparse(expr)))
-}
-
-# helper function to indent a line with args
-indent_line <- function(args_list, line) {
-  indented <- paste0("\t\t", line)
-  paste0(c(args_list, indented), collapse = ",\n")
 }
 

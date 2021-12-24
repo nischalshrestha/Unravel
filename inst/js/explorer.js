@@ -95,7 +95,7 @@ function setup_sortable() {
         reArrange = sortable.toArray(),
         oldSort = sortable.toArray();
     // if we are trying to reorder anything on the first line, undo the reorder
-    if (newId == 0) {
+    if (newId === 0) {
       if (oldId < newId) {
           for (var i = oldId; i < newId; i++)
               reArrange[i+1] = oldSort[i];
@@ -305,26 +305,31 @@ function callout_code_text(callout, verb_doc) {
   let lineNumber = 0;
   // regex the boundary word
   const re = new RegExp("(\\b" + snippet + "\\b)", 'g');
-  const matches = verb_doc.getValue().matchAll(re);
-  // for now, going to assume variable is mentioned once in a verb line
-  let m = matches.next();
-  // construct an html span element
-  let callout_html_node = document.createElement("span");
-  callout_html_node.innerHTML = snippet;
-  callout_html_node.id = callout.change;
-  // if we did have a match, mark the text
-  if (m.value !== undefined && m.value !== null) {
-    let charNumber = m.value.index;
-    verb_doc.markText(
-      {line: lineNumber, ch: charNumber},
-      {line: lineNumber, ch: charNumber + snippet.length},
-      {replacedWith: callout_html_node}
-    )
-  } else {
-    // otherwise, set id to "" so that we don't call out any code text
-    callout_html_node.id = "";
+  // for multi-lines, we need to split them into individual lines
+  // so that we can get the line number in addition to the match
+  let cur_lines = verb_doc.getValue().split("\n")
+  let callout_html_nodes = [];
+  for (const [index, line] of cur_lines.entries()) {
+    const matches = line.matchAll(re);
+    for (const m of matches) {
+      let callout_html_node = document.createElement("span");
+      callout_html_node.innerHTML = snippet;
+      callout_html_node.id = callout.change;
+    	if (m !== undefined) {
+        let charNumber = m.index;
+        verb_doc.markText(
+          {line: index, ch: charNumber},
+          {line: index, ch: charNumber + snippet.length},
+          {replacedWith: callout_html_node}
+        )
+      } else {
+        // otherwise, set id to "" so that we don't call out any code text
+        callout_html_node.id = "";
+      }
+      callout_html_nodes.push(callout_html_node);
+    }
   }
-  return callout_html_node;
+  return callout_html_nodes;
 }
 
 /*
@@ -342,6 +347,7 @@ function setup_callouts(callouts) {
     let line_callout_nodes = [];
     if (line_callouts != null) {
       line_callout_nodes = line_callouts.map(callout => callout_code_text(callout, line_doc));
+      line_callout_nodes = line_callout_nodes.flat();
     }
     line.callout_nodes = line_callout_nodes;
   })

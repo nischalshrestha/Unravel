@@ -264,7 +264,7 @@ unravelServer <- function(id, user_code = NULL) {
             {
               # it could be possible that we receive multiple expressions
               # in this case, we only take the first one for now
-              message(input$code_ready)
+              # message(input$code_ready)
               quoted <- rlang::parse_expr(input$code_ready)
               outputs <- get_output_intermediates(quoted)
               # set reactive values
