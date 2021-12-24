@@ -30,11 +30,13 @@ NULL
 #' @noRd
 summary_button <- function(ns_id, inputId, lineid, change_type, square_css = "square", value = 0) {
   ns <- shiny::NS(ns_id)
-  tags$button(id = ns(inputId),
-              `lineid` = lineid,
-              class = glue::glue("d-flex {change_type}-{square_css} noSelect justify-content-center"),
-              style = "color:transparent; cursor:pointer;",
-              type = "button", as.character(value))
+  tags$button(
+    id = ns(inputId),
+    `lineid` = lineid,
+    class = glue::glue("d-flex {change_type}-{square_css} noSelect justify-content-center"),
+    style = "color:transparent; cursor:pointer;",
+    type = "button", as.character(value)
+  )
 }
 
 #' A helper function that creates a div for a group item for SortableJS
@@ -67,31 +69,39 @@ group_item_div <- function(line, ns_id) {
   is_verb_line <- line_id != 1L
   # if the col is empty it means we have a list/vector so let's prep css class name for that
   square_css <- ifelse(nzchar(col), "square", "rect")
+  # construct the html for the row/col and summary box
   core_divs <- list(
     # row div
-    shiny::div(class = "justify-content-center align-self-center",
-        shiny::div(class = "d-flex justify-content-center align-self-baseline",
-            shiny::div(class = "row", style = "font-size:0.8em;",
-                shiny::HTML("&nbsp;")
-            )
-        ),
-        shiny::div(class = glue::glue("{id}-summary-box-row d-flex empty-{square_css} justify-content-center"),
-            shiny::div(class=glue::glue("{id}-row-content align-self-center"), style="font-size: 0.8em;",
-                # update element
-                shiny::HTML(row)
-            )
+    shiny::div(
+      class = "justify-content-center align-self-center",
+      shiny::div(
+        class = "row",
+        style = glue::glue("font-size:{ifelse(identical(square_css, 'square'), '0.8em;', '0em;')}"),
+        shiny::HTML("&nbsp;")
+      ),
+      shiny::div(
+        class = glue::glue("{id}-summary-box-row d-flex empty-{square_css} justify-content-center"),
+        shiny::div(
+          class = glue::glue("{id}-row-content align-self-center"), style = "font-size: 0.8em;",
+          # update element
+          shiny::HTML(row)
         )
+      )
     ),
     # column div + square div
-    shiny::div(class = "justify-content-center align-self-center",
-        shiny::div(class = glue::glue("{id}-summary-box-col d-flex justify-content-center align-self-center"),
-            shiny::div(class = glue::glue("{id}-col-content row"), style = "font-size:0.8em;",
-                # update element
-                shiny::HTML(col)
-            )
-        ),
-        # update element (class of square)
-        summary_button(ns_id, id, line_id, change_type, square_css)
+    shiny::div(
+      class = "justify-content-center align-self-center",
+      shiny::div(
+        class = glue::glue("{id}-summary-box-col d-flex justify-content-center align-self-center"),
+        shiny::div(
+          class = glue::glue("{id}-col-content row"),
+          style = glue::glue("font-size:{ifelse(identical(square_css, 'square'), '0.8em;', '0em;')}"),
+          # update element
+          shiny::HTML(col)
+        )
+      ),
+      # update element (class of square)
+      summary_button(ns_id, id, line_id, change_type, square_css)
     )
   )
   disabled <- ifelse(is_verb_line, "", "static")
@@ -100,12 +110,14 @@ group_item_div <- function(line, ns_id) {
     list(
       # glyphicon
       # add the move icon if it's not the first line, else make it transparent
-      shiny::div(class=glue::glue("{id}-glyph d-flex justify-content-center align-self-center"),
-          shiny::span(class=glue::glue("glyphicon glyphicon-move {disabled}"), style=glue::glue("opacity:{as.integer(is_verb_line)};"))
+      shiny::div(
+        class = glue::glue("{id}-glyph d-flex justify-content-center align-self-center"),
+        shiny::span(class = glue::glue("glyphicon glyphicon-move {disabled}"), style = glue::glue("opacity:{as.integer(is_verb_line)};"))
       ),
       # codemirror empty div above
-      shiny::div(class="d-flex justify-content-center align-self-center", style="padding:0.5em;",
-          div(class="row", style="font-size: 1em;", shiny::HTML("&nbsp;"))
+      shiny::div(
+        class = "d-flex justify-content-center align-self-center", style = "padding:0.5em;",
+        div(class = "row", style = "font-size: 1em;", shiny::HTML("&nbsp;"))
       ),
       # codemirror div (gets dynamically created); fixedPage keeps the width=100%
       shiny::tags$textarea(
@@ -122,28 +134,31 @@ group_item_div <- function(line, ns_id) {
       core_divs,
       list(
         # toggle checkbox
-        shiny::div(style="opacity:1; padding-right:0.25em;",
-            shiny::div(class="d-flex justify-content-center align-self-center",
-                shiny::div(style="font-size: 0.8em;", shiny::HTML("&nbsp;"))
+        shiny::div(
+          style = "opacity:1; padding-right:0.25em;",
+          shiny::div(
+            class = "d-flex justify-content-center align-self-center",
+            shiny::div(style = "font-size: 0.8em;", shiny::HTML("&nbsp;"))
+          ),
+          # the value of `checked` is not meaningful, the existence of attribute turns on toggle by default
+          shiny::tags$label(
+            class = "switch",
+            shiny::tags$input(
+              type = "checkbox",
+              class = "slider",
+              `toggle-id` = id,
+              `line-id` = line_id,
+              `checked` = TRUE
             ),
-            # the value of `checked` is not meaningful, the existence of attribute turns on toggle by default
-            shiny::tags$label(
-              class = "switch",
-              shiny::tags$input(
-                type = "checkbox",
-                class = "slider",
-                `toggle-id` = id,
-                `line-id` = line_id,
-                `checked` = TRUE
-              ),
-              span(class="slider round")
-            )
+            span(class = "slider round")
+          )
         )
       )
     )
   }
   # if it's the data line (first line), disable it for SortableJS so we can't move it
-  shiny::div(class = glue::glue("d-flex list-group-item {disabled}"), id=id, `data-id` = line_id,
+  shiny::div(
+    class = glue::glue("d-flex list-group-item {disabled}"), id = id, `data-id` = line_id,
     core_divs
   )
 }
@@ -177,7 +192,7 @@ unravelUI <- function(id) {
     # fontawesome (for glyphicon for move)
     shiny::tags$style("@import url(https://use.fontawesome.com/releases/v5.7.2/css/all.css);"),
     # Sortable.js
-    tags$head(tags$script(src="https://raw.githack.com/SortableJS/Sortable/master/Sortable.js")),
+    tags$head(tags$script(src = "https://raw.githack.com/SortableJS/Sortable/master/Sortable.js")),
     shiny::tags$body(
       # bootstrap stuff
       shiny::includeCSS(file.path(package_css, "bootstrap.min.css")),
@@ -221,14 +236,14 @@ unravelUI <- function(id) {
 #' @noRd
 unravelServer <- function(id, user_code = NULL) {
   # load and attach packages
-  shiny::addResourcePath('www', system.file('www', package = 'Unravel'))
+  shiny::addResourcePath("www", system.file("www", package = "Unravel"))
   moduleServer(
     id,
     function(input, output, session) {
       # these are reactive values related to current line, code info of all lines, summary prompts, and df outputs
       rv <- reactiveValues()
       rv$current <- 0
-      rv$code_info <-  NULL
+      rv$code_info <- NULL
       rv$summaries <- list()
       rv$outputs <- NULL
       rv$generic_output <- NULL
@@ -245,64 +260,66 @@ unravelServer <- function(id, user_code = NULL) {
         # process lines
         if (!is.null(input$code_ready) && nzchar(input$code_ready)) {
           err <- NULL
-          tryCatch({
-            # it could be possible that we receive multiple expressions
-            # in this case, we only take the first one for now
-            message(input$code_ready)
-            quoted <- rlang::parse_expr(input$code_ready)
-            outputs <- get_output_intermediates(quoted)
-            # set reactive values
-            rv$code_info <- lapply(outputs, function(x) {
-              list(
-                lineid = x$line,
-                code = x$code,
-                change = x$change,
-                row = abbrev_num(x$row),
-                col = abbrev_num(x$col),
-                err = x$err,
-                class = class(x$output)
-              )
-            })
-            # TODO-enhance: reset current_code_info via a Reset button
-            # store the current code metadata for the UI/logic
-            rv$current_code_info <- lapply(outputs, function(x) {
-              list(
-                lineid = x$line,
-                code = x$code,
-                change = x$change,
-                row = abbrev_num(x$row),
-                col = abbrev_num(x$col),
-                err = x$err,
-                checked = TRUE,
-                class = class(x$output)
-              )
-            })
-            attr(rv$current_code_info, "order") <- seq_len(length(outputs))
-            rv$callouts <- lapply(outputs, function(x) list(lineid = paste0("line", x$line), callouts = x$callouts))
-            rv$cur_callouts <- lapply(outputs, function(x) x$callouts)
-            rv$summaries <- lapply(outputs, function(x) {
-              if (!is.null(x$err)) {
-                x$summary <- x$err
-              }
-              list(lineid = paste0("line", x$line), summary = x$summary)
-            })
-            rv$outputs <- lapply(outputs, function(x) list(lineid = paste0("line", x$line), output = x$output))
-            # trigger data frame output of the very last line
-            rv$current <- length(rv$outputs)
+          tryCatch(
+            {
+              # it could be possible that we receive multiple expressions
+              # in this case, we only take the first one for now
+              message(input$code_ready)
+              quoted <- rlang::parse_expr(input$code_ready)
+              outputs <- get_output_intermediates(quoted)
+              # set reactive values
+              rv$code_info <- lapply(outputs, function(x) {
+                list(
+                  lineid = x$line,
+                  code = x$code,
+                  change = x$change,
+                  row = abbrev_num(x$row),
+                  col = abbrev_num(x$col),
+                  err = x$err,
+                  class = class(x$output)
+                )
+              })
+              # TODO-enhance: reset current_code_info via a Reset button
+              # store the current code metadata for the UI/logic
+              rv$current_code_info <- lapply(outputs, function(x) {
+                list(
+                  lineid = x$line,
+                  code = x$code,
+                  change = x$change,
+                  row = abbrev_num(x$row),
+                  col = abbrev_num(x$col),
+                  err = x$err,
+                  checked = TRUE,
+                  class = class(x$output)
+                )
+              })
+              attr(rv$current_code_info, "order") <- seq_len(length(outputs))
+              rv$callouts <- lapply(outputs, function(x) list(lineid = paste0("line", x$line), callouts = x$callouts))
+              rv$cur_callouts <- lapply(outputs, function(x) x$callouts)
+              rv$summaries <- lapply(outputs, function(x) {
+                if (!is.null(x$err)) {
+                  x$summary <- x$err
+                }
+                list(lineid = paste0("line", x$line), summary = x$summary)
+              })
+              rv$outputs <- lapply(outputs, function(x) list(lineid = paste0("line", x$line), output = x$output))
+              # trigger data frame output of the very last line
+              rv$current <- length(rv$outputs)
             },
             error = function(e) {
               err <<- e
             }
           )
         }
-      });
+      })
 
       # the observer for the code explorer which will get rendered once we have code information
       output$code_explorer <- renderUI({
         if (!is.null(rv$code_info)) {
           shiny::tagList(
             shiny::br(),
-            shiny::fixedPage(id = "simpleList", class="list-group",
+            shiny::fixedPage(
+              id = "simpleList", class = "list-group",
               create_group_item_tags(rv$code_info, id),
               shiny::tags$script("setup_editors();"),
               shiny::tags$script("setup_sortable();"),
@@ -312,24 +329,34 @@ unravelServer <- function(id, user_code = NULL) {
             ),
             shiny::br(),
             # TODO if we want we could also add prompts to the data change scheme color
-            shiny::div(class ="d-flex justify-content-center",
-              shiny::div(class = "d-flex align-self-center", style = "margin-left: 8em;",
-                         # no change
-                         div(class = glue::glue("d-flex none-square-key justify-content-center"), style = "cursor: default;"),
-                         div(class = glue::glue("d-flex empty-square justify-content-left align-self-center"),
-                             style = "padding-left: 1em; font-size: 0.8em; width: 80px;", "No change"),
-                         # internal
-                         div(class = glue::glue("d-flex internal-square-key justify-content-center"), style = "cursor: default;"),
-                         div(class = glue::glue("d-flex empty-square justify-content-left align-self-center"),
-                             style = "padding-left: 1em; font-size: 0.8em; width: 100px;", "Internal change"),
-                         # visible
-                         div(class = glue::glue("d-flex visible-square-key justify-content-center"), style = "cursor: default;"),
-                         div(class = glue::glue("d-flex empty-square justify-content-left align-self-center"),
-                             style = "padding-left: 1em; font-size: 0.8em; width: 100px;", "Visible change"),
-                         # error
-                         div(class = glue::glue("d-flex error-square-key justify-content-left"), style = "cursor: default;"),
-                         div(class = glue::glue("d-flex empty-square justify-content-left align-self-center"),
-                             style = "padding-left: 0.5em; font-size: 0.8em; width: 100px;", "Error"),
+            shiny::div(
+              class = "d-flex justify-content-center",
+              shiny::div(
+                class = "d-flex align-self-center", style = "margin-left: 8em;",
+                # no change
+                div(class = glue::glue("d-flex none-square-key justify-content-center"), style = "cursor: default;"),
+                div(
+                  class = glue::glue("d-flex empty-square justify-content-left align-self-center"),
+                  style = "padding-left: 1em; font-size: 0.8em; width: 80px;", "No change"
+                ),
+                # internal
+                div(class = glue::glue("d-flex internal-square-key justify-content-center"), style = "cursor: default;"),
+                div(
+                  class = glue::glue("d-flex empty-square justify-content-left align-self-center"),
+                  style = "padding-left: 1em; font-size: 0.8em; width: 100px;", "Internal change"
+                ),
+                # visible
+                div(class = glue::glue("d-flex visible-square-key justify-content-center"), style = "cursor: default;"),
+                div(
+                  class = glue::glue("d-flex empty-square justify-content-left align-self-center"),
+                  style = "padding-left: 1em; font-size: 0.8em; width: 100px;", "Visible change"
+                ),
+                # error
+                div(class = glue::glue("d-flex error-square-key justify-content-left"), style = "cursor: default;"),
+                div(
+                  class = glue::glue("d-flex empty-square justify-content-left align-self-center"),
+                  style = "padding-left: 0.5em; font-size: 0.8em; width: 100px;", "Error"
+                ),
               )
             ),
             shiny::br()
@@ -354,7 +381,7 @@ unravelServer <- function(id, user_code = NULL) {
         # message("clicked on a square: ", input$square)
         # make sure to only change current if the current code info has the line marked as enabled
         if (!is.null(input$square)) {
-          rv$current <- input$square;
+          rv$current <- input$square
           session$sendCustomMessage("square", input$square)
         }
       })
@@ -363,7 +390,7 @@ unravelServer <- function(id, user_code = NULL) {
         # message("clicked on a line: ", input$line)
         # make sure to only change current if the current code info has the line marked as enabled
         if (!is.null(input$line)) {
-          rv$current <- input$line;
+          rv$current <- input$line
           session$sendCustomMessage("line", input$line)
         }
       })
@@ -412,11 +439,13 @@ unravelServer <- function(id, user_code = NULL) {
           # if we have a grouped dataframe, to facilitate understanding let's rearrange columns such that
           # the grouped variables appear to the very left
           common_args <-
-            list(compact = TRUE,
-                 highlight = TRUE,
-                 bordered = TRUE,
-                 rownames = TRUE,
-                 defaultPageSize = 5)
+            list(
+              compact = TRUE,
+              highlight = TRUE,
+              bordered = TRUE,
+              rownames = TRUE,
+              defaultPageSize = 5
+            )
           if (is_grouped_df(final_data)) {
             return(
               do.call(
@@ -428,15 +457,16 @@ unravelServer <- function(id, user_code = NULL) {
                     # we can do a custom thing for a particular column
                     columns = reappend(
                       list(.rownames = colDef(style = list(textAlign = "left"), maxWidth = 80)),
-                      get_column_css(final_data, rv$main_callout))
+                      get_column_css(final_data, rv$main_callout)
                     )
                   )
                 )
               )
+            )
           } else {
             rowname_background <- list()
             if (inherits(final_data, "rowwise_df")) {
-              rowname_background <- list(`background-color` = "lightblue");
+              rowname_background <- list(`background-color` = "lightblue")
             }
             return(
               do.call(
@@ -447,7 +477,8 @@ unravelServer <- function(id, user_code = NULL) {
                     data = final_data %>% as.data.frame(),
                     columns = reappend(
                       list(.rownames = colDef(style = append(list(textAlign = "left"), rowname_background), maxWidth = 80)),
-                      get_column_css(final_data, rv$main_callout))
+                      get_column_css(final_data, rv$main_callout)
+                    )
                   )
                 )
               )
@@ -514,8 +545,6 @@ unravelServer <- function(id, user_code = NULL) {
         # update line information for both R and JS
         update_lines(order, outputs, rv$code_info, new_code_info, rv, session)
       })
-
     }
-
   )
 }
