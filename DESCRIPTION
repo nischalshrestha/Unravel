@@ -6,7 +6,8 @@ Authors@R:
     person(given = "Nischal",
            family = "Shrestha",
            role = c("aut", "cre"),
-           email = "nsrocker92@gmail.com")
+           email = "nsrocker92@gmail.com",
+           comment = c(ORCID = "0000-0003-3321-1712"))
 Description: 
     Unravel is an R package and Addin designed to help data scientists understand and explore tidyverse R code 
     which makes use of the fluent interface to compose functions using pipes. Unravel is designed to run inside 
