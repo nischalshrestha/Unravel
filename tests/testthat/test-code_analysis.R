@@ -1,3 +1,8 @@
+library(dplyr)
+library(tidyr)
+library(purrr)
+library(ggplot2)
+library(tidylog)
 
 test_that("One liner functions", {
   # only dataframe
