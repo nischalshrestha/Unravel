@@ -15,21 +15,23 @@ Description:
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-Depends:
-    tidyverse,
+Imports:
+    tibble,
     dplyr,
+    tidyr,
+    purrr,
+    ggplot2,
     reactable,
     tidylog,
-    shiny
-Imports:
+    shiny,
     magrittr,
     here,
-    babynames,
-    gapminder,
     rstudioapi,
     rlang,
     glue,
-    crayon
+    crayon,
+    babynames,
+    gapminder
 Remotes:
     nischalshrestha/tidylog
 RoxygenNote: 7.1.1

@@ -115,3 +115,27 @@ reappend <- function(...) {
 match_gregexpr <- function(pattern, string, which_one = 1) {
   gregexpr(pattern, string)[[1]][[which_one]]
 }
+
+log_info <- function(event) {
+  log_unravel("INFO", event)
+}
+
+log_event <- function(event) {
+  log_unravel("EVENT", event)
+}
+
+log_unravel <- function(type, message) {
+  # if logging is enabled, log
+  if (getOption("unravel.logging")) {
+    # grab the dir and file name from options so it can be customized
+    dir_name <- getOption("unravel.logdir")
+    logfile_name <- getOption("unravel.logfile")
+    dir.create(dir_name, showWarnings = FALSE)
+    timestamp <- format(Sys.time())
+    cat(
+      paste0(c(type, timestamp, message), collapse = "|"), "\n",
+      file = file.path(dir_name, logfile_name), sep = "", append = TRUE
+    )
+  }
+  invisible()
+}

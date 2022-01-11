@@ -256,10 +256,12 @@ unravelServer <- function(id, user_code = NULL) {
       # listen for JS to tell us code is ready for us to be processed
       observeEvent(input$code_ready, {
         # message("Receiving code from JS: ", input$code_ready)
+
         # TODO-refactor: process lines function?
         # process lines
         if (!is.null(input$code_ready) && nzchar(input$code_ready)) {
           err <- NULL
+          log_info(paste0(c("unraveling code", input$code_ready), collapse = "|"))
           tryCatch(
             {
               # it could be possible that we receive multiple expressions
@@ -381,6 +383,7 @@ unravelServer <- function(id, user_code = NULL) {
         # message("clicked on a square: ", input$square)
         # make sure to only change current if the current code info has the line marked as enabled
         if (!is.null(input$square)) {
+          log_event(paste0("viewed summary for line ", input$square))
           rv$current <- input$square
           session$sendCustomMessage("square", input$square)
         }
@@ -390,6 +393,7 @@ unravelServer <- function(id, user_code = NULL) {
         # message("clicked on a line: ", input$line)
         # make sure to only change current if the current code info has the line marked as enabled
         if (!is.null(input$line)) {
+          log_event(paste0("clicked line ", input$line))
           rv$current <- input$line
           session$sendCustomMessage("line", input$line)
         }
@@ -493,8 +497,10 @@ unravelServer <- function(id, user_code = NULL) {
         # this lets us get the boolean value of the toggle from JS side!
         if (isTRUE(input$toggle$checked)) {
           session$sendCustomMessage("toggle", paste0("un-commenting line ", input$toggle$lineid))
+          log_event(paste0("toggled on line ", input$toggle$lineid))
         } else {
           session$sendCustomMessage("toggle", paste0("commenting line ", input$toggle$lineid))
+          log_event(paste0("toggled off line ", input$toggle$lineid))
         }
         line_id <- as.numeric(input$toggle$lineid)
         checked <- input$toggle$checked
@@ -528,6 +534,8 @@ unravelServer <- function(id, user_code = NULL) {
         # message("REORDER", input$reorder)
         # this lets us get the boolean value of the toggle from JS side!
         order <- as.numeric(input$reorder)
+
+        log_event(paste0("reordered lines to ", paste0(order, collapse=", ")))
 
         # set and get the new order from current code stat
         attr(rv$current_code_info, "order") <- order
