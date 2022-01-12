@@ -226,6 +226,7 @@ unravelUI <- function(id) {
 #' @param user_code the \code{character} code text
 #'
 #' @importFrom utils getParseData
+#' @import tidylog
 #'
 #' @return there are no values returned for this module server function
 #'
@@ -261,7 +262,7 @@ unravelServer <- function(id, user_code = NULL) {
         # process lines
         if (!is.null(input$code_ready) && nzchar(input$code_ready)) {
           err <- NULL
-          log_info(paste0(c("unraveling code", input$code_ready), collapse = "|"))
+          log_code(input$code_ready)
           tryCatch(
             {
               # it could be possible that we receive multiple expressions
@@ -459,7 +460,7 @@ unravelServer <- function(id, user_code = NULL) {
                   list(
                     data = dplyr::select(.data = final_data, group_vars(final_data), dplyr::everything()) %>% as.data.frame(),
                     # we can do a custom thing for a particular column
-                    columns = reappend(
+                    columns = append(
                       list(.rownames = colDef(style = list(textAlign = "left"), maxWidth = 80)),
                       get_column_css(final_data, rv$main_callout)
                     )
@@ -479,7 +480,7 @@ unravelServer <- function(id, user_code = NULL) {
                   common_args,
                   list(
                     data = final_data %>% as.data.frame(),
-                    columns = reappend(
+                    columns = append(
                       list(.rownames = colDef(style = append(list(textAlign = "left"), rowname_background), maxWidth = 80)),
                       get_column_css(final_data, rv$main_callout)
                     )

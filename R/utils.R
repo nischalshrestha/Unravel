@@ -89,53 +89,67 @@ abbrev_num <- function(x) {
   return(as.character(x))
 }
 
-#' Takes a number of lists and appends them into a single list.
-#' Instead of doing nested append calls, this will automate that
-#' by doing the series of append calls for you.
-#'
-#' @param ... a series of lists
-#'
-#' @return named list
-#'
-#' @examples
-#' reappend(list(a = 1), list(b = 2))
-#'
-#' @export
-reappend <- function(...) {
-  myList <- list()
-  items <- list(...)
-  range <- 1:length(items)
-  # # Now the new experiments
-  for (i in seq_along(range)) {
-    myList <- append(myList, items[[i]])
-  }
-  myList
-}
-
 match_gregexpr <- function(pattern, string, which_one = 1) {
   gregexpr(pattern, string)[[1]][[which_one]]
 }
 
-log_info <- function(event) {
-  log_unravel("INFO", event)
+log_info <- function(message, user = "unravel") {
+  log_unravel("INFO", message, user)
 }
 
-log_event <- function(event) {
-  log_unravel("EVENT", event)
+log_event <- function(message, user = "unravel") {
+  log_unravel("EVENT", message, user)
 }
 
-log_unravel <- function(type, message) {
+log_code <- function(code, user = "unravel") {
+  log_unravel("CODE", code, user)
+}
+
+log_unravel <- function(type, message, user, storage = "sqlite") {
   # if logging is enabled, log
   if (getOption("unravel.logging")) {
-    # grab the dir and file name from options so it can be customized
-    dir_name <- getOption("unravel.logdir")
-    logfile_name <- getOption("unravel.logfile")
-    dir.create(dir_name, showWarnings = FALSE)
     timestamp <- format(Sys.time())
-    cat(
-      paste0(c(type, timestamp, message), collapse = "|"), "\n",
-      file = file.path(dir_name, logfile_name), sep = "", append = TRUE
+    store_log(
+      list(
+        timestamp = timestamp,
+        user = user,
+        type = type,
+        message = message
+      ),
+      storage = storage
     )
   }
   invisible()
+}
+
+db_cols <- c("timestamp", "user", "type", "message")
+
+store_log <- function(..., storage = "sqlite") {
+  variables <- force(...)
+  if (length(variables) == 0) {
+    stop("Log contained no values!")
+  } else if (!identical(names(variables), db_cols)) {
+    stop("Columns do not line up. Please use these: ", db_cols)
+  }
+
+  # grab the dir and file name from options so it can be customized
+  dir_name <- getOption("unravel.logdir")
+  if (identical(storage, "file")) {
+    dir.create(dir_name, showWarnings = FALSE)
+    logfile_name <- getOption("unravel.logfile")
+    cat(
+      paste0(c(variables), collapse = "|"), "\n",
+      file = file.path(dir_name, logfile_name), sep = "", append = TRUE
+    )
+  } else if (identical(storage, "sqlite")) {
+    db_path <- file.path(dir_name, getOption("db.file"))
+    mydb <- RSQLite::dbConnect(RSQLite::SQLite(), db_path)
+    if (length(RSQLite::dbListTables(mydb)) == 0) {
+      RSQLite::dbWriteTable(mydb, "events", dplyr::as_data_frame(variables))
+    } else {
+      old <- RSQLite::dbReadTable(mydb, "events")
+      RSQLite::dbAppendTable(mydb, "events", tibble::as_tibble(variables))
+    }
+    RSQLite::dbDisconnect(mydb)
+  }
 }
