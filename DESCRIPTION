@@ -25,11 +25,12 @@ Imports:
     tidylog,
     shiny,
     magrittr,
-    here,
     rstudioapi,
     rlang,
+    here,
     glue,
     crayon,
+    RSQLite,
     babynames,
     gapminder
 Remotes:

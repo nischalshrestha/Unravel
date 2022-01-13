@@ -28,12 +28,12 @@ You can also **perform structural edits** to the code via toggles (comment/uncom
 The easiest way to use Unravel is to highlight the tidyverse code you want to unravel, then go to Addins -\> Unravel code.
 
 <p align="center">
-  <img src="man/figures/demo.gif" alt="Sublime's custom image"/>
+  <img src="man/figures/demo.gif" alt="Demo of Unravel showing a user highlighting code, clicking on Addins and selecting Unravel. The user then interacts with the app by clicking lines, toggling and reordering lines."/>
 </p>
 
-This will open up the app on the Viewer pane in RStudio by default. But, if you want to respect your currently chosen browser window, you can pass `viewer = FALSE`. 
+This will open up the app on the Viewer pane in RStudio by default. If you want to respect your currently chosen browser window, you can pass `viewer = FALSE` using the programmatic way shown below.
 
-This style of coding always involves starting with a source of data. So, the first expression or line is "locked" such that you can't enable/dsiable or reorder it and other operations can't be reordered before the first line (as shown at the end of the GIF above).
+This style of coding always involves starting with a source of data. So, the first expression or line is "locked" such that you can't enable/disable or reorder it and other operations can't be reordered before the first line (as shown at the end of the GIF above).
 
 You can also invoke it programmatically using the `unravel` function by wrapping or piping your code to the function:
 
