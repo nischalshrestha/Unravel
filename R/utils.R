@@ -101,6 +101,15 @@ log_event <- function(message, user = "unravel") {
   log_unravel("EVENT", message, user)
 }
 
+#' Log a code event
+#'
+#' A user either executed some code on the IDE or the Unravel app.
+#'
+#' @param code A code snippet that was executed
+#' @param user In which context the code was run in ('ide' or 'unravel')
+#'
+#' @return Nothing
+#' @export
 log_code <- function(code, user = "unravel") {
   log_unravel("CODE", code, user)
 }
@@ -122,9 +131,8 @@ log_unravel <- function(type, message, user, storage = "sqlite") {
   invisible()
 }
 
-db_cols <- c("timestamp", "user", "type", "message")
-
-store_log <- function(..., storage = "sqlite") {
+store_log <- function(..., storage = "sqlite",
+                      db_cols = c("timestamp", "user", "type", "message")) {
   variables <- force(...)
   if (length(variables) == 0) {
     stop("Log contained no values!")
@@ -145,7 +153,7 @@ store_log <- function(..., storage = "sqlite") {
     db_path <- file.path(dir_name, getOption("db.file"))
     mydb <- RSQLite::dbConnect(RSQLite::SQLite(), db_path)
     if (length(RSQLite::dbListTables(mydb)) == 0) {
-      RSQLite::dbWriteTable(mydb, "events", dplyr::as_data_frame(variables))
+      RSQLite::dbWriteTable(mydb, "events", tibble::as_tibble(variables))
     } else {
       old <- RSQLite::dbReadTable(mydb, "events")
       RSQLite::dbAppendTable(mydb, "events", tibble::as_tibble(variables))
