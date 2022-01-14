@@ -14,7 +14,33 @@ get_change_css <- function(change) {
   return("")
 }
 
-#' Helper function that reutnrs the column, css pairs for callout words given data
+#' Get the `reactable::colDef()` for adding column types for a data.frame/tibble
+#'
+#' @param data A `data.frame` / `tibble`
+#'
+#' @return A list of `reactable::colDef`
+#'
+#' @examples
+#' get_col_type_headers(mtcars)
+#' @noRd
+get_col_type_headers <- function(data) {
+  # column type JS
+  column_types <- lapply(data, function(x) {
+    glue::glue("
+      function(colInfo) {
+        return colInfo.column.name + '<div style=\"color: grey;\">&lt;{{vctrs::vec_ptype_abbr(x)}}&gt;</div>'
+      }
+    ", .open = "{{", .close = "}}")
+  })
+  lapply(column_types, function(x) {
+    colDef(
+      html = TRUE,
+      header = JS(x)
+    )
+  })
+}
+
+#' Helper function that returns the column, css pairs for callout words given data
 #'
 #' @param data data.frame or tibble
 #' @param callout_words A list of lists of callout word and change type
@@ -23,9 +49,9 @@ get_change_css <- function(change) {
 #' @return a list structure to supply for reactable(columns = ...)
 #'
 #' @examples
-#' get_column_css(mtcars %>% group_by(cyl), list(word = "cyl", change = "internal-change"))
+#' get_column_css(mtcars %>% group_by(cyl), list(list(word = "cyl", change = "internal-change")))
 #' @noRd
-get_column_css <- function(data, callout_words) {
+get_column_css <- function(data, callout_words = list()) {
   if (length(callout_words) < 1) {
     return(list())
   }
@@ -44,6 +70,8 @@ get_column_css <- function(data, callout_words) {
 
   last_pos <- NULL
   columns_css <- list()
+
+  # then, apply any callout css needed if there are callouts
   for (i in seq_len(length(callout_words))) {
     c <- callout_words[[i]]
     cur_column <- list()
@@ -65,6 +93,7 @@ get_column_css <- function(data, callout_words) {
       headerStyle = paste0(change_css, "border-top: 1px dashed black;", collapse = "\n"),
       style = change_css
     )
+
     columns_css <- append(columns_css, cur_column)
     # update last callout column's position
     last_pos <- c$pos

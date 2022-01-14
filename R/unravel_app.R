@@ -451,6 +451,9 @@ unravelServer <- function(id, user_code = NULL) {
               rownames = TRUE,
               defaultPageSize = 5
             )
+          # apply custom styling for column types and any callout columns
+          cols_with_types <- get_col_type_headers(final_data)
+          all_cols <- append(cols_with_types, get_column_css(final_data, rv$main_callout))
           if (is_grouped_df(final_data)) {
             return(
               do.call(
@@ -458,11 +461,11 @@ unravelServer <- function(id, user_code = NULL) {
                 append(
                   common_args,
                   list(
+                    # rearrange the data such that group variables are at the beginning
                     data = dplyr::select(.data = final_data, group_vars(final_data), dplyr::everything()) %>% as.data.frame(),
-                    # we can do a custom thing for a particular column
                     columns = append(
                       list(.rownames = colDef(style = list(textAlign = "left"), maxWidth = 80)),
-                      get_column_css(final_data, rv$main_callout)
+                      all_cols
                     )
                   )
                 )
@@ -482,7 +485,7 @@ unravelServer <- function(id, user_code = NULL) {
                     data = final_data %>% as.data.frame(),
                     columns = append(
                       list(.rownames = colDef(style = append(list(textAlign = "left"), rowname_background), maxWidth = 80)),
-                      get_column_css(final_data, rv$main_callout)
+                      all_cols
                     )
                   )
                 )
