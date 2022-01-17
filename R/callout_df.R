@@ -27,7 +27,6 @@ get_list_col_styling <- function(data) {
     defaultPageSize = 5
   )
   for (lc in list_cols) {
-    # print(lc)
     all_styles[lc] <- list(colDef(
         cell = function(value) {
           # tibble formatting e.g. <int>
@@ -89,7 +88,7 @@ get_list_col_styling <- function(data) {
 #'
 #' reactable(
 #'   as.data.frame(df_list),
-#'   columns = get_col_type_headers(df_list)
+#'   columns = get_common_styles(df_list)
 #' )
 #' @noRd
 get_common_styles <- function(data) {
@@ -120,17 +119,14 @@ get_common_styles <- function(data) {
 #' @param data data.frame or tibble
 #' @param callout_words A list of lists of callout word and change type
 #'   e.g., list(list(word = "carat", change = "internal-change"), list(word = "cut", change = "visible-change"))
+#' @param existing_styles a `reactable::colDef()`
 #'
 #' @return a list structure to supply for reactable(columns = ...)
 #'
 #' @examples
 #' get_column_css(mtcars %>% group_by(cyl), list(list(word = "cyl", change = "internal-change")))
 #' @noRd
-get_column_css <- function(data, callout_words = list()) {
-  if (length(callout_words) < 1) {
-    return(list())
-  }
-
+get_column_css <- function(data, callout_words = list(), existing_styles = list()) {
   columns <- names(data)
   column_positions <- seq_len(length(columns))
 
@@ -144,12 +140,10 @@ get_column_css <- function(data, callout_words = list()) {
   )
 
   last_pos <- NULL
-  columns_css <- list()
-
+  columns_css <- existing_styles
   # then, apply any callout css needed if there are callouts
   for (i in seq_len(length(callout_words))) {
     c <- callout_words[[i]]
-    cur_column <- list()
     border_left_css <- ""
     # know when to not have a left border if a column is right next to another
     if (isTRUE(c$pos - 1 != last_pos) || is.null(last_pos)) {
@@ -164,12 +158,14 @@ get_column_css <- function(data, callout_words = list()) {
         .sep = "\n"
       )
     # construct the column css info
-    cur_column[[c$word]] <- colDef(
-      headerStyle = paste0(change_css, "border-top: 1px dashed black;", collapse = "\n"),
-      style = change_css
+    columns_css[[c$word]] <-
+      modifyList(
+        columns_css[[c$word]],
+        colDef(
+          headerStyle = paste0(change_css, "border-top: 1px dashed black;", collapse = "\n"),
+          style = change_css
+        )
     )
-
-    columns_css <- append(columns_css, cur_column)
     # update last callout column's position
     last_pos <- c$pos
   }

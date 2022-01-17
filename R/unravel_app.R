@@ -452,12 +452,8 @@ unravelServer <- function(id, user_code = NULL) {
               defaultPageSize = 5
             )
           # apply custom styling for column types and any callout columns
-          # TODO fix the colors not showing up for callouts
           cols_with_types <- get_common_styles(final_data)
-          all_cols <- append(
-            cols_with_types,
-            get_column_css(final_data, rv$main_callout)
-          )
+          all_cols <- get_column_css(final_data, rv$main_callout, cols_with_types)
           if (is_grouped_df(final_data)) {
             return(
               do.call(
