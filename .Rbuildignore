@@ -1,4 +1,5 @@
-^inst/tutorials/tidydata-polyglot\.Rmd$
+^renv$
+^renv\.lock$
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^LICENSE\.md$
