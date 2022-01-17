@@ -14,30 +14,105 @@ get_change_css <- function(change) {
   return("")
 }
 
-#' Get the `reactable::colDef()` for adding column types for a data.frame/tibble
+get_list_columns <- function(data) {
+  names(Filter(x = data, f = function(x) is.list(x)))
+}
+
+get_list_col_styling <- function(data) {
+  list_cols <- get_list_columns(data)
+  all_styles <- list()
+  common_styles <- list(
+    compact = TRUE,
+    highlight = TRUE,
+    defaultPageSize = 5
+  )
+  for (lc in list_cols) {
+    # print(lc)
+    all_styles[lc] <- list(colDef(
+        cell = function(value) {
+          # tibble formatting e.g. <int>
+          return(glue::glue("<{pillar::tbl_sum(value)}>"))
+        },
+        details = function(index) {
+          value <- data[[lc]][[index]]
+          if (identical(typeof(value), "list")) {
+            htmltools::div(
+              reactable::reactable(
+                as.data.frame(value),
+                compact = TRUE,
+                highlight = TRUE,
+                defaultPageSize = 5
+              )
+            )
+          } else  {
+            htmltools::div(
+              reactable::reactable(
+                as.data.frame(list(value)),
+                compact = TRUE,
+                highlight = TRUE,
+                defaultPageSize = 5,
+                defaultColDef = colDef(
+                  html = TRUE,
+                  header = function(value) htmltools::HTML(lc)
+                )
+              )
+            )
+          }
+        }
+      )
+    )
+  }
+  all_styles
+}
+
+#' Constructs the column types and the cell rendering style for list columns.
+#'
 #'
 #' @param data A `data.frame` / `tibble`
 #'
 #' @return A list of `reactable::colDef`
 #'
 #' @examples
-#' get_col_type_headers(mtcars)
+#' df_list <- tibble::tibble(
+#'   id=1:2,
+#'   comment=list(c("michele", Sys.time(), "hello"),
+#'                c("michele", Sys.time(), "world")))
+#'
+#' df_list <- tibble::tibble(id=1:10, comment=list(c(rep("michele", 10))))
+#'
+#' library(gapminder)
+#' df_list <-
+#'   gapminder %>%
+#'   filter(country == 'Afghanistan') %>%
+#'   group_by(country) %>%
+#'   nest()
+#'
+#' reactable(
+#'   as.data.frame(df_list),
+#'   columns = get_col_type_headers(df_list)
+#' )
 #' @noRd
-get_col_type_headers <- function(data) {
-  # column type JS
-  column_types <- lapply(data, function(x) {
-    glue::glue("
-      function(colInfo) {
-        return colInfo.column.name + '<div style=\"color: grey;\">&lt;{{vctrs::vec_ptype_abbr(x)}}&gt;</div>'
-      }
-    ", .open = "{{", .close = "}}")
-  })
-  lapply(column_types, function(x) {
+get_common_styles <- function(data) {
+  column_type <- function(value) {
+    htmltools::tagList(
+      htmltools::div(value),
+      htmltools::div(
+        style = list(color = "grey"),
+        htmltools::div(
+          paste0("<", vctrs::vec_ptype_abbr(data[[value]]), ">")
+        )
+      )
+    )
+  }
+  ls_styling <- get_list_col_styling(data)
+  type_styling <- lapply(data, function(column) {
     colDef(
-      html = TRUE,
-      header = JS(x)
+      header = column_type,
+      na = "NA"
     )
   })
+  common_style <- modifyList(type_styling, ls_styling)
+  return(common_style)
 }
 
 #' Helper function that returns the column, css pairs for callout words given data
