@@ -4,16 +4,16 @@
 \alias{log_code}
 \title{Log a code event}
 \usage{
-log_code(code, user = "unravel")
+log_code(code, context = "unravel")
 }
 \arguments{
 \item{code}{A code snippet that was executed}
 
-\item{user}{In which context the code was run in ('ide' or 'unravel')}
+\item{context}{In which context the code was run in ('ide' or 'unravel')}
 }
 \value{
 Nothing
 }
 \description{
-A user either executed some code on the IDE or the Unravel app.
+A context either executed some code on the IDE or the Unravel app.
 }

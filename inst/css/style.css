@@ -12,6 +12,10 @@ h2 {
   padding-top: 10px;
 }
 
+.nav-tabs>li>a {
+  color: black;
+}
+
 .CodeMirror-line:hover{
   cursor:pointer
 }

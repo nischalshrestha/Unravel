@@ -13,6 +13,36 @@ var last_line_wrapper = null;
 var last_callout_nodes = null;
 var has_error = false;
 
+// TODO report to R the JS events on table
+/*
+// reference: https://www.w3schools.com/jsref/obj_mouseevent.asp
+// pre-req: need to create reactable with an `elementId` param
+htmltools::browsable(
+    tagList(
+        tags$button("Download as CSV", onclick = "Reactable.downloadDataCSV('cars-table')"),
+        reactable(
+            MASS::Cars93[, 1:5],
+            defaultPageSize = 5,
+            elementId = "cars-table"
+        )
+    )
+)
+
+// TODO classify the element and make a log event based on it
+// for e.g. if it's the Next/Previous/Page elements, or cells/column headers/sort etc
+
+// listen to any click and print target
+document.getElementById('cars-table').addEventListener("click", function(e) {
+    console.log(e.target);
+})
+
+// listen to any focus with mouse on the table
+document.getElementById('cars-table').addEventListener("mouseenter", function(e) {
+    console.log(e.target);
+})
+*/
+
+
 /*
 EDITOR
 */
