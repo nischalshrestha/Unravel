@@ -4,12 +4,14 @@
 \alias{log_content_change}
 \title{Log a content change from the RStudio editor and Unravel.}
 \usage{
-log_content_change(content, context = "rstudio")
+log_content_change(content, path = "", context = "rstudio")
 }
 \arguments{
-\item{context}{The context}
+\item{content}{The code within editor/Unravel}
 
-\item{code}{A character form of the code}
+\item{path}{The path of the editor}
+
+\item{context}{The context of where the code originates from ("rstudio" or "unravel")}
 }
 \value{
 Nothing

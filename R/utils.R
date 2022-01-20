@@ -107,25 +107,27 @@ log_event <- function(message, context = "unravel") {
 #'
 #' @param code A code snippet that was executed
 #' @param context In which context the code was run in ('rstudio' or 'unravel')
+#' @param path The path of the editor
 #'
 #' @return Nothing
 #' @export
-log_code <- function(code, context = "unravel") {
-  log_unravel("CODE", code, context)
+log_code <- function(code, path = "", context = "unravel") {
+  log_unravel("CODE", code, path, context)
 }
 
 #' Log a content change from the RStudio editor and Unravel.
 #'
-#' @param code A character form of the code
-#' @param context The context
+#' @param content The code within editor/Unravel
+#' @param context The context of where the code originates from ("rstudio" or "unravel")
+#' @param path The path of the editor
 #'
 #' @return Nothing
 #' @export
-log_content_change <- function(content, context = "rstudio") {
-  log_unravel("CONTENT_CHANGE", content, context)
+log_content_change <- function(content, path = "", context = "rstudio") {
+  log_unravel("CONTENT_CHANGE", content, path, context)
 }
 
-log_unravel <- function(type, message, context, storage = "sqlite") {
+log_unravel <- function(type, message, context, path = "", storage = "sqlite") {
   # if logging is enabled, log
   if (getOption("unravel.logging")) {
     timestamp <- format(Sys.time())
@@ -133,6 +135,7 @@ log_unravel <- function(type, message, context, storage = "sqlite") {
       list(
         timestamp = timestamp,
         context = context,
+        path = path,
         type = type,
         message = message
       ),
@@ -142,7 +145,7 @@ log_unravel <- function(type, message, context, storage = "sqlite") {
 }
 
 store_log <- function(..., storage = "sqlite",
-                      db_cols = c("timestamp", "context", "type", "message")) {
+                      db_cols = c("timestamp", "context", "path", "type", "message")) {
   variables <- force(...)
   if (length(variables) == 0) {
     stop("Log contained no values!")
