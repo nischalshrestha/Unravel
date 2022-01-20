@@ -127,7 +127,7 @@ log_content_change <- function(content, path = "", context = "rstudio") {
   log_unravel("CONTENT_CHANGE", content, path, context)
 }
 
-log_unravel <- function(type, message, context, path = "", storage = "sqlite") {
+log_unravel <- function(type, message, path = "", context = "unravel", storage = "sqlite") {
   # if logging is enabled, log
   if (getOption("unravel.logging")) {
     timestamp <- format(Sys.time())
