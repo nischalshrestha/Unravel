@@ -368,6 +368,24 @@ $(document).ready(function() {
 $(document).on("shiny:sessioninitialized", function(event) {
   console.log("shiny initialized on explorer");
 
+  /*
+  * Table interaction logging:
+  * The following 3 event listeners are for logging if users hover, or clicks
+  * on `reactable`
+  */
+
+  // listen to any click and print target
+  document.getElementById('unravel-line_table').addEventListener("click", function(e) {
+    console.log("Click event on table!")
+    Shiny.setInputValue("unravel-table_focus", "clicking on table", {priority: "event"});
+  })
+
+  // listen to any focus with mouse on reactable
+  document.getElementById('unravel-line_table').addEventListener("mouseenter", function(e) {
+    console.log("Mouse hover event on table!")
+    Shiny.setInputValue("unravel-table_focus", "focusing on table", {priority: "event"});
+  })
+
   Shiny.addCustomMessageHandler('need_explorer', function(message) {
     console.log("JS is signaling R " + message);
     Shiny.setInputValue("unravel-explorer_ready", "explorer ready!", {priority: "event"});

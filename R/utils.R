@@ -93,46 +93,59 @@ match_gregexpr <- function(pattern, string, which_one = 1) {
   gregexpr(pattern, string)[[1]][[which_one]]
 }
 
-log_info <- function(message, user = "unravel") {
-  log_unravel("INFO", message, user)
+log_info <- function(message, context = "unravel") {
+  log_unravel("INFO", message, context)
 }
 
-log_event <- function(message, user = "unravel") {
-  log_unravel("EVENT", message, user)
+log_event <- function(message, context = "unravel") {
+  log_unravel("EVENT", message, context)
 }
 
 #' Log a code event
 #'
-#' A user either executed some code on the IDE or the Unravel app.
+#' A context either executed some code on the IDE or the Unravel app.
 #'
 #' @param code A code snippet that was executed
-#' @param user In which context the code was run in ('ide' or 'unravel')
+#' @param context In which context the code was run in ('rstudio' or 'unravel')
+#' @param path The path of the editor
 #'
 #' @return Nothing
 #' @export
-log_code <- function(code, user = "unravel") {
-  log_unravel("CODE", code, user)
+log_code <- function(code, path = "", context = "unravel") {
+  log_unravel("CODE", code, path, context)
 }
 
-log_unravel <- function(type, message, user, storage = "sqlite") {
+#' Log a content change from the RStudio editor and Unravel.
+#'
+#' @param content The code within editor/Unravel
+#' @param context The context of where the code originates from ("rstudio" or "unravel")
+#' @param path The path of the editor
+#'
+#' @return Nothing
+#' @export
+log_content_change <- function(content, path = "", context = "rstudio") {
+  log_unravel("CONTENT_CHANGE", content, path, context)
+}
+
+log_unravel <- function(type, message, path = "", context = "unravel", storage = "sqlite") {
   # if logging is enabled, log
   if (getOption("unravel.logging")) {
     timestamp <- format(Sys.time())
     store_log(
       list(
         timestamp = timestamp,
-        user = user,
+        context = context,
+        path = path,
         type = type,
         message = message
       ),
       storage = storage
     )
   }
-  invisible()
 }
 
 store_log <- function(..., storage = "sqlite",
-                      db_cols = c("timestamp", "user", "type", "message")) {
+                      db_cols = c("timestamp", "context", "path", "type", "message")) {
   variables <- force(...)
   if (length(variables) == 0) {
     stop("Log contained no values!")
@@ -160,4 +173,5 @@ store_log <- function(..., storage = "sqlite",
     }
     RSQLite::dbDisconnect(mydb)
   }
+  invisible()
 }

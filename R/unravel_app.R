@@ -495,6 +495,11 @@ unravelServer <- function(id, user_code = NULL) {
         }
       })
 
+      # log a user interacting with a table event
+      observeEvent(input$table_focus, {
+        log_event(input$table_focus)
+      })
+
       # this input even tells us which line to (un)comment
       observeEvent(input$toggle, {
         # message("TOGGLE", input$toggle)
