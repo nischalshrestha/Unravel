@@ -134,10 +134,10 @@ log_unravel <- function(type, message, path = "", context = "unravel", storage =
     store_log(
       list(
         timestamp = timestamp,
-        context = context,
-        path = path,
         type = type,
-        message = message
+        message = message,
+        path = path,
+        context = context
       ),
       storage = storage
     )
@@ -145,7 +145,7 @@ log_unravel <- function(type, message, path = "", context = "unravel", storage =
 }
 
 store_log <- function(..., storage = "sqlite",
-                      db_cols = c("timestamp", "context", "path", "type", "message")) {
+                      db_cols = c("timestamp", "type", "message", "path", "context")) {
   variables <- force(...)
   if (length(variables) == 0) {
     stop("Log contained no values!")

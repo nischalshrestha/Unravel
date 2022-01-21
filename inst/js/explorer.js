@@ -12,6 +12,7 @@ var last_line_wrapper = null;
 // the last line's callout nodes
 var last_callout_nodes = null;
 var has_error = false;
+var auto_focus = false;
 
 /*
 EDITOR
@@ -170,6 +171,7 @@ function setup_prompts(summaries) {
       line.prompt = line_tippy;
     }
   }
+  auto_focus = true;
   last_line_wrapper.click();
   console.log("JS has set prompts! " + last_line_wrapper);
 }
@@ -246,7 +248,6 @@ function signal_square_clicked(e) {
     last_line_wrapper = line.wrapper;
     last_callout_nodes = line.callout_nodes;
   }
-
   Shiny.setInputValue("unravel-square", key, {priority: "event"});
 }
 
@@ -269,7 +270,11 @@ function signal_line_clicked(e) {
     // the last line wrapper and callout nodes will be set here when setting up listeners
     last_line_wrapper = line.wrapper;
     last_callout_nodes = line.callout_nodes;
-    Shiny.setInputValue("unravel-line", square, {priority: "event"});
+    if (!auto_focus) {
+      Shiny.setInputValue("unravel-line", square, {priority: "event"});
+    } else {
+      auto_focus = false;
+    }
   }
 }
 
@@ -370,7 +375,7 @@ $(document).on("shiny:sessioninitialized", function(event) {
 
   /*
   * Table interaction logging:
-  * The following 3 event listeners are for logging if users hover, or clicks
+  * The following 2 event listeners are for logging if users hover, or click
   * on `reactable`
   */
 
