@@ -129,6 +129,7 @@ get_data_change_type <- function(verb_name, prev_output, cur_output) {
 get_output_intermediates <- function(pipeline) {
   clear_verb_summary()
   clear_callouts()
+  clear_fns_help()
   old_verb_summary <- ""
 
   # if code is an assignment expression, grab the value (rhs)
@@ -303,6 +304,8 @@ get_output_intermediates <- function(pipeline) {
         intermediate["change"] <- change_type
         # store the column strings so we can highlight them as callouts
         intermediate["callouts"] <- list(get_line_callouts())
+        # store the help strings so we can make functions links to Help pages
+        intermediate["fns_help"] <- list(get_fns_help())
         # if we have a dataframe %>% verb() expression, the 'dataframe' summary is simply
         # the dataframe/tibble with dimensions reported (we could expand that if we want)
         if ((i == 1 && (has_pipes || first_arg_data)) || is.null(verb_summary)) {

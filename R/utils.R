@@ -1,6 +1,4 @@
 
-### Verb summary
-
 #' Pipe operator
 #'
 #' See \code{magrittr::\link[magrittr:pipe]{\%>\%}} for details.
@@ -12,6 +10,8 @@
 #' @importFrom magrittr %>%
 #' @usage lhs \%>\% rhs
 NULL
+
+### Function summaries
 
 # empty out the tidylog summary env initially
 tidylog_cache <- new.env(parent=emptyenv())
@@ -65,33 +65,46 @@ clear_callouts <- function() {
   rm(list=ls(callout_cache, all.names=TRUE), envir=callout_cache)
 }
 
-#' Returns an abbreviated version of a number (K for thousndas and M for millions)
-#'
-#' We won't do more than millions of rows for now.
-#'
-#' @param x a numeric
-#' @return a character
-#' @examples
-#' abbrev_num(1950) # 1.95K
-#' abbrev_num(1950000) # 1.95M
-#'
-#' @export
-abbrev_num <- function(x) {
-  if (is.null(x)) {
-    return("")
-  }
-  if (x >= 1e3 && x < 1e6) {
-    return(paste0(format(round(x / 1e3, 1), trim = TRUE), "K"))
-  }
-  else if (x >= 1e6) {
-    return(paste0(format(round(x / 1e6, 1), trim = TRUE), "M"))
-  }
-  return(as.character(x))
+### Linking of Function to Help page
+
+# empty out the tidylog summary env initially
+fns_help_cache <- new.env(parent=emptyenv())
+
+# A helper function to store function words from tidylog
+# and their code text to use when replacing them in
+# the Unravel front-end.
+#
+# For e.g. in `mutate(mtcars, mpg_round = round(mpg))`
+# the `mutate` and `round` are functions for which we
+# have help pages for. So the list could look like:
+#
+# list(
+#   mutate = "<a id = 'mutate' class = 'fn_help'>mutate</a>"),
+#   round = "<a id = 'round' class = 'fn_help'>round</a>"),
+# )
+store_fns_help <- function(fns) {
+  message("storing fns_help")
+  assign("fns_help", fns, envir = fns_help_cache)
 }
 
-match_gregexpr <- function(pattern, string, which_one = 1) {
-  gregexpr(pattern, string)[[1]][[which_one]]
+# helper function to get the current function help words as set by tidylog
+get_fns_help <- function() {
+  if (exists("fns_help", envir = fns_help_cache)) {
+    message("getting fns_help ", fns_help)
+    fns_help <- get("fns_help", envir = fns_help_cache)
+    return(fns_help)
+  }
+  return(NULL)
 }
+
+# helper function to clear the fns_help_cache envir
+clear_fns_help <- function() {
+  message("clearing fns_help")
+  rm(list=ls(fns_help_cache, all.names=TRUE), envir=fns_help_cache)
+}
+
+
+### Logging
 
 log_info <- function(message, context = "unravel") {
   log_unravel("INFO", message, context)
@@ -174,4 +187,34 @@ store_log <- function(..., storage = "sqlite",
     RSQLite::dbDisconnect(mydb)
   }
   invisible()
+}
+
+### Miscellaneous
+
+#' Returns an abbreviated version of a number (K for thousndas and M for millions)
+#'
+#' We won't do more than millions of rows for now.
+#'
+#' @param x a numeric
+#' @return a character
+#' @examples
+#' abbrev_num(1950) # 1.95K
+#' abbrev_num(1950000) # 1.95M
+#'
+#' @export
+abbrev_num <- function(x) {
+  if (is.null(x)) {
+    return("")
+  }
+  if (x >= 1e3 && x < 1e6) {
+    return(paste0(format(round(x / 1e3, 1), trim = TRUE), "K"))
+  }
+  else if (x >= 1e6) {
+    return(paste0(format(round(x / 1e6, 1), trim = TRUE), "M"))
+  }
+  return(as.character(x))
+}
+
+match_gregexpr <- function(pattern, string, which_one = 1) {
+  gregexpr(pattern, string)[[1]][[which_one]]
 }

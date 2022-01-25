@@ -302,6 +302,10 @@ function setup_box_listeners() {
   Shiny.setInputValue("unravel-need_callouts", "Gimme the callouts! ", {priority: "event"});
 }
 
+/*
+Callouts
+*/
+
 // helper function to callout parts of the code snippet
 function callout_code_text(callout, verb_doc) {
   // this marks the specific snippet within a verb document
@@ -337,9 +341,6 @@ function callout_code_text(callout, verb_doc) {
   return callout_html_nodes;
 }
 
-/*
-Callouts
-*/
 
 function setup_callouts(callouts) {
   console.log("got the callouts in JS! " + JSON.stringify(callouts));
@@ -359,6 +360,31 @@ function setup_callouts(callouts) {
   Shiny.setInputValue("unravel-need_prompts", "we need the prompts now ", {priority: "event"});
 }
 
+/*
+Help text linking
+*/
+
+
+// TODO implement setup_fns_help that will modify the
+function setup_fns_help(fns_help) {
+  // console.log("got the fns_help in JS! " + JSON.stringify(fns_help));
+  // for each lineid, add a the fns_help words field
+  // containing a list like:
+  // [{word: "select", help_text: "<a id = 'mutate' class = 'fn_help'>mutate</a>"}, ...]
+  /*
+  fns_help.forEach(e => {
+
+  })
+  Shiny.setInputValue("unravel-need_prompts", "we need the prompts now ", {priority: "event"});
+  */
+}
+
+// helper function to callout parts of the code snippet
+function help_code_text(help_text, verb_doc) {
+
+}
+
+
 function send_toggle(message) {
   console.log("R received message from JS. " + message);
 }
@@ -372,6 +398,14 @@ $(document).ready(function() {
 // more information to UI from R. JS here will initialize prompts, toggles, and the summary box event listeners.
 $(document).on("shiny:sessioninitialized", function(event) {
   console.log("shiny initialized on explorer");
+
+  $('.fn_help').each(function(index, element) {
+  	// console.log(element.id);
+    element.addEventListener("click", function(event){
+    	console.log(event.target.id);
+    	Shiny.setInputValue("unravel-fn_help", event.target.id, {priority: "event"});
+  	})
+  })
 
   /*
   * Table interaction logging:

@@ -211,6 +211,12 @@ unravelUI <- function(id) {
       shiny::includeCSS(file.path(package_css, "light.css")),
     ),
     shiny::includeScript(file.path(package_js, "script.js")),
+    shiny::HTML(
+    "<span><a id='select' class='fn_help'>select</a></span>(<span><a id='starts_with' class='fn_help'>starts_with</a></span>(cyl))"
+    ),
+    mainPanel(
+      plotOutput(ns("fn_help_dummy"), height=1)
+    ),
     shiny::htmlOutput(ns("code_explorer")),
     shiny::div(
       style = "width: 100%; height: 500px; margin: 10px;",
@@ -250,6 +256,7 @@ unravelServer <- function(id, user_code = NULL) {
       rv$generic_output <- NULL
       rv$table_output <- NULL
       rv$main_callout <- NULL
+      rv$fns_help <- NULL
 
       # send signal to JS of the code text to display
       session$sendCustomMessage("set_code", paste0(user_code))
@@ -257,7 +264,6 @@ unravelServer <- function(id, user_code = NULL) {
       # listen for JS to tell us code is ready for us to be processed
       observeEvent(input$code_ready, {
         # message("Receiving code from JS: ", input$code_ready)
-
         # TODO-refactor: process lines function?
         # process lines
         if (!is.null(input$code_ready) && nzchar(input$code_ready)) {
@@ -299,6 +305,10 @@ unravelServer <- function(id, user_code = NULL) {
               attr(rv$current_code_info, "order") <- seq_len(length(outputs))
               rv$callouts <- lapply(outputs, function(x) list(lineid = paste0("line", x$line), callouts = x$callouts))
               rv$cur_callouts <- lapply(outputs, function(x) x$callouts)
+
+              # TODO add the fns_help as well and make sure it's being set etc.
+              rv$fns_help <- lapply(outputs, function(x) x$fns_help)
+
               rv$summaries <- lapply(outputs, function(x) {
                 if (!is.null(x$err)) {
                   x$summary <- x$err
@@ -498,6 +508,26 @@ unravelServer <- function(id, user_code = NULL) {
       # log a user interacting with a table event
       observeEvent(input$table_focus, {
         log_event(input$table_focus)
+      })
+
+
+
+      # invoke the help menu for a particular function
+      observeEvent(input$fn_help, {
+        # TODO wrap the function name with a link tag that will be triggered upon
+        fn <- input$fn_help
+        message(fn)
+        # clicking on the JS side
+        fn_ns <- getAnywhere(fn)$where[[1]]
+        message(fn_ns)
+        # help(fn, unlist(strsplit(fn_ns, ":"))[[2]])
+        rv$fns_help <- list(fn = fn, pkg = unlist(strsplit(fn_ns, ":"))[[2]])
+      })
+
+      output$fn_help_dummy <- renderPlot({
+        if (!is.null(rv$fn_help)) {
+          help(rv$fn_help$fn, rv$fn_help$pkg)
+        }
       })
 
       # this input even tells us which line to (un)comment
