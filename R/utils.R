@@ -90,8 +90,8 @@ store_fns_help <- function(fns) {
 # helper function to get the current function help words as set by tidylog
 get_fns_help <- function() {
   if (exists("fns_help", envir = fns_help_cache)) {
-    message("getting fns_help ", fns_help)
     fns_help <- get("fns_help", envir = fns_help_cache)
+    message(paste0("getting fns_help ", fns_help))
     return(fns_help)
   }
   return(NULL)
@@ -102,7 +102,6 @@ clear_fns_help <- function() {
   message("clearing fns_help")
   rm(list=ls(fns_help_cache, all.names=TRUE), envir=fns_help_cache)
 }
-
 
 ### Logging
 
@@ -177,14 +176,16 @@ store_log <- function(..., storage = "sqlite",
     )
   } else if (identical(storage, "sqlite")) {
     db_path <- file.path(dir_name, getOption("db.file"))
-    mydb <- RSQLite::dbConnect(RSQLite::SQLite(), db_path)
-    if (length(RSQLite::dbListTables(mydb)) == 0) {
-      RSQLite::dbWriteTable(mydb, "events", tibble::as_tibble(variables))
-    } else {
-      old <- RSQLite::dbReadTable(mydb, "events")
-      RSQLite::dbAppendTable(mydb, "events", tibble::as_tibble(variables))
+    if (file.exists(db_path)) {
+      mydb <- RSQLite::dbConnect(RSQLite::SQLite(), db_path)
+      if (length(RSQLite::dbListTables(mydb)) == 0) {
+        RSQLite::dbWriteTable(mydb, "events", tibble::as_tibble(variables))
+      } else {
+        old <- RSQLite::dbReadTable(mydb, "events")
+        RSQLite::dbAppendTable(mydb, "events", tibble::as_tibble(variables))
+      }
+      RSQLite::dbDisconnect(mydb)
     }
-    RSQLite::dbDisconnect(mydb)
   }
   invisible()
 }

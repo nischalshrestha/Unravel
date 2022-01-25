@@ -214,9 +214,7 @@ unravelUI <- function(id) {
     shiny::HTML(
     "<span><a id='select' class='fn_help'>select</a></span>(<span><a id='starts_with' class='fn_help'>starts_with</a></span>(cyl))"
     ),
-    mainPanel(
-      plotOutput(ns("fn_help_dummy"), height=1)
-    ),
+    shiny::plotOutput(ns("fn_help_dummy"), height = 1),
     shiny::htmlOutput(ns("code_explorer")),
     shiny::div(
       style = "width: 100%; height: 500px; margin: 10px;",
@@ -247,6 +245,8 @@ unravelServer <- function(id, user_code = NULL) {
   moduleServer(
     id,
     function(input, output, session) {
+      #### Setup variables and handlers
+
       # these are reactive values related to current line, code info of all lines, summary prompts, and df outputs
       rv <- reactiveValues()
       rv$current <- 0
@@ -303,11 +303,15 @@ unravelServer <- function(id, user_code = NULL) {
                 )
               })
               attr(rv$current_code_info, "order") <- seq_len(length(outputs))
-              rv$callouts <- lapply(outputs, function(x) list(lineid = paste0("line", x$line), callouts = x$callouts))
+              rv$callouts <- lapply(outputs, function(x) {
+                list(lineid = paste0("line", x$line), callouts = x$callouts)
+              })
               rv$cur_callouts <- lapply(outputs, function(x) x$callouts)
 
               # TODO add the fns_help as well and make sure it's being set etc.
-              rv$fns_help <- lapply(outputs, function(x) x$fns_help)
+              rv$fns_help <- lapply(outputs, function(x) {
+                list(lineid = paste0("line", x$line), fns_help = x$fns_help)
+              })
 
               rv$summaries <- lapply(outputs, function(x) {
                 if (!is.null(x$err)) {
@@ -378,9 +382,12 @@ unravelServer <- function(id, user_code = NULL) {
       })
 
       # list for a trigger message input from JS input so we can send callout info for each line
+      # this involves sending the list of callouts for highlighting and a list for the function
+      # help trigger from JS -> R (Help menu)
       observeEvent(input$need_callouts, {
         # message("JS is ready for callouts: ", input$need_callouts)
         session$sendCustomMessage("callouts", rv$callouts)
+        session$sendCustomMessage("fns_help", rv$fns_help)
       })
 
       # list for a trigger message input from JS input so we can send summary info for data prompts
@@ -388,6 +395,8 @@ unravelServer <- function(id, user_code = NULL) {
         # message("JS is ready for prompts: ", input$need_prompts)
         session$sendCustomMessage("prompts", rv$summaries)
       })
+
+      #### Inspection of code and summary
 
       # list for a click square input from JS to tells us which data to display for a particular line
       observeEvent(input$square, {
@@ -410,6 +419,8 @@ unravelServer <- function(id, user_code = NULL) {
         }
       })
 
+      #### Output handlers
+
       # a reactive expression that sets and determines the type of data we render on the UI for code output
       # this could be generic output like vectors and lists, or
       # this could be data.frame / tibble
@@ -429,6 +440,7 @@ unravelServer <- function(id, user_code = NULL) {
             rv$generic_output <- NULL
             rv$table_output <- out
             rv$main_callout <- rv$cur_callouts[[value]]
+            # TODO update the fns_help
           } else {
             # NOTE: we have to set table output to NULL if it's not a data.frame, otherwise it will
             # still appear below a generic output
@@ -510,25 +522,27 @@ unravelServer <- function(id, user_code = NULL) {
         log_event(input$table_focus)
       })
 
-
+      #### Function help handlers
 
       # invoke the help menu for a particular function
       observeEvent(input$fn_help, {
-        # TODO wrap the function name with a link tag that will be triggered upon
         fn <- input$fn_help
-        message(fn)
-        # clicking on the JS side
+        # we're going to grab the most relevant namespace that this
+        # function belongs to (first element)
         fn_ns <- getAnywhere(fn)$where[[1]]
-        message(fn_ns)
-        # help(fn, unlist(strsplit(fn_ns, ":"))[[2]])
-        rv$fns_help <- list(fn = fn, pkg = unlist(strsplit(fn_ns, ":"))[[2]])
+        # TODO refactor this so that you have two rv values
+        # 1) the current fns_help (the one we're invoking rn)
+        # 2) the main fns_help (the list of all of the fns_help)
+        rv$cur_fns_help <- list(fn = fn, pkg = unlist(strsplit(fn_ns, ":"))[[2]])
       })
 
       output$fn_help_dummy <- renderPlot({
         if (!is.null(rv$fn_help)) {
-          help(rv$fn_help$fn, rv$fn_help$pkg)
+          help(rv$cur_fns_help$fn, rv$fn_help$pkg)
         }
       })
+
+      #### Structural edit handlers
 
       # this input even tells us which line to (un)comment
       observeEvent(input$toggle, {

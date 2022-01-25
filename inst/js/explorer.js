@@ -344,6 +344,7 @@ function callout_code_text(callout, verb_doc) {
 
 function setup_callouts(callouts) {
   console.log("got the callouts in JS! " + JSON.stringify(callouts));
+  console.log('length of callouts ' + Object.keys(callouts));
   // for each lineid, add a the callout words field
   // containing a list like: [{word: "foo", change: "internal-change"}, ...]
   callouts.forEach(e => {
@@ -368,6 +369,11 @@ Help text linking
 // TODO implement setup_fns_help that will modify the
 function setup_fns_help(fns_help) {
   // console.log("got the fns_help in JS! " + JSON.stringify(fns_help));
+  console.log('got the fns_help in JS! ' + JSON.stringify(fns_help));
+  console.log('length of fns_help ' + Object.keys(fns_help));
+  console.log('first element of fns_help ' + JSON.stringify(fns_help[0]));
+
+
   // for each lineid, add a the fns_help words field
   // containing a list like:
   // [{word: "select", help_text: "<a id = 'mutate' class = 'fn_help'>mutate</a>"}, ...]
@@ -437,6 +443,12 @@ $(document).on("shiny:sessioninitialized", function(event) {
     console.log("trying to setup the callouts in JS")
     // set up the callouts
     setup_callouts(callouts);
+  });
+
+  Shiny.addCustomMessageHandler('fns_help', function(fns_help) {
+    console.log("trying to setup the fns_help in JS")
+    // set up the fns_help
+    setup_fns_help(fns_help);
   });
 
   Shiny.addCustomMessageHandler('prompts', function(summaries) {
