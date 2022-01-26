@@ -211,9 +211,9 @@ unravelUI <- function(id) {
       shiny::includeCSS(file.path(package_css, "light.css")),
     ),
     shiny::includeScript(file.path(package_js, "script.js")),
-    shiny::HTML(
-    "<span><a id='select' class='fn_help'>select</a></span>(<span><a id='starts_with' class='fn_help'>starts_with</a></span>(cyl))"
-    ),
+    # although this is super confusing, `plotOutput` is simply a
+    # placeholder Shiny output so we can use it to call `help()` programmatically
+    # it's a Shiny output that seems to allow invoking help page
     shiny::plotOutput(ns("fn_help_dummy"), height = 1),
     shiny::htmlOutput(ns("code_explorer")),
     shiny::div(
@@ -255,7 +255,10 @@ unravelServer <- function(id, user_code = NULL) {
       rv$outputs <- NULL
       rv$generic_output <- NULL
       rv$table_output <- NULL
+      rv$callouts <- NULL
+      # used to trigger output (data.frame/lists)
       rv$main_callout <- NULL
+      # used to trigger the Help page for a function
       rv$fns_help <- NULL
 
       # send signal to JS of the code text to display
@@ -308,7 +311,8 @@ unravelServer <- function(id, user_code = NULL) {
               })
               rv$cur_callouts <- lapply(outputs, function(x) x$callouts)
 
-              # TODO add the fns_help as well and make sure it's being set etc.
+              # information about the functions used in each line
+              # and its respective HTML that will allow user to click on them
               rv$fns_help <- lapply(outputs, function(x) {
                 list(lineid = paste0("line", x$line), fns_help = x$fns_help)
               })
@@ -440,7 +444,6 @@ unravelServer <- function(id, user_code = NULL) {
             rv$generic_output <- NULL
             rv$table_output <- out
             rv$main_callout <- rv$cur_callouts[[value]]
-            # TODO update the fns_help
           } else {
             # NOTE: we have to set table output to NULL if it's not a data.frame, otherwise it will
             # still appear below a generic output
@@ -530,15 +533,13 @@ unravelServer <- function(id, user_code = NULL) {
         # we're going to grab the most relevant namespace that this
         # function belongs to (first element)
         fn_ns <- getAnywhere(fn)$where[[1]]
-        # TODO refactor this so that you have two rv values
-        # 1) the current fns_help (the one we're invoking rn)
-        # 2) the main fns_help (the list of all of the fns_help)
-        rv$cur_fns_help <- list(fn = fn, pkg = unlist(strsplit(fn_ns, ":"))[[2]])
+        fn_pkg <- unlist(strsplit(fn_ns, ":"))
+        rv$fns_help <- list(fn = fn, pkg = fn_pkg[[2]])
       })
 
       output$fn_help_dummy <- renderPlot({
-        if (!is.null(rv$fn_help)) {
-          help(rv$cur_fns_help$fn, rv$fn_help$pkg)
+        if (!is.null(rv$fns_help) && length(rv$fns_help$pkg) > 0) {
+          help(rv$fns_help$fn, rv$fns_help$pkg)
         }
       })
 

@@ -341,12 +341,12 @@ function callout_code_text(callout, verb_doc) {
   return callout_html_nodes;
 }
 
-
 function setup_callouts(callouts) {
   console.log("got the callouts in JS! " + JSON.stringify(callouts));
   console.log('length of callouts ' + Object.keys(callouts));
   // for each lineid, add a the callout words field
   // containing a list like: [{word: "foo", change: "internal-change"}, ...]
+  // mark variables to highlight in the code text in the Codemirror text editors
   callouts.forEach(e => {
     let line = lines[e.lineid];
     let line_doc = line.editor.getDoc();
@@ -365,31 +365,63 @@ function setup_callouts(callouts) {
 Help text linking
 */
 
-
-// TODO implement setup_fns_help that will modify the
+// a helper function that will mark all of the function text as hyperlink
+// for each line in the code
 function setup_fns_help(fns_help) {
-  // console.log("got the fns_help in JS! " + JSON.stringify(fns_help));
   console.log('got the fns_help in JS! ' + JSON.stringify(fns_help));
-  console.log('length of fns_help ' + Object.keys(fns_help));
-  console.log('first element of fns_help ' + JSON.stringify(fns_help[0]));
-
-
-  // for each lineid, add a the fns_help words field
-  // containing a list like:
-  // [{word: "select", help_text: "<a id = 'mutate' class = 'fn_help'>mutate</a>"}, ...]
-  /*
+  // for each element in the JSON list of [{ <function>: <string>, ... }, ...]
+  // mark functions in the code text in the Codemirror text editors
   fns_help.forEach(e => {
-
+    console.log('fns_help element: ' + JSON.stringify(e.fns_help));
+    let line = lines[e.lineid];
+    let line_doc = line.editor.getDoc();
+    let line_fns_help = e.fns_help;
+    let line_fns_help_nodes = [];
+    if (line_fns_help != null) {
+      line_fns_help_nodes = Object.keys(line_fns_help).forEach(fn_help => {
+        fns_help_code_text(fn_help, line_fns_help[fn_help], line_doc);
+      });
+    }
+    line.fns_help = line_fns_help_nodes;
   })
-  Shiny.setInputValue("unravel-need_prompts", "we need the prompts now ", {priority: "event"});
-  */
 }
 
-// helper function to callout parts of the code snippet
-function help_code_text(help_text, verb_doc) {
-
+// helper function to hyperlink parts of the code snippet that has a function call
+function fns_help_code_text(fn, fn_help, verb_doc) {
+  // this marks the specific snippet within a verb document
+  // such that we can refer to it later when user clicks on them to request Help docs
+  let lineNumber = 0;
+  // regex the boundary word
+  const re = new RegExp("(\\b" + fn + "\\b)", 'g');
+  // for multi-lines, we need to split them into individual lines
+  // so that we can get the line number in addition to the match
+  let cur_lines = verb_doc.getValue().split("\n")
+  let fns_html_nodes = [];
+  for (const [index, line] of cur_lines.entries()) {
+    const matches = line.matchAll(re);
+    for (const m of matches) {
+      let fn_help_html_node = document.createElement("span");
+      fn_help_html_node.innerHTML = fn_help;
+      fn_help_html_node.id = fn;
+    	if (m !== undefined) {
+    	  fn_help_html_node.addEventListener("click", function(event){
+        	Shiny.setInputValue("unravel-fn_help", event.target.id, {priority: "event"});
+      	})
+        let charNumber = m.index;
+        verb_doc.markText(
+          {line: index, ch: charNumber},
+          {line: index, ch: charNumber + fn.length},
+          {replacedWith: fn_help_html_node}
+        )
+      } else {
+        // otherwise, set id to "" so that we don't call out any code text
+        fn_help_html_node.id = "";
+      }
+      fns_html_nodes.push(fn_help_html_node);
+    }
+  }
+  return fns_html_nodes;
 }
-
 
 function send_toggle(message) {
   console.log("R received message from JS. " + message);
@@ -404,14 +436,6 @@ $(document).ready(function() {
 // more information to UI from R. JS here will initialize prompts, toggles, and the summary box event listeners.
 $(document).on("shiny:sessioninitialized", function(event) {
   console.log("shiny initialized on explorer");
-
-  $('.fn_help').each(function(index, element) {
-  	// console.log(element.id);
-    element.addEventListener("click", function(event){
-    	console.log(event.target.id);
-    	Shiny.setInputValue("unravel-fn_help", event.target.id, {priority: "event"});
-  	})
-  })
 
   /*
   * Table interaction logging:
