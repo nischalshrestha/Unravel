@@ -530,10 +530,14 @@ unravelServer <- function(id, user_code = NULL) {
       # invoke the help menu for a particular function
       observeEvent(input$fn_help, {
         fn <- input$fn_help
-        # we're going to grab the most relevant namespace that this
+        # get the namespaces for the function
+        fn_ns <- getAnywhere(fn)$where
+        # since tidylog gets loaded as part of this package,
+        # filter it out so we can get the dplyr/tidyr namespace
+        fn_ns <- Filter(function(ns) !grepl('tidylog', ns), fn_ns)
+        # grab the most relevant namespace that this
         # function belongs to (first element)
-        fn_ns <- getAnywhere(fn)$where[[1]]
-        fn_pkg <- unlist(strsplit(fn_ns, ":"))
+        fn_pkg <- unlist(strsplit(fn_ns[[1]], ":"))
         rv$fns_help <- list(fn = fn, pkg = fn_pkg[[2]])
       })
 

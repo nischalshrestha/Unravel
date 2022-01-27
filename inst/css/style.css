@@ -360,5 +360,6 @@ input:checked + .slider:before {
 }
 
 .fn_help {
+  color: #375f84;
   cursor: help;
 }

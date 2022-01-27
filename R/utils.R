@@ -83,7 +83,7 @@ fns_help_cache <- new.env(parent=emptyenv())
 #   round = "<a id = 'round' class = 'fn_help'>round</a>"),
 # )
 store_fns_help <- function(fns) {
-  message("storing fns_help")
+  # message("storing fns_help")
   assign("fns_help", fns, envir = fns_help_cache)
 }
 
@@ -91,7 +91,7 @@ store_fns_help <- function(fns) {
 get_fns_help <- function() {
   if (exists("fns_help", envir = fns_help_cache)) {
     fns_help <- get("fns_help", envir = fns_help_cache)
-    message(paste0("getting fns_help ", fns_help))
+    # message(paste0("getting fns_help ", fns_help))
     return(fns_help)
   }
   return(NULL)
@@ -99,7 +99,7 @@ get_fns_help <- function() {
 
 # helper function to clear the fns_help_cache envir
 clear_fns_help <- function() {
-  message("clearing fns_help")
+  # message("clearing fns_help")
   rm(list=ls(fns_help_cache, all.names=TRUE), envir=fns_help_cache)
 }
 
