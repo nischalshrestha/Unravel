@@ -306,6 +306,11 @@ function setup_box_listeners() {
 Callouts
 */
 
+// TODO-add_function_help test out the token range info
+// we added on the code analysis side, if it goes well
+// and we can simply `markText` this will be much better
+// than usingg the regex way
+
 // helper function to callout parts of the code snippet
 function callout_code_text(callout, verb_doc) {
   // this marks the specific snippet within a verb document

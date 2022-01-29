@@ -29,7 +29,7 @@ style_dplyr_code <- function(quoted, char_threshold = 50) {
 # return the formmated string
 style_long_line <- function(expr, char_threshold = 50) {
   # determine if the whole line char length exceeds threshold (including the function part e.g. "mutate")
-  exceeds_t <- nchar(paste0(rlang::expr_deparse(expr))) > (char_threshold + 10)
+  exceeds_t <- nchar(paste0(rlang::expr_deparse(expr), collapse = "")) > (char_threshold + 10)
   # if it exceeds length, proceed to style
   if (any(exceeds_t)) {
     # extract function name and the arguments
