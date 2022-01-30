@@ -255,11 +255,12 @@ unravelServer <- function(id, user_code = NULL) {
       rv$outputs <- NULL
       rv$generic_output <- NULL
       rv$table_output <- NULL
-      rv$callouts <- NULL
       # used to trigger output (data.frame/lists)
+      rv$callouts <- NULL
       rv$main_callout <- NULL
       # used to trigger the Help page for a function
       rv$fns_help <- NULL
+      rv$cur_fns_help <- NULL
 
       # send signal to JS of the code text to display
       session$sendCustomMessage("set_code", paste0(user_code))
@@ -316,6 +317,7 @@ unravelServer <- function(id, user_code = NULL) {
               rv$fns_help <- lapply(outputs, function(x) {
                 list(lineid = paste0("line", x$line), fns_help = x$fns_help)
               })
+              rv$cur_fns_help <- lapply(outputs, function(x) x$fns_help)
 
               rv$summaries <- lapply(outputs, function(x) {
                 if (!is.null(x$err)) {
@@ -534,16 +536,16 @@ unravelServer <- function(id, user_code = NULL) {
         fn_ns <- getAnywhere(fn)$where
         # since tidylog gets loaded as part of this package,
         # filter it out so we can get the dplyr/tidyr namespace
-        fn_ns <- Filter(function(ns) !grepl('tidylog', ns), fn_ns)
+        fn_ns <- Filter(function(ns) !grepl('tidylog|Unravel', ns), fn_ns)
         # grab the most relevant namespace that this
         # function belongs to (first element)
         fn_pkg <- unlist(strsplit(fn_ns[[1]], ":"))
-        rv$fns_help <- list(fn = fn, pkg = fn_pkg[[2]])
+        rv$cur_fns_help <- list(fn = fn, pkg = fn_pkg[[2]])
       })
 
       output$fn_help_dummy <- renderPlot({
-        if (!is.null(rv$fns_help) && length(rv$fns_help$pkg) > 0) {
-          help(rv$fns_help$fn, rv$fns_help$pkg)
+        if (!is.null(rv$cur_fns_help) && length(rv$cur_fns_help$pkg) > 0) {
+          help(rv$cur_fns_help$fn, rv$cur_fns_help$pkg)
         }
       })
 

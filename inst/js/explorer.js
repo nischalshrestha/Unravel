@@ -306,43 +306,56 @@ function setup_box_listeners() {
 Callouts
 */
 
-// TODO-add_function_help test out the token range info
-// we added on the code analysis side, if it goes well
-// and we can simply `markText` this will be much better
-// than usingg the regex way
+// helper function to zip lists together like in Python
+// src: https://stackoverflow.com/a/10284006
+function zip(arrays) {
+    return arrays[0].map(function(_,i){
+        return arrays.map(function(array){return array[i]})
+    });
+}
 
 // helper function to callout parts of the code snippet
 function callout_code_text(callout, verb_doc) {
-  // this marks the specific snippet within a verb document
-  // such that we can refer to it later to enable or disable the span for callout highlights
-  let snippet = callout.word;
-  let lineNumber = 0;
-  // regex the boundary word
-  const re = new RegExp("(\\b" + snippet + "\\b)", 'g');
-  // for multi-lines, we need to split them into individual lines
-  // so that we can get the line number in addition to the match
-  let cur_lines = verb_doc.getValue().split("\n")
+  console.log('callout: ' + JSON.stringify(callout))
+  // get the content
+  const code =  verb_doc.getValue();
+  // setup a list containing all html nodes that will mark all instances of the
+  // callout word
   let callout_html_nodes = [];
-  for (const [index, line] of cur_lines.entries()) {
-    const matches = line.matchAll(re);
-    for (const m of matches) {
+  // this is to track what the first range's column start is (see NOTE below)
+  let beginning_start = 0;
+  for (const [index, ranges] of callout.location.entries()) {
+    beginning_start = (index == 0) ? ranges.col1[0] : 0;
+    // each callout could have multiple locations for one word
+    // for multiple lines, so we first zip up the range info
+    let location = zip([ranges.line1, ranges.line2, ranges.col1, ranges.col2]);
+    // go through each range of the locations and mark the text in the CodeMirror
+    // document using all of the range information for each instance of the word
+    for (const [index, range] of location.entries()) {
       let callout_html_node = document.createElement("span");
-      callout_html_node.innerHTML = snippet;
+      callout_html_node.innerHTML = callout.word;
       callout_html_node.id = callout.change;
-    	if (m !== undefined) {
-        let charNumber = m.index;
-        verb_doc.markText(
-          {line: index, ch: charNumber},
-          {line: index, ch: charNumber + snippet.length},
-          {replacedWith: callout_html_node}
-        )
-      } else {
-        // otherwise, set id to "" so that we don't call out any code text
-        callout_html_node.id = "";
-      }
+      const line1 = range[0] - 1;
+      const line2 = range[1] - 1;
+      // NOTE: the way codemirror works and the ranges we get from R via `getParseData()`
+      // sadly do not line up; in particular, the column start and end from R are going to
+      // be working off of a single-line string but the way CodeMirror marks up text conflicts
+      // with this because it assumes start is 0 for any new line. So, we are
+      // compensating for that discrepancy here by using the first line's range col1 so that
+      // we can appropriately subtract this first, and add 2 for the \t\t for both col1 and col2
+      // and one more for col2 bc JS excludes end range whereas R includes it.
+      let col_dec = (line1 > 0) ? beginning_start: 2
+      const col1 = range[2] - col_dec + 2;
+      const col2 = range[3] - col_dec + 3;
+      verb_doc.markText(
+        {line: line1, ch: col1},
+        {line: line2, ch: col2},
+        {replacedWith: callout_html_node}
+      );
       callout_html_nodes.push(callout_html_node);
     }
   }
+
   return callout_html_nodes;
 }
 
@@ -383,48 +396,52 @@ function setup_fns_help(fns_help) {
     let line_fns_help = e.fns_help;
     let line_fns_help_nodes = [];
     if (line_fns_help != null) {
-      line_fns_help_nodes = Object.keys(line_fns_help).forEach(fn_help => {
-        fns_help_code_text(fn_help, line_fns_help[fn_help], line_doc);
-      });
+      line_fns_help_nodes = line_fns_help.map(fn_help => fns_help_code_text(fn_help, line_doc));
     }
-    line.fns_help = line_fns_help_nodes;
+    line_fns_help_nodes = line_fns_help_nodes;
   })
 }
 
 // helper function to hyperlink parts of the code snippet that has a function call
-function fns_help_code_text(fn, fn_help, verb_doc) {
-  // this marks the specific snippet within a verb document
-  // such that we can refer to it later when user clicks on them to request Help docs
-  let lineNumber = 0;
-  // regex the boundary word
-  const re = new RegExp("(\\b" + fn + "\\b)", 'g');
-  // for multi-lines, we need to split them into individual lines
-  // so that we can get the line number in addition to the match
-  let cur_lines = verb_doc.getValue().split("\n")
+function fns_help_code_text(fn_help, verb_doc) {
+  console.log('fn_help: ' + JSON.stringify(fn_help))
+
+  let code = verb_doc.getValue();
   let fns_html_nodes = [];
-  for (const [index, line] of cur_lines.entries()) {
-    const matches = line.matchAll(re);
-    for (const m of matches) {
-      let fn_help_html_node = document.createElement("span");
-      fn_help_html_node.innerHTML = fn_help;
-      fn_help_html_node.id = fn;
-    	if (m !== undefined) {
-    	  fn_help_html_node.addEventListener("click", function(event){
+
+  // this is to track what the first range's column start is (see NOTE below)
+  let beginning_start = 0;
+  for (const [index, ranges] of fn_help.location.entries()) {
+    beginning_start = (index == 0) ? ranges.col1[0] : 0;
+    // each fn could have multiple locations for one word
+    // for multiple lines, so we first zip up the range info
+    let location = zip([ranges.line1, ranges.line2, ranges.col1, ranges.col2]);
+    // go through each range of the locations and mark the text in the CodeMirror
+    // document using all of the range information for each instance of the word
+    for (const [index, range] of location.entries()) {
+      let fn_html_node = document.createElement("span");
+      fn_html_node.innerHTML = fn_help.html;
+      fn_html_node.id = fn_help.word;
+      fn_html_node.addEventListener("click", function(event) {
         	Shiny.setInputValue("unravel-fn_help", event.target.id, {priority: "event"});
-      	})
-        let charNumber = m.index;
-        verb_doc.markText(
-          {line: index, ch: charNumber},
-          {line: index, ch: charNumber + fn.length},
-          {replacedWith: fn_help_html_node}
-        )
-      } else {
-        // otherwise, set id to "" so that we don't call out any code text
-        fn_help_html_node.id = "";
-      }
-      fns_html_nodes.push(fn_help_html_node);
+      });
+      const line1 = range[0] - 1;
+      const line2 = range[1] - 1;
+      // adjust ranges for CodeMirror (see the NOTE in `callout_code_text()`)
+      let col_dec = (line1 > 0) ? beginning_start: 2
+      const col1 = range[2] - col_dec + 2;
+      const col2 = range[3] - col_dec + 3;
+      // this marks the specific snippet within a verb document
+      // such that we can refer to it later when user clicks on them to request Help docs
+      verb_doc.markText(
+        {line: line1, ch: col1},
+        {line: line2, ch: col2},
+        {replacedWith: fn_html_node}
+      );
+      fns_html_nodes.push(fn_html_node);
     }
   }
+
   return fns_html_nodes;
 }
 

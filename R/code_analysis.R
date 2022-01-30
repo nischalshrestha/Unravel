@@ -97,34 +97,71 @@ get_data_change_type <- function(verb_name, prev_output, cur_output) {
 
 # helper function to add some range info for the callout words
 gather_callouts <- function(callouts, deparsed) {
+  if (is.null(callouts)) return(NULL)
   # store some info about the range so JS knows which
   code <- substring(deparsed, 2, nchar(deparsed))
   parse_tree <- getParseData(parse(text = code))
   callout_words <- lapply(callouts, function(x) x$word)
-  # FIXME in some expressions, we only want certain callouts like named argument
-  # e.g `summarise(n = n(), price = mean(price))`, we only want the first `n` because it's a column
-  filtered_calls <- parse_tree[parse_tree$token != 'SYMBOL_FUNCTION_CALL', ]
-  filtered_calls <- filtered_calls[filtered_calls$text %in% unlist(callout_words), ]
+  filtered_tree <- parse_tree[parse_tree$token != 'SYMBOL_FUNCTION_CALL', ]
+  filtered_tree <- filtered_tree[filtered_tree$text %in% unlist(callout_words), ]
+  # if there is an expression for the arguments where we have the same name of the callout word
+  # for both creation of a variable and a symbol within the expression, let's just keep the
+  # tree info for the SYMBOL_SUB
+  has_multiple_instances <- "SYMBOL_SUB" %in% filtered_tree$token && "SYMBOL" %in% filtered_tree$token
+  if (has_multiple_instances) {
+    filtered_tree <- filtered_tree[filtered_tree$token == "SYMBOL_SUB", ]
+  }
   # grab the col1, col2 and store them as 2 more items in the callouts list
-  filtered_callouts <- filtered_calls[callout_words == filtered_calls$text, c('text', 'col1', 'col2')]
+  filtered_callouts <- filtered_tree[filtered_tree$text %in% callout_words, c('text', 'line1', 'line2', 'col1', 'col2')]
   if (nrow(filtered_callouts) > 0) {
+    # return a list of callouts with the range information baked in for JS to mark
     return(
-      modifyList(
-        list(callouts),
-        lapply(
-          callouts,
-          function(callout) {
-            token_info <- filtered_callouts[filtered_callouts$text == callout$word, ]
-            callout['col1'] <- token_info[['col1']]
-            # we increment the end since JS does not include it
-            callout['col2'] <- token_info[['col2']] + 1
-            callout
-          }
+      list(
+        modifyList(
+          lapply(
+            callouts,
+            function(callout) {
+              # store the token range info for each callout word instance
+              token_info <- filtered_callouts[filtered_callouts$text == callout$word, ]
+              callout[['location']] <- list(token_info)
+              callout
+            }
+          ),
+          list(callouts)
         )
       )
     )
   }
   return(list(callouts))
+}
+
+# helper function to add some range info for the function help words
+gather_fns_help <- function(fns_help, deparsed) {
+  # store some info about the range so JS knows which
+  code <- substring(deparsed, 2, nchar(deparsed))
+  parse_tree <- getParseData(parse(text = code))
+  # grab the col1, col2, and text
+  filtered_fns_help <- parse_tree[
+    parse_tree$token == 'SYMBOL_FUNCTION_CALL', c('text', 'line1', 'line2', 'col1', 'col2')
+  ]
+  if (nrow(filtered_fns_help) > 0) {
+    return(
+      list(
+        modifyList(
+          lapply(
+            fns_help,
+            function(fn) {
+              token_info <- filtered_fns_help[filtered_fns_help$text == fn$word, ]
+              fn[['location']] <- list(token_info)
+              fn
+            }
+          ),
+          list(fns_help)
+        )
+      )
+    )
+  }
+  return(list(fns_help))
 }
 
 #' Given an expression of fluent code, return a list of intermediate outputs.
@@ -335,15 +372,14 @@ get_output_intermediates <- function(pipeline) {
         # store the final change type
         intermediate["change"] <- change_type
 
-        # gather the callouts
+        # gather the callouts to mark text in editor
         # store the column strings so we can highlight them as callouts
         callouts <- get_line_callouts()
-        if (!is.null(callouts)) {
-          intermediate["callouts"] <- gather_callouts(callouts, deparsed)
-        }
-
+        intermediate["callouts"] <- gather_callouts(callouts, deparsed)
         # store the help strings so we can make functions links to Help pages
-        intermediate["fns_help"] <- list(get_fns_help())
+        fns_help <- get_fns_help()
+        intermediate["fns_help"] <- gather_fns_help(fns_help, deparsed)
+
         # if we have a dataframe %>% verb() expression, the 'dataframe' summary is simply
         # the dataframe/tibble with dimensions reported (we could expand that if we want)
         if ((i == 1 && (has_pipes || first_arg_data)) || is.null(verb_summary)) {
