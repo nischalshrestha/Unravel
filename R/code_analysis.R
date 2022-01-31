@@ -145,9 +145,7 @@ gather_fns_help <- function(fns_help, deparsed) {
   fns_help_words <- lapply(fns_help, function(x) x$word)
   # grab the col1, col2, and text
   filtered_tree <- parse_tree[parse_tree$token == 'SYMBOL_FUNCTION_CALL', ]
-  filtered_fns_help <- filtered_tree[
-    , c('text', 'line1', 'line2', 'col1', 'col2')
-  ]
+  filtered_fns_help <- filtered_tree[c('text', 'line1', 'line2', 'col1', 'col2')]
   if (length(fns_help) == 0 && nrow(filtered_fns_help) > 0) {
     return(
       list(
