@@ -396,49 +396,62 @@ function setup_fns_help(fns_help) {
     let line_fns_help = e.fns_help;
     let line_fns_help_nodes = [];
     if (line_fns_help != null) {
-      line_fns_help_nodes = line_fns_help.map(fn_help => fns_help_code_text(fn_help, line_doc));
+      // NOTE: unlike the callout list, we're going to pass the whole list because
+      // we need information about the first line to properly mark the text with
+      // correct ranges
+      line_fns_help_nodes = fns_help_code_text(line_fns_help, line_doc);
+      line_fns_help_nodes = line_fns_help_nodes.flat();
     }
-    line_fns_help_nodes = line_fns_help_nodes;
+    line.line_fns_help_nodes = line_fns_help_nodes;
   })
 }
 
 // helper function to hyperlink parts of the code snippet that has a function call
-function fns_help_code_text(fn_help, verb_doc) {
-  console.log('fn_help: ' + JSON.stringify(fn_help))
+function fns_help_code_text(fns_help, verb_doc) {
+  console.log('fn_help: ' + JSON.stringify(fns_help))
 
   let code = verb_doc.getValue();
+  let code_lines = verb_doc.getValue().split("\n");
   let fns_html_nodes = [];
+  let beginning_start = code_lines[0].length + 3;
 
-  // this is to track what the first range's column start is (see NOTE below)
-  let beginning_start = 0;
-  for (const [index, ranges] of fn_help.location.entries()) {
-    beginning_start = (index == 0) ? ranges.col1[0] : 0;
-    // each fn could have multiple locations for one word
-    // for multiple lines, so we first zip up the range info
-    let location = zip([ranges.line1, ranges.line2, ranges.col1, ranges.col2]);
-    // go through each range of the locations and mark the text in the CodeMirror
-    // document using all of the range information for each instance of the word
-    for (const [index, range] of location.entries()) {
-      let fn_html_node = document.createElement("span");
-      fn_html_node.innerHTML = fn_help.html;
-      fn_html_node.id = fn_help.word;
-      fn_html_node.addEventListener("click", function(event) {
-        	Shiny.setInputValue("unravel-fn_help", event.target.id, {priority: "event"});
-      });
-      const line1 = range[0] - 1;
-      const line2 = range[1] - 1;
-      // adjust ranges for CodeMirror (see the NOTE in `callout_code_text()`)
-      let col_dec = (line1 > 0) ? beginning_start: 2
-      const col1 = range[2] - col_dec + 2;
-      const col2 = range[3] - col_dec + 3;
-      // this marks the specific snippet within a verb document
-      // such that we can refer to it later when user clicks on them to request Help docs
-      verb_doc.markText(
-        {line: line1, ch: col1},
-        {line: line2, ch: col2},
-        {replacedWith: fn_html_node}
-      );
-      fns_html_nodes.push(fn_html_node);
+  for (const [i, fn_help] of fns_help.entries())  {
+    // this is to track what the first range's column start is (see NOTE below)
+    for (const [index, ranges] of fn_help.location.entries()) {
+      // each fn could have multiple locations for one word
+      // for multiple lines, so we first zip up the range info
+      let location = zip([ranges.line1, ranges.line2, ranges.col1, ranges.col2]);
+      // go through each range of the locations and mark the text in the CodeMirror
+      // document using all of the range information for each instance of the word
+      for (const [index, range] of location.entries()) {
+        let fn_html_node = document.createElement("span");
+        fn_html_node.innerHTML = fn_help.html;
+        fn_html_node.id = fn_help.word;
+        fn_html_node.addEventListener("click", function(event) {
+          	Shiny.setInputValue("unravel-fn_help", event.target.id, {priority: "event"});
+        });
+        console.log(fn_html_node);
+        let line1 = range[0] - 1;
+        let line2 = range[1] - 1;
+        // adjust ranges for CodeMirror
+        let col1 = range[2];
+        let col2 = range[3] + 1;
+        // if we're on new lines, adjust for the start and end such that the previous line's
+        // length + (\n\t\t is accounted for (super hacky but this will do for now)
+        if (line1 > 0) {
+          let col_dec = (line1 > 0) ? beginning_start : 0;
+          col1 = range[2] - (col_dec + 4); // (\n\t\t
+          col2 = range[3] - (col_dec + 3);
+        }
+        // this marks the specific snippet within a verb document
+        // such that we can refer to it later when user clicks on them to request Help docs
+        verb_doc.markText(
+          {line: line1, ch: col1},
+          {line: line2, ch: col2},
+          {replacedWith: fn_html_node}
+        );
+        fns_html_nodes.push(fn_html_node);
+      }
     }
   }
 

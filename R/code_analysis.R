@@ -112,7 +112,9 @@ gather_callouts <- function(callouts, deparsed) {
     filtered_tree <- filtered_tree[filtered_tree$token == "SYMBOL_SUB", ]
   }
   # grab the col1, col2 and store them as 2 more items in the callouts list
-  filtered_callouts <- filtered_tree[filtered_tree$text %in% callout_words, c('text', 'line1', 'line2', 'col1', 'col2')]
+  filtered_callouts <- filtered_tree[
+    filtered_tree$text %in% callout_words, c('text', 'line1', 'line2', 'col1', 'col2')
+  ]
   if (nrow(filtered_callouts) > 0) {
     # return a list of callouts with the range information baked in for JS to mark
     return(
@@ -140,11 +142,14 @@ gather_fns_help <- function(fns_help, deparsed) {
   # store some info about the range so JS knows which
   code <- substring(deparsed, 2, nchar(deparsed))
   parse_tree <- getParseData(parse(text = code))
+  fns_help_words <- lapply(fns_help, function(x) x$word)
   # grab the col1, col2, and text
-  filtered_fns_help <- parse_tree[
-    parse_tree$token == 'SYMBOL_FUNCTION_CALL', c('text', 'line1', 'line2', 'col1', 'col2')
+  filtered_tree <- parse_tree[parse_tree$token == 'SYMBOL_FUNCTION_CALL', ]
+  filtered_fns_help <- filtered_tree[
+    filtered_tree$text %in% fns_help_words, c('text', 'line1', 'line2', 'col1', 'col2')
   ]
   if (nrow(filtered_fns_help) > 0) {
+    # return a list of callouts with the range information baked in for JS to mark
     return(
       list(
         modifyList(

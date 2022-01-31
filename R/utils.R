@@ -91,7 +91,6 @@ store_fns_help <- function(fns) {
 get_fns_help <- function() {
   if (exists("fns_help", envir = fns_help_cache)) {
     fns_help <- get("fns_help", envir = fns_help_cache)
-    # message(paste0("getting fns_help ", fns_help))
     return(fns_help)
   }
   return(NULL)
