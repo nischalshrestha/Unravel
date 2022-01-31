@@ -146,8 +146,23 @@ gather_fns_help <- function(fns_help, deparsed) {
   # grab the col1, col2, and text
   filtered_tree <- parse_tree[parse_tree$token == 'SYMBOL_FUNCTION_CALL', ]
   filtered_fns_help <- filtered_tree[
-    filtered_tree$text %in% fns_help_words, c('text', 'line1', 'line2', 'col1', 'col2')
+    , c('text', 'line1', 'line2', 'col1', 'col2')
   ]
+  if (length(fns_help) == 0 && nrow(filtered_fns_help) > 0) {
+    return(
+      list(
+        lapply(
+          filtered_fns_help$text,
+          function(fn_name) {
+            fn <- list(word = fn_name, html = glue::glue("<a id='{fn_name}' class='fn_help'>{fn_name}</a>"))
+            token_info <- filtered_fns_help[filtered_fns_help$text == fn_name, ]
+            fn[['location']] <- list(token_info)
+            fn
+          }
+        )
+      )
+    )
+  }
   if (nrow(filtered_fns_help) > 0) {
     # return a list of callouts with the range information baked in for JS to mark
     return(

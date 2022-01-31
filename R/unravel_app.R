@@ -536,7 +536,7 @@ unravelServer <- function(id, user_code = NULL) {
         fn_ns <- getAnywhere(fn)$where
         # since tidylog gets loaded as part of this package,
         # filter it out so we can get the dplyr/tidyr namespace
-        fn_ns <- Filter(function(ns) !grepl('tidylog|Unravel', ns), fn_ns)
+        fn_ns <- Filter(function(ns) !grepl('tidylog|Unravel|ggplot2', ns), fn_ns)
         # grab the most relevant namespace that this
         # function belongs to (first element)
         fn_pkg <- unlist(strsplit(fn_ns[[1]], ":"))
