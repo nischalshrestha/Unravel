@@ -4,6 +4,7 @@
   # this is done after all the utility functions for getting/setting summaries are defined above
   options(
     "tidylog.display" = list(store_verb_summary),
-    "tidylog.callouts" = store_line_callouts
+    "tidylog.callouts" = store_line_callouts,
+    "tidylog.fns_help" = store_fns_help
   )
 }

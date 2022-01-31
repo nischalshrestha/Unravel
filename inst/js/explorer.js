@@ -302,49 +302,69 @@ function setup_box_listeners() {
   Shiny.setInputValue("unravel-need_callouts", "Gimme the callouts! ", {priority: "event"});
 }
 
-// helper function to callout parts of the code snippet
-function callout_code_text(callout, verb_doc) {
-  // this marks the specific snippet within a verb document
-  // such that we can refer to it later to enable or disable the span for callout highlights
-  let snippet = callout.word;
-  let lineNumber = 0;
-  // regex the boundary word
-  const re = new RegExp("(\\b" + snippet + "\\b)", 'g');
-  // for multi-lines, we need to split them into individual lines
-  // so that we can get the line number in addition to the match
-  let cur_lines = verb_doc.getValue().split("\n")
-  let callout_html_nodes = [];
-  for (const [index, line] of cur_lines.entries()) {
-    const matches = line.matchAll(re);
-    for (const m of matches) {
-      let callout_html_node = document.createElement("span");
-      callout_html_node.innerHTML = snippet;
-      callout_html_node.id = callout.change;
-    	if (m !== undefined) {
-        let charNumber = m.index;
-        verb_doc.markText(
-          {line: index, ch: charNumber},
-          {line: index, ch: charNumber + snippet.length},
-          {replacedWith: callout_html_node}
-        )
-      } else {
-        // otherwise, set id to "" so that we don't call out any code text
-        callout_html_node.id = "";
-      }
-      callout_html_nodes.push(callout_html_node);
-    }
-  }
-  return callout_html_nodes;
-}
-
 /*
 Callouts
 */
 
+// helper function to zip lists together like in Python
+// src: https://stackoverflow.com/a/10284006
+function zip(arrays) {
+    return arrays[0].map(function(_,i){
+        return arrays.map(function(array){return array[i]})
+    });
+}
+
+// helper function to callout parts of the code snippet
+function callout_code_text(callout, verb_doc) {
+  console.log('callout: ' + JSON.stringify(callout))
+  // get the content
+  const code =  verb_doc.getValue();
+  // setup a list containing all html nodes that will mark all instances of the
+  // callout word
+  let callout_html_nodes = [];
+  // this is to track what the first range's column start is (see NOTE below)
+  let beginning_start = 0;
+  for (const [index, ranges] of callout.location.entries()) {
+    beginning_start = (index == 0) ? ranges.col1[0] : 0;
+    // each callout could have multiple locations for one word
+    // for multiple lines, so we first zip up the range info
+    let location = zip([ranges.line1, ranges.line2, ranges.col1, ranges.col2]);
+    // go through each range of the locations and mark the text in the CodeMirror
+    // document using all of the range information for each instance of the word
+    for (const [index, range] of location.entries()) {
+      let callout_html_node = document.createElement("span");
+      callout_html_node.innerHTML = callout.word;
+      callout_html_node.id = callout.change;
+      const line1 = range[0] - 1;
+      const line2 = range[1] - 1;
+      // NOTE: the way codemirror works and the ranges we get from R via `getParseData()`
+      // sadly do not line up; in particular, the column start and end from R are going to
+      // be working off of a single-line string but the way CodeMirror marks up text conflicts
+      // with this because it assumes start is 0 for any new line. So, we are
+      // compensating for that discrepancy here by using the first line's range col1 so that
+      // we can appropriately subtract this first, and add 2 for the \t\t for both col1 and col2
+      // and one more for col2 bc JS excludes end range whereas R includes it.
+      let col_dec = (line1 > 0) ? beginning_start: 2
+      const col1 = range[2] - col_dec + 2;
+      const col2 = range[3] - col_dec + 3;
+      verb_doc.markText(
+        {line: line1, ch: col1},
+        {line: line2, ch: col2},
+        {replacedWith: callout_html_node}
+      );
+      callout_html_nodes.push(callout_html_node);
+    }
+  }
+
+  return callout_html_nodes;
+}
+
 function setup_callouts(callouts) {
   console.log("got the callouts in JS! " + JSON.stringify(callouts));
+  console.log('length of callouts ' + Object.keys(callouts));
   // for each lineid, add a the callout words field
   // containing a list like: [{word: "foo", change: "internal-change"}, ...]
+  // mark variables to highlight in the code text in the Codemirror text editors
   callouts.forEach(e => {
     let line = lines[e.lineid];
     let line_doc = line.editor.getDoc();
@@ -357,6 +377,85 @@ function setup_callouts(callouts) {
     line.callout_nodes = line_callout_nodes;
   })
   Shiny.setInputValue("unravel-need_prompts", "we need the prompts now ", {priority: "event"});
+}
+
+/*
+Help text linking
+*/
+
+// a helper function that will mark all of the function text as hyperlink
+// for each line in the code
+function setup_fns_help(fns_help) {
+  console.log('got the fns_help in JS! ' + JSON.stringify(fns_help));
+  // for each element in the JSON list of [{ <function>: <string>, ... }, ...]
+  // mark functions in the code text in the Codemirror text editors
+  fns_help.forEach(e => {
+    console.log('fns_help element: ' + JSON.stringify(e.fns_help));
+    let line = lines[e.lineid];
+    let line_doc = line.editor.getDoc();
+    let line_fns_help = e.fns_help;
+    let line_fns_help_nodes = [];
+    if (line_fns_help != null) {
+      // NOTE: unlike the callout list, we're going to pass the whole list because
+      // we need information about the first line to properly mark the text with
+      // correct ranges
+      line_fns_help_nodes = fns_help_code_text(line_fns_help, line_doc);
+      line_fns_help_nodes = line_fns_help_nodes.flat();
+    }
+    line.line_fns_help_nodes = line_fns_help_nodes;
+  })
+}
+
+// helper function to hyperlink parts of the code snippet that has a function call
+function fns_help_code_text(fns_help, verb_doc) {
+  console.log('fn_help: ' + JSON.stringify(fns_help))
+
+  let code = verb_doc.getValue();
+  let code_lines = verb_doc.getValue().split("\n");
+  let fns_html_nodes = [];
+  let beginning_start = code_lines[0].length + 3;
+
+  for (const [i, fn_help] of fns_help.entries())  {
+    // this is to track what the first range's column start is (see NOTE below)
+    for (const [index, ranges] of fn_help.location.entries()) {
+      // each fn could have multiple locations for one word
+      // for multiple lines, so we first zip up the range info
+      let location = zip([ranges.line1, ranges.line2, ranges.col1, ranges.col2]);
+      // go through each range of the locations and mark the text in the CodeMirror
+      // document using all of the range information for each instance of the word
+      for (const [index, range] of location.entries()) {
+        let fn_html_node = document.createElement("span");
+        fn_html_node.innerHTML = fn_help.html;
+        fn_html_node.id = fn_help.word;
+        fn_html_node.addEventListener("click", function(event) {
+          	Shiny.setInputValue("unravel-fn_help", event.target.id, {priority: "event"});
+        });
+        console.log(fn_html_node);
+        let line1 = range[0] - 1;
+        let line2 = range[1] - 1;
+        // adjust ranges for CodeMirror
+        let col1 = range[2];
+        let col2 = range[3] + 1;
+        // if we're on new lines, adjust for the start and end such that the previous line's
+        // length + (\n\t\t is accounted for (super hacky but this will do for now)
+        if (line1 > 0) {
+          let col_dec = (line1 > 0) ? beginning_start : 0;
+          col1 = range[2] - (col_dec + 4); // (\n\t\t
+          col2 = range[3] - (col_dec + 3);
+        }
+        // this marks the specific snippet within a verb document
+        // such that we can refer to it later when user clicks on them to request Help docs
+        verb_doc.markText(
+          {line: line1, ch: col1},
+          {line: line2, ch: col2},
+          {replacedWith: fn_html_node}
+        );
+        fns_html_nodes.push(fn_html_node);
+      }
+    }
+  }
+
+  return fns_html_nodes;
 }
 
 function send_toggle(message) {
@@ -403,6 +502,12 @@ $(document).on("shiny:sessioninitialized", function(event) {
     console.log("trying to setup the callouts in JS")
     // set up the callouts
     setup_callouts(callouts);
+  });
+
+  Shiny.addCustomMessageHandler('fns_help', function(fns_help) {
+    console.log("trying to setup the fns_help in JS")
+    // set up the fns_help
+    setup_fns_help(fns_help);
   });
 
   Shiny.addCustomMessageHandler('prompts', function(summaries) {

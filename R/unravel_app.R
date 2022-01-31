@@ -211,6 +211,10 @@ unravelUI <- function(id) {
       shiny::includeCSS(file.path(package_css, "light.css")),
     ),
     shiny::includeScript(file.path(package_js, "script.js")),
+    # although this is super confusing, `plotOutput` is simply a
+    # placeholder Shiny output so we can use it to call `help()` programmatically
+    # it's a Shiny output that seems to allow invoking help page
+    shiny::plotOutput(ns("fn_help_dummy"), height = 1),
     shiny::htmlOutput(ns("code_explorer")),
     shiny::div(
       style = "width: 100%; height: 500px; margin: 10px;",
@@ -241,6 +245,8 @@ unravelServer <- function(id, user_code = NULL) {
   moduleServer(
     id,
     function(input, output, session) {
+      #### Setup variables and handlers
+
       # these are reactive values related to current line, code info of all lines, summary prompts, and df outputs
       rv <- reactiveValues()
       rv$current <- 0
@@ -249,7 +255,12 @@ unravelServer <- function(id, user_code = NULL) {
       rv$outputs <- NULL
       rv$generic_output <- NULL
       rv$table_output <- NULL
+      # used to trigger output (data.frame/lists)
+      rv$callouts <- NULL
       rv$main_callout <- NULL
+      # used to trigger the Help page for a function
+      rv$fns_help <- NULL
+      rv$cur_fns_help <- NULL
 
       # send signal to JS of the code text to display
       session$sendCustomMessage("set_code", paste0(user_code))
@@ -257,7 +268,6 @@ unravelServer <- function(id, user_code = NULL) {
       # listen for JS to tell us code is ready for us to be processed
       observeEvent(input$code_ready, {
         # message("Receiving code from JS: ", input$code_ready)
-
         # TODO-refactor: process lines function?
         # process lines
         if (!is.null(input$code_ready) && nzchar(input$code_ready)) {
@@ -297,8 +307,18 @@ unravelServer <- function(id, user_code = NULL) {
                 )
               })
               attr(rv$current_code_info, "order") <- seq_len(length(outputs))
-              rv$callouts <- lapply(outputs, function(x) list(lineid = paste0("line", x$line), callouts = x$callouts))
+              rv$callouts <- lapply(outputs, function(x) {
+                list(lineid = paste0("line", x$line), callouts = x$callouts)
+              })
               rv$cur_callouts <- lapply(outputs, function(x) x$callouts)
+
+              # information about the functions used in each line
+              # and its respective HTML that will allow user to click on them
+              rv$fns_help <- lapply(outputs, function(x) {
+                list(lineid = paste0("line", x$line), fns_help = x$fns_help)
+              })
+              rv$cur_fns_help <- lapply(outputs, function(x) x$fns_help)
+
               rv$summaries <- lapply(outputs, function(x) {
                 if (!is.null(x$err)) {
                   x$summary <- x$err
@@ -368,9 +388,12 @@ unravelServer <- function(id, user_code = NULL) {
       })
 
       # list for a trigger message input from JS input so we can send callout info for each line
+      # this involves sending the list of callouts for highlighting and a list for the function
+      # help trigger from JS -> R (Help menu)
       observeEvent(input$need_callouts, {
         # message("JS is ready for callouts: ", input$need_callouts)
         session$sendCustomMessage("callouts", rv$callouts)
+        session$sendCustomMessage("fns_help", rv$fns_help)
       })
 
       # list for a trigger message input from JS input so we can send summary info for data prompts
@@ -378,6 +401,8 @@ unravelServer <- function(id, user_code = NULL) {
         # message("JS is ready for prompts: ", input$need_prompts)
         session$sendCustomMessage("prompts", rv$summaries)
       })
+
+      #### Inspection of code and summary
 
       # list for a click square input from JS to tells us which data to display for a particular line
       observeEvent(input$square, {
@@ -399,6 +424,8 @@ unravelServer <- function(id, user_code = NULL) {
           session$sendCustomMessage("line", input$line)
         }
       })
+
+      #### Output handlers
 
       # a reactive expression that sets and determines the type of data we render on the UI for code output
       # this could be generic output like vectors and lists, or
@@ -499,6 +526,30 @@ unravelServer <- function(id, user_code = NULL) {
       observeEvent(input$table_focus, {
         log_event(input$table_focus)
       })
+
+      #### Function help handlers
+
+      # invoke the help menu for a particular function
+      observeEvent(input$fn_help, {
+        fn <- input$fn_help
+        # get the namespaces for the function
+        fn_ns <- getAnywhere(fn)$where
+        # since tidylog gets loaded as part of this package,
+        # filter it out so we can get the dplyr/tidyr namespace
+        fn_ns <- Filter(function(ns) !grepl('tidylog|Unravel', ns), fn_ns)
+        # grab the most relevant namespace that this
+        # function belongs to (first element)
+        fn_pkg <- unlist(strsplit(fn_ns[[1]], ":"))
+        rv$cur_fns_help <- list(fn = fn, pkg = fn_pkg[[2]])
+      })
+
+      output$fn_help_dummy <- renderPlot({
+        if (!is.null(rv$cur_fns_help) && length(rv$cur_fns_help$pkg) > 0) {
+          help(rv$cur_fns_help$fn, rv$cur_fns_help$pkg)
+        }
+      })
+
+      #### Structural edit handlers
 
       # this input even tells us which line to (un)comment
       observeEvent(input$toggle, {
