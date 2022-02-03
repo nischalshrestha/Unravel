@@ -112,6 +112,10 @@ log_event <- function(message, context = "unravel") {
   log_unravel("EVENT", message, context)
 }
 
+log_help <- function(message, context = "unravel") {
+  log_unravel("HELP", message, context)
+}
+
 #' Log a code event
 #'
 #' A context either executed some code on the IDE or the Unravel app.
@@ -139,6 +143,10 @@ log_content_change <- function(content, path = "", context = "rstudio") {
 }
 
 log_unravel <- function(type, message, path = "", context = "unravel", storage = "sqlite") {
+  # first, check if all the required options are set, and if not quit early
+  unravel_log_options <- c("db.file", "unravel.logdir", "unravel.logfile", "unravel.logging")
+  are_options_set <- all(unravel_log_options %in% names(options()))
+  if (!are_options_set) return(invisible())
   # if logging is enabled, log
   if (getOption("unravel.logging")) {
     timestamp <- format(Sys.time())
