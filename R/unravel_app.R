@@ -317,7 +317,6 @@ unravelServer <- function(id, user_code = NULL) {
               rv$fns_help <- lapply(outputs, function(x) {
                 list(lineid = paste0("line", x$line), fns_help = x$fns_help)
               })
-              rv$cur_fns_help <- lapply(outputs, function(x) x$fns_help)
 
               rv$summaries <- lapply(outputs, function(x) {
                 if (!is.null(x$err)) {
@@ -545,6 +544,10 @@ unravelServer <- function(id, user_code = NULL) {
 
       output$fn_help_dummy <- renderPlot({
         if (!is.null(rv$cur_fns_help) && length(rv$cur_fns_help$pkg) > 0) {
+          # log event of referencing help page for a function
+          log_help(
+            paste0("Open help for ", paste0(rv$cur_fns_help$fn, ":", rv$cur_fns_help$pkg))
+          )
           help(rv$cur_fns_help$fn, rv$cur_fns_help$pkg)
         }
       })
