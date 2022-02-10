@@ -191,8 +191,6 @@ unravelUI <- function(id) {
   shiny::fixedPage(
     # fontawesome (for glyphicon for move)
     shiny::tags$style("@import url(https://use.fontawesome.com/releases/v5.7.2/css/all.css);"),
-    # Sortable.js
-    tags$head(tags$script(src = "https://raw.githack.com/SortableJS/Sortable/master/Sortable.js")),
     shiny::tags$body(
       # bootstrap stuff
       shiny::includeCSS(file.path(package_css, "bootstrap.min.css")),
@@ -201,6 +199,8 @@ unravelUI <- function(id) {
       shiny::includeScript(file.path(package_js, "codemirror.js")),
       shiny::includeCSS(file.path(package_css, "codemirror.css")),
       shiny::includeScript(file.path(package_js, "r.js")),
+      # Sortable.js
+      shiny::includeScript(file.path(package_js, "Sortable.min.js")),
       # custom css
       shiny::includeCSS(file.path(package_css, "style.css")),
       # custom js for exploration of code

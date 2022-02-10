@@ -361,7 +361,6 @@ function callout_code_text(callout, verb_doc) {
 
 function setup_callouts(callouts) {
   console.log("got the callouts in JS! " + JSON.stringify(callouts));
-  console.log('length of callouts ' + Object.keys(callouts));
   // for each lineid, add a the callout words field
   // containing a list like: [{word: "foo", change: "internal-change"}, ...]
   // mark variables to highlight in the code text in the Codemirror text editors
@@ -389,17 +388,15 @@ function setup_fns_help(fns_help) {
   console.log('got the fns_help in JS! ' + JSON.stringify(fns_help));
   // for each element in the JSON list of [{ <function>: <string>, ... }, ...]
   // mark functions in the code text in the Codemirror text editors
-  fns_help.forEach(e => {
-    console.log('fns_help element: ' + JSON.stringify(e.fns_help));
+  fns_help.forEach((e, index, fullArray) => {
     let line = lines[e.lineid];
     let line_doc = line.editor.getDoc();
     let line_fns_help = e.fns_help;
     let line_fns_help_nodes = [];
     if (line_fns_help != null) {
-      // NOTE: unlike the callout list, we're going to pass the whole list because
-      // we need information about the first line to properly mark the text with
-      // correct ranges
-      line_fns_help_nodes = fns_help_code_text(line_fns_help, line_doc);
+      // for each line/editor, create html nodes that replace text that should be
+      // functions in R
+      line_fns_help_nodes = fns_help_code_text(line_fns_help, line_doc, index);
       line_fns_help_nodes = line_fns_help_nodes.flat();
     }
     line.line_fns_help_nodes = line_fns_help_nodes;
@@ -407,16 +404,11 @@ function setup_fns_help(fns_help) {
 }
 
 // helper function to hyperlink parts of the code snippet that has a function call
-function fns_help_code_text(fns_help, verb_doc) {
-  console.log('fn_help: ' + JSON.stringify(fns_help))
-
+function fns_help_code_text(fns_help, verb_doc, editor_index) {
   let code = verb_doc.getValue();
-  let code_lines = verb_doc.getValue().split("\n");
   let fns_html_nodes = [];
-  let beginning_start = code_lines[0].length + 3;
-
   for (const [i, fn_help] of fns_help.entries())  {
-    // this is to track what the first range's column start is (see NOTE below)
+    // go through locations of a word
     for (const [index, ranges] of fn_help.location.entries()) {
       // each fn could have multiple locations for one word
       // for multiple lines, so we first zip up the range info
@@ -430,19 +422,11 @@ function fns_help_code_text(fns_help, verb_doc) {
         fn_html_node.addEventListener("click", function(event) {
           	Shiny.setInputValue("unravel-fn_help", event.target.id, {priority: "event"});
         });
-        console.log(fn_html_node);
-        let line1 = range[0] - 1;
-        let line2 = range[1] - 1;
-        // adjust ranges for CodeMirror
-        let col1 = range[2];
-        let col2 = range[3] + 1;
-        // if we're on new lines, adjust for the start and end such that the previous line's
-        // length + (\n\t\t is accounted for (super hacky but this will do for now)
-        if (line1 > 0) {
-          let col_dec = (line1 > 0) ? beginning_start : 0;
-          col1 = range[2] - (col_dec + 4); // (\n\t\t
-          col2 = range[3] - (col_dec + 3);
-        }
+        // adjust ranges for CodeMirror/JS
+        const line1 = range[0] - 1;
+        const line2 = range[1] - 1;
+        const col1 = (editor_index === 0) ? range[2] - 1 : range[2];
+        const col2 = (editor_index === 0) ? range[3] : range[3] + 1;
         // this marks the specific snippet within a verb document
         // such that we can refer to it later when user clicks on them to request Help docs
         verb_doc.markText(

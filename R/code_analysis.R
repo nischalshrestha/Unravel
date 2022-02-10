@@ -99,7 +99,7 @@ get_data_change_type <- function(verb_name, prev_output, cur_output) {
 gather_callouts <- function(callouts, deparsed) {
   if (is.null(callouts)) return(NULL)
   # store some info about the range so JS knows which
-  code <- substring(deparsed, 2, nchar(deparsed))
+  code <- trimws(deparsed)
   parse_tree <- getParseData(parse(text = code))
   callout_words <- lapply(callouts, function(x) x$word)
   filtered_tree <- parse_tree[parse_tree$token != 'SYMBOL_FUNCTION_CALL', ]
@@ -134,13 +134,28 @@ gather_callouts <- function(callouts, deparsed) {
       )
     )
   }
+  # in some cases, we can have changed columns yet they aren't present in the code text
+  # if that is the case make sure to return callouts that contain an empty list for callouts
+  if (length(callouts) != 0) {
+    return(
+      list(
+        lapply(
+          callouts,
+          function(callout) {
+            callout[['location']] <- list()
+            callout
+          }
+        )
+      )
+    )
+  }
   return(list(callouts))
 }
 
 # helper function to add some range info for the function help words
 gather_fns_help <- function(fns_help, deparsed) {
   # store some info about the range so JS knows which
-  code <- substring(deparsed, 2, nchar(deparsed))
+  code <- trimws(deparsed)
   parse_tree <- getParseData(parse(text = code))
   fns_help_words <- lapply(fns_help, function(x) x$word)
   # grab the col1, col2, and text
@@ -402,6 +417,16 @@ get_output_intermediates <- function(pipeline) {
         # the dataframe/tibble with dimensions reported (we could expand that if we want)
         if ((i == 1 && (has_pipes || first_arg_data)) || is.null(verb_summary)) {
           verb_summary <- tidylog::get_data_summary(out)
+          # attempt to produce a hyperlink for any dataset or expression with functions for
+          # the first line
+          if (length(getAnywhere(deparsed)$where) > 0) {
+            dataset_link <- list(
+              word = deparsed,
+              html = glue::glue("<a id='{deparsed}' class='fn_help'>{deparsed}</a>"),
+              location = list(data.frame(text = deparsed, line1 = 1, line2 = 1, col1 = 1, col2 = nchar(deparsed)))
+            )
+            intermediate[["fns_help"]] <- list(append(dataset_link, intermediate[["fns_help"]]))
+          }
         }
         # store the final function summary and set it to empty string if we do not yet have
         # a summary support for the function
