@@ -346,6 +346,7 @@ get_output_intermediates <- function(pipeline) {
             intermediate["change"] <- "error"
             # for now, simply point out that the previous lines have an error
             intermediate["summary"] <- "<strong>Summary:</strong> Previous lines have problems!"
+            intermediate["fns_help"] <- gather_fns_help(list(), deparsed)
             results <- append(results, list(intermediate))
             next
           }
@@ -462,6 +463,9 @@ get_output_intermediates <- function(pipeline) {
       msg <- gsub("\n\u2139", "<br><span style='color:DodgerBlue'>\u2139</span>", msg)
       msg <- gsub("\n\\*", "<br>*", msg)
       intermediate[["err"]] <- msg
+      # even though we have an error, include function hyperlinks so user can
+      # invesitage how the functions within the expression of the line work
+      intermediate["fns_help"] <- gather_fns_help(list(), deparsed)
     }
     results <- append(results, list(intermediate))
   }
