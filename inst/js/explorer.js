@@ -542,8 +542,15 @@ $(document).on("shiny:sessioninitialized", function(event) {
       }
       new_summary_class = `d-flex noSelect justify-content-center ${e.change}${shape}`;
       line.summary_box.className = new_summary_class;
+      // make sure to hide or reveal the row/col based on whether or not that information
+      // is available (e.g. error lines would have nothing, lists would only have row, etc.)
+      // since R initially would set size to 0em during first Unravel, we have to properly
+      // set the font size when we do have the shape information on updates
       line.line_row_content.innerHTML = (e.row == "") ? "&nbsp;" : e.row;
+      line.line_row_content.style.fontSize = (e.row !== "") ? "0.8em" : "0em";
       line.line_col_content.innerHTML = (e.col == "") ? "&nbsp;" : e.col;
+      line.line_col_content.style.fontSize = (e.col !== "") ? "0.8em" : "0em";
+      // finally, set the new code text on the editor
       line.editor.getDoc().setValue(e.code);
     }
     // setup summary box event listeners again because the lineids have been updated
