@@ -191,8 +191,6 @@ unravelUI <- function(id) {
   shiny::fixedPage(
     # fontawesome (for glyphicon for move)
     shiny::tags$style("@import url(https://use.fontawesome.com/releases/v5.7.2/css/all.css);"),
-    # Sortable.js
-    tags$head(tags$script(src = "https://raw.githack.com/SortableJS/Sortable/master/Sortable.js")),
     shiny::tags$body(
       # bootstrap stuff
       shiny::includeCSS(file.path(package_css, "bootstrap.min.css")),
@@ -201,6 +199,8 @@ unravelUI <- function(id) {
       shiny::includeScript(file.path(package_js, "codemirror.js")),
       shiny::includeCSS(file.path(package_css, "codemirror.css")),
       shiny::includeScript(file.path(package_js, "r.js")),
+      # Sortable.js
+      shiny::includeScript(file.path(package_js, "Sortable.min.js")),
       # custom css
       shiny::includeCSS(file.path(package_css, "style.css")),
       # custom js for exploration of code
@@ -533,9 +533,9 @@ unravelServer <- function(id, user_code = NULL) {
         fn <- input$fn_help
         # get the namespaces for the function
         fn_ns <- getAnywhere(fn)$where
-        # since tidylog gets loaded as part of this package,
+        # since tidylog/Unravel gets loaded as part of this package,
         # filter it out so we can get the dplyr/tidyr namespace
-        fn_ns <- Filter(function(ns) !grepl('tidylog|Unravel|ggplot2', ns), fn_ns)
+        fn_ns <- Filter(function(ns) !grepl('tidylog|Unravel', ns), fn_ns)
         # grab the most relevant namespace that this
         # function belongs to (first element)
         fn_pkg <- unlist(strsplit(fn_ns[[1]], ":"))

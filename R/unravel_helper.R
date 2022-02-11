@@ -125,17 +125,22 @@ update_lines <- function(order, outputs, current_code_info, new_code_info, rv, s
     x
   })
   new_rv_code_info <- new_rv_code_info[order]
-  send_js_code_info <- lapply(new_rv_code_info, function(x) {
-    list(id = x$lineid, code = x$code, change = x$change, row = x$row, col = x$col)
-  })
-  # NOTE: this starts the sequence again of requesting callouts, then prompts
-  session$sendCustomMessage("update_line", send_js_code_info)
 
-  # update the summaries, callouts, and outputs as well
+  # update the summaries, callouts, function help, and outputs as well
   rv$summaries <- lapply(new_rv_code_info, function(x) list(lineid = paste0("line", x$lineid), summary = x$summary))
   rv$callouts <- lapply(new_rv_code_info, function(x) list(lineid = paste0("line", x$lineid), callouts = x$callouts))
   rv$outputs <- lapply(outputs, function(x) list(id = x$line, lineid = paste0("line", x$line), output = x$output))
   rv$cur_callouts <- lapply(outputs, function(x) x$callouts)
+  rv$fns_help <- lapply(outputs, function(x) {
+    list(lineid = paste0("line", x$line), fns_help = x$fns_help)
+  })
+
+  # NOTE: this starts the sequence again of requesting callouts, then prompts
+  send_js_code_info <- lapply(new_rv_code_info, function(x) {
+    list(id = x$lineid, code = x$code, change = x$change, row = x$row, col = x$col)
+  })
+  session$sendCustomMessage("update_line", send_js_code_info)
+
   # update the data display to the last enabled output
   rv$current <- length(rv$outputs)
 }

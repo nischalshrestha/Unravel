@@ -501,10 +501,10 @@
     },
     "reactable": {
       "Package": "reactable",
-      "Version": "0.2.2",
+      "Version": "0.2.3",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "31b911f5231ea795b79fdde51644035e"
+      "Hash": "ac1afe50d1c77470a72971a07fd146b1"
     },
     "rematch2": {
       "Package": "rematch2",
