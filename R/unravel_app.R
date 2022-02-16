@@ -219,6 +219,12 @@ unravelUI <- function(id) {
     # it's a Shiny output that seems to allow invoking help page
     shiny::plotOutput(ns("fn_help_dummy"), height = 1),
     shiny::div(
+      id = "code_explorer_container",
+      # since the tabsetPanel below renders before the code overlay, this is a hack
+      # that 'hides' the tabbed output by simply shifting the content way below
+      # so the user is unaware it even existed; when the html for code_explorer loads
+      # we set this height to 100% to bring the tab output back.
+      style = "height: 5000px;",
       shiny::htmlOutput(ns("code_explorer"))
     ),
     shiny::tabsetPanel(
@@ -358,7 +364,9 @@ unravelServer <- function(id, user_code = NULL) {
               shiny::tags$script("setup_sortable();"),
               # toggle
               shiny::tags$script("setup_toggles();"),
-              shiny::tags$script("setup_box_listeners();")
+              shiny::tags$script("setup_box_listeners();"),
+              # a hack that makes sure the code explorer loads before the tabs output
+              shiny::tags$script("document.getElementById('code_explorer_container').style.height = '100%';")
             ),
             shiny::br(),
             # TODO if we want we could also add prompts to the data change scheme color
