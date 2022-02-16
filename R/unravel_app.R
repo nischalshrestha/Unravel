@@ -1,16 +1,4 @@
 
-#' @importFrom shiny observe
-#' @importFrom shiny observeEvent
-#' @importFrom shiny reactive
-#' @importFrom shiny reactiveValues
-#' @importFrom shiny div
-#' @importFrom shiny span
-#' @importFrom shiny fluidPage
-#' @importFrom shiny shinyApp
-#' @importFrom shiny tags
-#' @importFrom shiny moduleServer
-#' @importFrom shiny renderUI
-#' @importFrom shiny onStop
 #' @importFrom reactable colDef
 #' @importFrom utils getParseData
 #' @importFrom ggplot2 is.ggplot
@@ -180,6 +168,21 @@ create_group_item_tags <- function(lines, ns_id) {
 #'
 #' @param id A \code{character}
 #'
+#' @importFrom shiny observe
+#' @importFrom shiny observeEvent
+#' @importFrom shiny reactive
+#' @importFrom shiny reactiveValues
+#' @importFrom shiny div
+#' @importFrom shiny span
+#' @importFrom shiny fluidPage
+#' @importFrom shiny shinyApp
+#' @importFrom shiny tags
+#' @importFrom shiny moduleServer
+#' @importFrom shiny renderUI
+#' @importFrom shiny onStop
+#' @importFrom shiny mainPanel
+#' @importFrom shiny navbarPage
+#'
 #' @return \code{shiny::fixedPage}
 #' @noRd
 unravelUI <- function(id) {
@@ -215,11 +218,19 @@ unravelUI <- function(id) {
     # placeholder Shiny output so we can use it to call `help()` programmatically
     # it's a Shiny output that seems to allow invoking help page
     shiny::plotOutput(ns("fn_help_dummy"), height = 1),
-    shiny::htmlOutput(ns("code_explorer")),
     shiny::div(
-      style = "width: 100%; height: 500px; margin: 10px;",
-      shiny::verbatimTextOutput(ns("generic_output")),
-      reactable::reactableOutput(ns("line_table"))
+      shiny::htmlOutput(ns("code_explorer"))
+    ),
+    shiny::tabsetPanel(
+      shiny::tabPanel("Table",
+        shiny::div(
+          style = "width: 100%; height: 500px; margin: 10px;",
+          shiny::verbatimTextOutput(ns("generic_output")),
+          reactable::reactableOutput(ns("line_table"))
+        )
+      ),
+      # a pane that includes the diagnoistics for the dataframe.
+      shiny::tabPanel("Diagnosis", shiny::htmlOutput(ns("diagnosis")))
     )
   )
 }
@@ -524,6 +535,14 @@ unravelServer <- function(id, user_code = NULL) {
       # log a user interacting with a table event
       observeEvent(input$table_focus, {
         log_event(input$table_focus)
+      })
+
+      #### Diagnosis
+      output$diagnosis <- renderUI({
+        tagList(
+          shiny::renderPlot(naniar::gg_miss_var(data(), show_pct = TRUE)),
+          shiny::renderTable(naniar::miss_var_summary(data()))
+        )
       })
 
       #### Function help handlers
