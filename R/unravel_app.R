@@ -545,7 +545,8 @@ unravelServer <- function(id, user_code = NULL) {
         log_event(input$table_focus)
       })
 
-      #### Diagnosis
+      #### Diagnosis handler
+
       output$diagnosis <- renderUI({
         tagList(
           shiny::renderPlot(naniar::gg_miss_var(data(), show_pct = TRUE)),
