@@ -1,9 +1,11 @@
 
-#' Return basic stats about the columns of a data.frame or tibble
+#' Return basic descriptive stats about the columns of a \code{data.frame} or \code{tibble}
 #'
-#' @param dat data.frame or tibble
+#' Currently, we return type of column, # unique elements, # missing values.
 #'
-#' @return tibble
+#' @param dat \code{data.frame} or \code{tibble}
+#'
+#' @return \code{tibble}
 #' @export
 get_summary <- function(dat) {
   summary <- dataReporter::summarize(dat)
@@ -42,7 +44,7 @@ get_summary <- function(dat) {
   # final summary
   # NOTE: the `details` column is to show the expand for details button
   # on the reactable
-  tibble(
+  dplyr::tibble(
     columns = variables,
     type = var_types,
     unique = unique_elements,
@@ -72,7 +74,7 @@ get_diagnosis <- function(dat) {
       exclude <- c("variableType", "countMissing", "uniqueValues")
       features <- features[!features %in% exclude]
       variables <- Filter(function(v) !v %in% exclude, variable)
-      unnest(tibble(
+      tidyr::unnest(dplyr::tibble(
         Feature = features,
         Result = lapply(
           features,
@@ -88,18 +90,19 @@ get_diagnosis <- function(dat) {
   dat_checks <- dataReporter::check(dat)
 
   # final diagnostic table
-  reactable(
+  reactable::reactable(
     dat_summary,
     pagination = FALSE,
     resizable = TRUE,
     compact = TRUE,
-    # outlined = T,
-    bordered = T,
+    bordered = TRUE,
     columns = list(
       missing = colDef(
-        cell = data_bars(dat_summary, force_outside = c(0, 100),
-                         number_fmt = scales::percent,
-                         fill_color = "#f87c6b")
+        cell = reactablefmtr::data_bars(dat_summary,
+          force_outside = c(0, 100),
+          number_fmt = scales::percent,
+          fill_color = "#f87c6b"
+        )
       ),
       details = colDef(
         name = "",
@@ -116,8 +119,6 @@ get_diagnosis <- function(dat) {
       problems <- unname(lapply(problems, function(c) c$message))
       # then, create list items so they can be displayed as bullet points
       problems <- lapply(unname(problems), function(p) shiny::tags$li(gsub("\\\\", "", p)))
-
-      # problems <- Filter(function(c) c$problem, var_checks)
       # display the table of stats and the potential issues side by side
       htmltools::div(
         reactable::reactable(
