@@ -100,13 +100,6 @@
       "Repository": "CRAN",
       "Hash": "dab19adae4440ae55aa8a9d238b246bb"
     },
-    "UpSetR": {
-      "Package": "UpSetR",
-      "Version": "1.4.0",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "f6ef89503aaff474873f8bc1823894e1"
-    },
     "askpass": {
       "Package": "askpass",
       "Version": "1.1",
@@ -172,10 +165,10 @@
     },
     "bslib": {
       "Package": "bslib",
-      "Version": "0.2.4",
+      "Version": "0.3.1",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "4830a372b241d78ed6f53731ee3023ac"
+      "Hash": "56ae7e1987b340186a8a5a157c2ec358"
     },
     "cachem": {
       "Package": "cachem",
@@ -254,18 +247,6 @@
       "Repository": "CRAN",
       "Hash": "3d7115603dd405bec1c72b3ca54eb1dd"
     },
-    "dataui": {
-      "Package": "dataui",
-      "Version": "0.0.1",
-      "Source": "GitHub",
-      "RemoteType": "github",
-      "RemoteHost": "api.github.com",
-      "RemoteUsername": "timelyportfolio",
-      "RemoteRepo": "dataui",
-      "RemoteRef": "master",
-      "RemoteSha": "39583c661edddb44214a269aed5393ba91b2789d",
-      "Hash": "5f1d9194502decd17c5f773d3da43eb2"
-    },
     "desc": {
       "Package": "desc",
       "Version": "1.2.0",
@@ -324,10 +305,17 @@
     },
     "fastmap": {
       "Package": "fastmap",
-      "Version": "1.0.1",
+      "Version": "1.1.0",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "83ab58a0518afe3d17e41da01af13b60"
+      "Hash": "77bd60a6157420d4ffa93b27cf6a58b8"
+    },
+    "fontawesome": {
+      "Package": "fontawesome",
+      "Version": "0.2.2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "55624ed409e46c5f358b2c060be87f67"
     },
     "forcats": {
       "Package": "forcats",
@@ -415,10 +403,10 @@
     },
     "htmltools": {
       "Package": "htmltools",
-      "Version": "0.5.1.1",
+      "Version": "0.5.2",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "af2c2531e55df5cf230c4b5444fc973c"
+      "Hash": "526c484233f42522278ab06fb185cb26"
     },
     "htmlwidgets": {
       "Package": "htmlwidgets",
@@ -539,26 +527,12 @@
       "Repository": "CRAN",
       "Hash": "6dfe8bf774944bd5595785e3229d8771"
     },
-    "naniar": {
-      "Package": "naniar",
-      "Version": "0.6.1",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "4fffc0d02071a6150c1016fb8766224c"
-    },
     "nlme": {
       "Package": "nlme",
       "Version": "3.1-142",
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "557d78d7eac2c1090ee58647a6274142"
-    },
-    "norm": {
-      "Package": "norm",
-      "Version": "1.0-9.5",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "302631c84303c4910692fdc66273744e"
     },
     "openssl": {
       "Package": "openssl",
@@ -608,13 +582,6 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "09eb987710984fc2905c7129c7d85e65"
-    },
-    "plyr": {
-      "Package": "plyr",
-      "Version": "1.8.6",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "ec0e5ab4e5f851f6ef32cd1d1984957f"
     },
     "praise": {
       "Package": "praise",
@@ -686,18 +653,6 @@
       "Repository": "CRAN",
       "Hash": "ac1afe50d1c77470a72971a07fd146b1"
     },
-    "reactablefmtr": {
-      "Package": "reactablefmtr",
-      "Version": "1.1.0",
-      "Source": "GitHub",
-      "RemoteType": "github",
-      "RemoteHost": "api.github.com",
-      "RemoteUsername": "kcuilla",
-      "RemoteRepo": "reactablefmtr",
-      "RemoteRef": "main",
-      "RemoteSha": "1ff0c194fb054d08f3a566634b856b8e4ce52e1e",
-      "Hash": "fb52f1bd6ff553b7fa9bb0e928e1e80b"
-    },
     "readr": {
       "Package": "readr",
       "Version": "2.1.1",
@@ -756,10 +711,10 @@
     },
     "sass": {
       "Package": "sass",
-      "Version": "0.3.1",
+      "Version": "0.4.0",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "3ef1adfe46b7b144b970d74ce33ab0d6"
+      "Hash": "50cf822feb64bb3977bda0b7091be623"
     },
     "scales": {
       "Package": "scales",
@@ -770,15 +725,10 @@
     },
     "shiny": {
       "Package": "shiny",
-      "Version": "1.6.0.9000",
-      "Source": "GitHub",
-      "RemoteType": "github",
-      "RemoteHost": "api.github.com",
-      "RemoteRepo": "shiny",
-      "RemoteUsername": "rstudio",
-      "RemoteRef": "master",
-      "RemoteSha": "b165127d20effc34b105ae16ca5fc294a3c7dfc4",
-      "Hash": "9f53e3eb2d1a8d26da9d6e8aeec3a27f"
+      "Version": "1.7.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "00344c227c7bd0ab5d78052c5d736c44"
     },
     "sourcetools": {
       "Package": "sourcetools",
@@ -786,6 +736,13 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "947e4e02a79effa5d512473e10f41797"
+    },
+    "sparkline": {
+      "Package": "sparkline",
+      "Version": "2.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "06e5e4017ecb00fd142bada4b380c59a"
     },
     "stringi": {
       "Package": "stringi",
@@ -857,13 +814,6 @@
       "Repository": "CRAN",
       "Hash": "130fe4c61e55b271a2655b3a284a205f"
     },
-    "tippy": {
-      "Package": "tippy",
-      "Version": "0.1.0",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "39b1d69229e30314e7cba023c777f52d"
-    },
     "tzdb": {
       "Package": "tzdb",
       "Version": "0.2.0",
@@ -885,26 +835,12 @@
       "Repository": "CRAN",
       "Hash": "ecf749a1b39ea72bd9b51b76292261f1"
     },
-    "viridis": {
-      "Package": "viridis",
-      "Version": "0.6.2",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "ee96aee95a7a563e5496f8991e9fde4b"
-    },
     "viridisLite": {
       "Package": "viridisLite",
       "Version": "0.3.0",
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "ce4f6271baa94776db692f1cb2055bee"
-    },
-    "visdat": {
-      "Package": "visdat",
-      "Version": "0.5.3",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "f62b960320b18fdffb2f0f76bb65dbaf"
     },
     "vroom": {
       "Package": "vroom",

@@ -23,8 +23,7 @@ Imports:
     ggplot2,
     vctrs,
     reactable,
-    dataui,
-    reactablefmtr,
+    sparkline,
     tidylog,
     shiny,
     magrittr,
@@ -38,7 +37,6 @@ Imports:
     babynames,
     gapminder
 Remotes:
-    timelyportfolio/dataui
     nischalshrestha/tidylog
 RoxygenNote: 7.1.1
 Suggests: 
