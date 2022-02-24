@@ -235,8 +235,8 @@ unravelUI <- function(id) {
           reactable::reactableOutput(ns("line_table"))
         )
       ),
-      # a pane that includes the diagnoistics for the dataframe.
-      shiny::tabPanel("Diagnosis", shiny::htmlOutput(ns("diagnosis")))
+      # a pane that includes an interactive diagnoistics table for a dataframe
+      shiny::tabPanel("Diagnosis", reactable::reactableOutput(ns("diagnosis")))
     )
   )
 }
@@ -547,11 +547,8 @@ unravelServer <- function(id, user_code = NULL) {
 
       #### Diagnosis handler
 
-      output$diagnosis <- renderUI({
-        tagList(
-          shiny::renderPlot(naniar::gg_miss_var(data(), show_pct = TRUE)),
-          shiny::renderTable(naniar::miss_var_summary(data()))
-        )
+      output$diagnosis <- reactable::renderReactable({
+        get_diagnosis(data())
       })
 
       #### Function help handlers
