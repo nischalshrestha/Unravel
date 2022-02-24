@@ -73,16 +73,22 @@ get_diagnosis <- function(dat) {
       features <- names(variable)
       exclude <- c("variableType", "countMissing", "uniqueValues")
       features <- features[!features %in% exclude]
+      readable_names <- list(
+        "centralValue" = "Median",
+        "quartiles" = "1st and 3rd quartiles",
+        "minMax" = "Min. and max."
+      )
+      feature_names <- unname(readable_names[features])
       variables <- Filter(function(v) !v %in% exclude, variable)
       tidyr::unnest(dplyr::tibble(
         # TODO get the human-readable versions of the features
         # dataReporter does this when reporting issues, just need to
         # somehow dig that part out or do the renaming ourselves (with key-value list)
-        Feature = features,
+        Statistic = unlist(feature_names),
         Result = lapply(
           features,
-          function(f) {
-            paste0(variable[[f]]$result)
+          function(fkey) {
+            paste0(variable[[fkey]]$result)
           }
         )
       ), cols = c(Result))
@@ -90,7 +96,16 @@ get_diagnosis <- function(dat) {
   )
 
   ### Checks
-  dat_checks <- dataReporter::check(dat)
+  dat_checks <- dataReporter::check(
+    dat, checks = setChecks(
+      numeric = defaultNumericChecks(
+        remove = "identifyOutliers", add = "identifyOutliersTBStyle"
+      ),
+      integer = defaultIntegerChecks(
+        remove = "identifyOutliers", add = "identifyOutliersTBStyle"
+      )
+    )
+  )
 
   # final diagnostic table
   reactable::reactable(
@@ -116,14 +131,13 @@ get_diagnosis <- function(dat) {
           # Render as count (%)
           paste0(value, " (", round(value / nrow(dat), 2), "%)")
         }
-        # format = colFormat(percent = TRUE, digits = 1)
       ),
       # TODO maybe we can style this button better or use some kinda
       # bootstrap button to make it look less bland
       details = colDef(
         name = "",
         sortable = FALSE,
-        cell = function() htmltools::tags$button("Show details")
+        cell = function() shiny::tags$button("Show details")
       )
     ),
     details = function(index) {
@@ -135,16 +149,31 @@ get_diagnosis <- function(dat) {
       problems <- unname(lapply(problems, function(c) c$message))
       # then, create list items so they can be displayed as bullet points
       problems <- lapply(unname(problems), function(p) shiny::tags$li(gsub("\\\\", "", p)))
-      # TODO test out a shiny::renderPlot(...) once we integrate the diagnostic table
-      # in Unravel itself
-      # display the table of stats and the potential issues side by side
-      htmltools::div(
-        reactable::reactable(
-          stables[[index]],
-          compact = TRUE,
-          fullWidth = F
+      # display the table of stats and the potential issues
+      shiny::div(
+        shiny::div(
+          style = "padding: 0.5em;",
+          reactable::reactable(
+            stables[[index]],
+            compact = TRUE,
+            fullWidth = F,
+            defaultColDef = colDef(
+              minWidth = 150
+            ),
+            columns = list(
+              Result = colDef(
+                name = ""
+              )
+            )
+          )
         ),
-        shiny::tags$ul(problems)
+        shiny::div(
+          style = "padding: 0.5em;",
+          shiny::h5("Potential issues:"),
+          shiny::tags$p(
+            shiny::tags$ul(problems)
+          )
+        )
       )
     },
     onClick = "expand",
