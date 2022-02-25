@@ -548,7 +548,10 @@ unravelServer <- function(id, user_code = NULL) {
       #### Diagnosis handler
 
       output$diagnosis <- reactable::renderReactable({
-        get_diagnosis(data())
+        dat <- data()
+        if (!is.null(dat)) {
+          get_diagnosis(dat)
+        }
       })
 
       #### Function help handlers

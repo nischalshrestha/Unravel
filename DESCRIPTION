@@ -24,6 +24,7 @@ Imports:
     vctrs,
     reactable,
     sparkline,
+    dataReporter,
     tidylog,
     shiny,
     magrittr,

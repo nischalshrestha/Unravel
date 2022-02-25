@@ -8,11 +8,6 @@ get_unsupported_vars <- function(summary) {
   )
 }
 
-# TODO we're still getting an error for an error line when trying to display diagnostics
-# Warning: Error in : Can't subset columns that don't exist.
-# x Column `unique` doesn't exist.
-#   115: <Anonymous>
-
 #' Return basic descriptive stats about the columns of a \code{data.frame} or \code{tibble}
 #'
 #' Currently, we return type of column, # unique elements, # missing values.
@@ -53,14 +48,13 @@ get_summary <- function(dat) {
       }
     )
   ))
-  # length(unique_elements)
 
-  # extract missing value count
+  # extract missing value %
   missing_counts <- unlist(unname(
     lapply(
       summary,
       function(variable) {
-        variable$countMissing$value
+        variable$countMissing$value / nrow(dat)
       }
     )
   ))
@@ -164,23 +158,31 @@ get_diagnosis <- function(dat) {
     bordered = TRUE,
     columns = list(
       missing = colDef(
-        # style text red if there are missing values
-        style = function(value) {
-          if (is.na(value)) return(list())
-          if (value > 0) {
-            color <- "#ff4a40"
-            fontWeight <- "bold"
-          } else {
-            color <- "#000"
-            fontWeight <- "normal"
+        # use a small bar graph to display this
+        cell = JS("function(cellInfo) {
+          // Format as percentage
+          console.log(cellInfo.value);
+          let pct = (cellInfo.value * 100).toFixed(2) + '%';
+          // Pad single-digit numbers
+          let value = pct.padStart(5)
+          if (cellInfo.value === undefined) {
+            pct = '0%';
           }
-          list(color = color, fontWeight = fontWeight)
-        },
-        cell = function(value) {
-          if (is.na(value)) return("")
-          # Render as count (%)
-          paste0(value, " (", round(value / nrow(dat), 2), "%)")
-        }
+          // Show % on first row only
+          if (cellInfo.viewIndex > 0) {
+            value = value.replace('%', ' ')
+          }
+          // Render bar chart
+          return (
+            '<div class=\"bar-cell\">' +
+              '<span class=\"number\">' + value + '</span>' +
+              '<div class=\"bar-chart\" style=\"background-color: #e1e1e1\">' +
+                '<div class=\"bar\" style=\"width: ' + pct + '; background-color: #fb8072\"></div>' +
+              '</div>' +
+            '</div>'
+          )
+        }"),
+        html = TRUE
       ),
       # display the distribution and the boxplot (will work for numeric, and won't crash for factors)
       distribution = colDef(
