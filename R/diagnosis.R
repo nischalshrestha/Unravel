@@ -167,10 +167,6 @@ get_diagnosis <- function(dat) {
           if (cellInfo.value === undefined) {
             pct = '0%';
           }
-          // Show % on first row only
-          if (cellInfo.viewIndex > 0) {
-            value = value.replace('%', ' ')
-          }
           // Render bar chart
           return (
             '<div class=\"bar-cell\">' +

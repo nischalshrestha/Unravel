@@ -485,7 +485,7 @@ unravelServer <- function(id, user_code = NULL) {
       # shiny output of reactable for a data.frame / tibble
       output$line_table <- reactable::renderReactable({
         final_data <- data()
-        if (is.data.frame(final_data) && !is.na(final_data) && !is.null(final_data) && length(final_data) >= 1) {
+        if (is.data.frame(final_data) && !is.null(final_data) && length(final_data) >= 1) {
           # if we have a grouped dataframe, to facilitate understanding let's rearrange columns such that
           # the grouped variables appear to the very left
           common_args <-
