@@ -34,7 +34,7 @@ get_summary <- function(dat) {
     lapply(
       variables,
       function(v) {
-        typeof(dat[[v]])
+        unlist(strsplit(vctrs::vec_ptype_full(dat[[v]]), "<"))[[1]]
       }
     )
   ))
@@ -139,11 +139,11 @@ get_diagnosis <- function(dat) {
   not_supported_vars <- get_unsupported_vars(summary)
   dat_checks <- dataReporter::check(
     dat[!names(dat) %in% names(not_supported_vars)],
-    checks = setChecks(
-      numeric = defaultNumericChecks(
+    checks = dataReporter::setChecks(
+      numeric = dataReporter::defaultNumericChecks(
         remove = "identifyOutliers", add = "identifyOutliersTBStyle"
       ),
-      integer = defaultIntegerChecks(
+      integer = dataReporter::defaultIntegerChecks(
         remove = "identifyOutliers", add = "identifyOutliersTBStyle"
       )
     )
@@ -159,9 +159,8 @@ get_diagnosis <- function(dat) {
     columns = list(
       missing = colDef(
         # use a small bar graph to display this
-        cell = JS("function(cellInfo) {
+        cell = htmlwidgets::JS("function(cellInfo) {
           // Format as percentage
-          console.log(cellInfo.value);
           let pct = (cellInfo.value * 100).toFixed(2) + '%';
           // Pad single-digit numbers
           let value = pct.padStart(5)
@@ -175,7 +174,7 @@ get_diagnosis <- function(dat) {
           // Render bar chart
           return (
             '<div class=\"bar-cell\">' +
-              '<span class=\"number\">' + value + '</span>' +
+              '<span>' + value + '</span>' +
               '<div class=\"bar-chart\" style=\"background-color: #e1e1e1\">' +
                 '<div class=\"bar\" style=\"width: ' + pct + '; background-color: #fb8072\"></div>' +
               '</div>' +
@@ -188,13 +187,13 @@ get_diagnosis <- function(dat) {
       distribution = colDef(
         cell = function(value, index) {
           if (index > length(dat)) return("")
-          sparkline(dat[[index]], lineWidth = 0.25)
+          sparkline(dat[[index]], lineWidth = 0.25, width = 100)
         }
       ),
       boxplot = colDef(
         cell = function(value, index) {
           if (index > length(dat)) return("")
-          sparkline(dat[[index]], type = "box")
+          sparkline(dat[[index]], type = "box", width = 100)
         }
       ),
       # create a column for the show details button
@@ -215,24 +214,38 @@ get_diagnosis <- function(dat) {
       # then, create list items so they can be displayed as bullet points
       problems <- lapply(unname(problems), function(p) shiny::tags$li(gsub("\\\\", "", p)))
       # construct the html for the table of stats and the potential issues
-      taglist <- list(
-        shiny::div(
-          style = "padding: 0.5em;",
-          reactable::reactable(
-            stables[[index]],
-            compact = TRUE,
-            fullWidth = F,
-            defaultColDef = colDef(
-              maxWidth = 150
-            ),
-            columns = list(
-              Result = colDef(
-                name = ""
+      var_type <- unlist(strsplit(vctrs::vec_ptype_full(dat[[index]]), "<"))[[1]]
+      taglist <- list()
+      # if it's a categorical variable, provide a count stat and exclude stats table
+      if (var_type %in% c('ordered', 'character')) {
+        taglist <-
+          list(
+            shiny::div(
+              reactable::reactable(
+                as.data.frame(dplyr::count(dat, across(names(dat)[[index]]))),
+                defaultColDef = colDef(
+                  na = "NA"
+                )
+              )
+            )
+          )
+      } else {
+        # otherwise start with stats table
+        taglist <- list(
+          shiny::div(
+            style = "padding: 0.5em;",
+            reactable::reactable(
+              stables[[index]],
+              compact = TRUE,
+              columns = list(
+                Result = colDef(
+                  name = ""
+                )
               )
             )
           )
         )
-      )
+      }
       # include problems html if they exist
       if (length(problems) > 0) {
         taglist <- append(
