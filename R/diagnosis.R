@@ -49,12 +49,22 @@ get_summary <- function(dat) {
     )
   ))
 
-  # extract missing value %
+  # extract missing count
   missing_counts <- unlist(unname(
     lapply(
       summary,
       function(variable) {
-        variable$countMissing$value / nrow(dat)
+        variable$countMissing$value
+      }
+    )
+  ))
+
+  # extract non-na counts
+  non_na_counts <- unlist(unname(
+    lapply(
+      variables,
+      function(v) {
+        sum(!is.na(dat[[v]]))
       }
     )
   ))
@@ -73,6 +83,7 @@ get_summary <- function(dat) {
     dplyr::tibble(
       variable = variables,
       type = var_types,
+      non_na = non_na_counts,
       unique = unique_elements,
       missing = missing_counts,
       details = NA
@@ -102,7 +113,7 @@ get_diagnosis <- function(dat) {
   dat_summary <- get_summary(dat)
   dat_summary <-  dat_summary %>%
     mutate(boxplot = NA, distribution = NA) %>%
-    select(variable, type, unique, missing, distribution, boxplot, details)
+    select(variable, type, unique, non_na, missing, distribution, boxplot, details)
 
   ### Curated summary
   # list of the variable descriptive stat tables
@@ -157,26 +168,34 @@ get_diagnosis <- function(dat) {
     compact = TRUE,
     bordered = TRUE,
     columns = list(
+      unique = colDef(
+        maxWidth = 80
+      ),
+      non_na = colDef(
+        name = "not missing"
+      ),
       missing = colDef(
         # use a small bar graph to display this
-        cell = htmlwidgets::JS("function(cellInfo) {
-          // Format as percentage
-          let pct = (cellInfo.value * 100).toFixed(2) + '%';
-          // Pad single-digit numbers
-          let value = pct.padStart(5)
+        cell = htmlwidgets::JS(glue::glue("function(cellInfo) {
+          // Format as percentage for the bar shading
+          let pct = ((cellInfo.value / {{nrow(dat)}}) * 100).toFixed(2) + '%';
+          // if undefined, dont shade bar red
           if (cellInfo.value === undefined) {
             pct = '0%';
           }
+          // Use the value as is for the count
+          let pct_string = cellInfo.value;
           // Render bar chart
           return (
             '<div class=\"bar-cell\">' +
-              '<span>' + value + '</span>' +
+              '<span>' + pct_string + '</span>' +
               '<div class=\"bar-chart\" style=\"background-color: #e1e1e1\">' +
                 '<div class=\"bar\" style=\"width: ' + pct + '; background-color: #fb8072\"></div>' +
               '</div>' +
             '</div>'
           )
-        }"),
+          }", .open = "{{", .close = "}}")
+        ),
         html = TRUE
       ),
       # display the distribution and the boxplot (will work for numeric, and won't crash for factors)
