@@ -262,7 +262,7 @@ unravelServer <- function(id, user_code = NULL) {
   moduleServer(
     id,
     function(input, output, session) {
-      #### Setup variables and handlers
+      #### Setup variables, UI, and handlers
 
       # these are reactive values related to current line, code info of all lines, summary prompts, and df outputs
       rv <- reactiveValues()
@@ -420,7 +420,7 @@ unravelServer <- function(id, user_code = NULL) {
         session$sendCustomMessage("prompts", rv$summaries)
       })
 
-      #### Inspection of code and summary
+      #### Inspection of code and summary handlers
 
       # list for a click square input from JS to tells us which data to display for a particular line
       observeEvent(input$square, {

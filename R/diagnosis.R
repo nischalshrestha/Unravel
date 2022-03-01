@@ -212,8 +212,8 @@ get_diagnosis <- function(dat) {
       # construct the html for the table of stats and the potential issues
       var_type <- unlist(strsplit(vctrs::vec_ptype_full(dat[[index]]), "<"))[[1]]
       taglist <- list()
-      # if it's a categorical variable, provide a count stat and exclude stats table
-      if (var_type %in% c('ordered', 'character')) {
+      # if it's a ordinal/categorical variable, provide a count stat and exclude stats table
+      if (var_type %in% c('ordered', 'character', 'factor')) {
         taglist <-
           list(
             shiny::div(
