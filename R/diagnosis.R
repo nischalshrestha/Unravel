@@ -202,13 +202,31 @@ get_diagnosis <- function(dat) {
       distribution = colDef(
         cell = function(value, index) {
           if (index > length(dat)) return("")
-          sparkline(dat[[index]], lineWidth = 0.25, width = 100)
+          col_dat <- dat[[index]]
+          # we have to get counts to show histogram
+          if (is.factor(col_dat) || is.character(col_dat)) {
+            unique_counts <- unique(col_dat)
+            if (length(unique_counts) == 1) {
+              return(sparkline(
+                col_dat, type = "bar", height = 25, width = 100, barWidth = 8, nullColor = "#fb8072"
+              ))
+            }
+            return(sparkline(
+              dplyr::count(dat, across(names(dat)[[index]]))[['n']],
+              type = "bar", height = 25, width = 100, barWidth = 8,
+              nullColor = "#fb8072",
+              tooltipValueLookups = list("10" = "foo")
+            ))
+          }
+          sparkline(col_dat, type = "bar", height = 25, width = 100, barWidth = 8, nullColor = "#fb8072")
         }
       ),
       boxplot = colDef(
         cell = function(value, index) {
           if (index > length(dat)) return("")
-          sparkline(dat[[index]], type = "box", width = 100)
+          col_dat <- dat[[index]]
+          if (is.factor(col_dat) || is.character(col_dat)) return("not applicable")
+          sparkline(col_dat, type = "box", height = 25, width = 100)
         }
       ),
       # create a column for the show details button

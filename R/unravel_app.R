@@ -236,7 +236,7 @@ unravelUI <- function(id) {
         )
       ),
       # a pane that includes an interactive diagnoistics table for a dataframe
-      shiny::tabPanel("Diagnosis", reactable::reactableOutput(ns("diagnosis")))
+      shiny::tabPanel("Data Details", reactable::reactableOutput(ns("diagnosis")))
     )
   )
 }
