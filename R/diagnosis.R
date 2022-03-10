@@ -85,7 +85,7 @@ get_summary <- function(dat) {
       type = var_types,
       non_na = non_na_counts,
       unique = unique_elements,
-      missing = missing_counts,
+      `missing / not missing` = missing_counts,
       details = NA
     ),
     error = function(e) {
@@ -112,8 +112,8 @@ get_diagnosis <- function(dat) {
 
   dat_summary <- get_summary(dat)
   dat_summary <-  dat_summary %>%
-    mutate(boxplot = NA, distribution = NA) %>%
-    select(variable, type, unique, non_na, missing, distribution, boxplot, details)
+    mutate(distribution = NA) %>%
+    select(variable, type, unique, `missing / not missing`, distribution, details)
 
   ### Curated summary
   # list of the variable descriptive stat tables
@@ -167,31 +167,38 @@ get_diagnosis <- function(dat) {
     resizable = TRUE,
     compact = TRUE,
     bordered = TRUE,
+    defaultColDef = colDef(
+      align = "left"
+    ),
     columns = list(
-      unique = colDef(
+      type = colDef(
         maxWidth = 80
       ),
-      non_na = colDef(
-        name = "not missing"
+      unique = colDef(
+        maxWidth = 80,
       ),
-      missing = colDef(
+      `missing / not missing` = colDef(
+        maxWidth = 300,
         # use a small bar graph to display this
         cell = htmlwidgets::JS(glue::glue("function(cellInfo) {
           // Format as percentage for the bar shading
-          let pct = ((cellInfo.value / {{nrow(dat)}}) * 100).toFixed(2) + '%';
+          let dat_row_count = {{nrow(dat)}}
+          let real_values = dat_row_count - cellInfo.value
+          let pct = ((cellInfo.value / dat_row_count) * 100).toFixed(2) + '%'
           // if undefined, dont shade bar red
           if (cellInfo.value === undefined) {
-            pct = '0%';
+            pct = '0%'
           }
           // Use the value as is for the count
-          let pct_string = cellInfo.value;
+          let missing_count = cellInfo.value
           // Render bar chart
           return (
             '<div class=\"bar-cell\">' +
-              '<span>' + pct_string + '</span>' +
+              '<span>' + missing_count + '</span>' +
               '<div class=\"bar-chart\" style=\"background-color: #e1e1e1\">' +
                 '<div class=\"bar\" style=\"width: ' + pct + '; background-color: #fb8072\"></div>' +
               '</div>' +
+              '<span>' + real_values + '</span>' +
             '</div>'
           )
           }", .open = "{{", .close = "}}")
@@ -200,6 +207,7 @@ get_diagnosis <- function(dat) {
       ),
       # display the distribution and the boxplot (will work for numeric, and won't crash for factors)
       distribution = colDef(
+        maxWidth = 150,
         cell = function(value, index) {
           if (index > length(dat)) return("")
           col_dat <- dat[[index]]
@@ -208,25 +216,17 @@ get_diagnosis <- function(dat) {
             unique_counts <- unique(col_dat)
             if (length(unique_counts) == 1) {
               return(sparkline(
-                col_dat, type = "bar", height = 25, width = 100, barWidth = 8, nullColor = "#fb8072"
+                col_dat, type = "bar", height = 25, width = 150, barWidth = 8, nullColor = "#fb8072"
               ))
             }
             return(sparkline(
               dplyr::count(dat, across(names(dat)[[index]]))[['n']],
-              type = "bar", height = 25, width = 100, barWidth = 8,
+              type = "bar", height = 25, width = 150, barWidth = 8,
               nullColor = "#fb8072",
               tooltipValueLookups = list("10" = "foo")
             ))
           }
-          sparkline(col_dat, type = "bar", height = 25, width = 100, barWidth = 8, nullColor = "#fb8072")
-        }
-      ),
-      boxplot = colDef(
-        cell = function(value, index) {
-          if (index > length(dat)) return("")
-          col_dat <- dat[[index]]
-          if (is.factor(col_dat) || is.character(col_dat)) return("not applicable")
-          sparkline(col_dat, type = "box", height = 25, width = 100)
+          sparkline(col_dat, type = "bar", height = 25, width = 150, barWidth = 8, nullColor = "#fb8072")
         }
       ),
       # create a column for the show details button
@@ -234,7 +234,7 @@ get_diagnosis <- function(dat) {
         name = "",
         maxWidth = 100,
         sortable = FALSE,
-        cell = function() shiny::tags$button("Show details", class = "btn-sm")
+        cell = function() shiny::tags$button("Details", class = "btn-sm")
       )
     ),
     details = function(index) {
