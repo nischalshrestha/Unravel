@@ -121,6 +121,10 @@ Currently, any `dplyr`/`tidyr` piped code working on single tables will work exe
 
 In the extension, I have added some enhancements (like data shape summary for every verb and rephrasing summaries) and is specially designed to work with `Unravel` so that I can access the messages in a convenient cache. All verbs supported by `tidylog` besides `join`s will work and some more I added like `arrange`, `rowwise`.
 
+## Performance limitations
+
+Unravel currently starts to lag when handling dataframes that are larger than 100K rows. In the future, I will find ways to optimize the app so it can startup and respond faster for larger datasets. However, at this time try using Unravel for smaller datasets or work on subsets since the tool is more geared towards learning the tidyverse rather than a super scalable tool that is used in 'production' systems.
+
 # Related tools
 
 There are several other similar tools that provide inspection and/or summary of tidyverse code operations and intermediates, which you may find useful as well:
