@@ -122,7 +122,7 @@ get_diagnosis <- function(dat) {
     summary,
     function(variable) {
       features <- names(variable)
-      exclude <- c("variableType", "countMissing", "uniqueValues")
+      exclude <- c("variableType", "countMissing", "uniqueValues", "refCat")
       features <- features[!features %in% exclude]
       is_num <- any(variable[['variableType']] %in% c("integer", "numeric"))
       # get the human-readable versions of the features
@@ -171,14 +171,10 @@ get_diagnosis <- function(dat) {
       align = "left"
     ),
     columns = list(
-      type = colDef(
-        maxWidth = 80
-      ),
-      unique = colDef(
-        maxWidth = 80,
-      ),
+      type = colDef(maxWidth = 80),
+      unique = colDef(maxWidth = 80),
       `missing / not missing` = colDef(
-        maxWidth = 300,
+        maxWidth = 150,
         # use a small bar graph to display this
         cell = htmlwidgets::JS(glue::glue("function(cellInfo) {
           // Format as percentage for the bar shading
@@ -207,26 +203,32 @@ get_diagnosis <- function(dat) {
       ),
       # display the distribution and the boxplot (will work for numeric, and won't crash for factors)
       distribution = colDef(
-        maxWidth = 150,
+        maxWidth = 200,
         cell = function(value, index) {
           if (index > length(dat)) return("")
           col_dat <- dat[[index]]
-          # we have to get counts to show histogram
+          # we have to get counts to show histogram for categoricals
+          unique_counts <- unique(col_dat)
           if (is.factor(col_dat) || is.character(col_dat)) {
-            unique_counts <- unique(col_dat)
+            # if it's just one single category, just pass data as is so we can hover over and see label
             if (length(unique_counts) == 1) {
               return(sparkline(
-                col_dat, type = "bar", height = 25, width = 150, barWidth = 8, nullColor = "#fb8072"
+                col_dat, type = "bar", height = 25, width = 200, barWidth = 8, nullColor = "#fb8072"
               ))
             }
+            # else, display the distribution (where we can't see category on hover but could be seen in details)
             return(sparkline(
               dplyr::count(dat, across(names(dat)[[index]]))[['n']],
-              type = "bar", height = 25, width = 150, barWidth = 8,
+              type = "bar", height = 25, width = 200, barWidth = 8,
               nullColor = "#fb8072",
               tooltipValueLookups = list("10" = "foo")
             ))
           }
-          sparkline(col_dat, type = "bar", height = 25, width = 150, barWidth = 8, nullColor = "#fb8072")
+          # else, if it's not a list column create histogram
+          if (!is.list(col_dat)) {
+            # numbers can be passed as is
+            sparkline(hist(col_dat, plot = FALSE, breaks = length(unique_counts) %/% 2)$counts, type = "bar", height = 25, width = 200, barWidth = 8, nullColor = "#fb8072")
+          }
         }
       ),
       # create a column for the show details button
@@ -251,20 +253,26 @@ get_diagnosis <- function(dat) {
       taglist <- list()
       # if it's a ordinal/categorical variable, provide a count stat and exclude stats table
       if (var_type %in% c('ordered', 'character', 'factor')) {
-        taglist <-
-          list(
-            shiny::div(
-              reactable::reactable(
-                as.data.frame(dplyr::count(dat, across(names(dat)[[index]]))),
-                defaultColDef = colDef(
-                  na = "NA"
+        suppressWarnings(
+          taglist <-
+            list(
+              shiny::div(
+                config(
+                  ggplotly(ggplot(data = dat, aes_string(names(dat)[[index]])) + geom_bar() + theme(axis.text.x = element_text(angle = 90))),
+                  staticPlot = TRUE
                 )
               )
             )
-          )
+        )
       } else {
         # otherwise start with stats table
         taglist <- list(
+          suppressWarnings(
+            config(
+              ggplotly(ggplot(data = dat, aes_string(names(dat)[[index]])) + geom_histogram(bins=30)),
+              staticPlot = TRUE
+            )
+          ),
           shiny::div(
             style = "padding: 0.5em;",
             reactable::reactable(

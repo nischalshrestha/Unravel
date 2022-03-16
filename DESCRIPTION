@@ -21,6 +21,7 @@ Imports:
     tidyr,
     purrr,
     ggplot2,
+    plotly,
     vctrs,
     reactable,
     sparkline,
