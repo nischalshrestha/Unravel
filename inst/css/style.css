@@ -62,6 +62,16 @@ h2 {
   border-radius: 0.5rem;
 }
 
+.groups {
+  width: auto;
+  height: 2em;
+  font-size: 0.8em;
+  text-align: left;
+  padding: 2px;
+  background: lightblue;
+  border-radius: 0.5rem;
+}
+
 .internal-square-key:hover{
   cursor:pointer
 }

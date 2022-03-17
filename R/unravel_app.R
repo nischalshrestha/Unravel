@@ -500,6 +500,7 @@ unravelServer <- function(id, user_code = NULL) {
           cols_with_types <- get_common_styles(final_data)
           all_cols <- get_column_css(final_data, rv$main_callout, cols_with_types)
           if (is_grouped_df(final_data)) {
+            ngroups_text <- glue::glue("# Groups: [{dplyr::n_groups(final_data)}]")
             return(
               do.call(
                 reactable::reactable,
@@ -509,7 +510,12 @@ unravelServer <- function(id, user_code = NULL) {
                     # rearrange the data such that group variables are at the beginning
                     data = dplyr::select(.data = final_data, group_vars(final_data), dplyr::everything()) %>% as.data.frame(),
                     columns = append(
-                      list(.rownames = colDef(style = list(textAlign = "left"), maxWidth = 80)),
+                      # add in the group number
+                      list(.rownames = colDef(
+                        name = glue::glue("<div class = 'groups'>{ngroups_text}</div>"),
+                        html = TRUE,
+                        maxWidth = 100)
+                      ),
                       all_cols
                     )
                   )
