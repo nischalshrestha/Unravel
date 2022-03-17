@@ -227,7 +227,10 @@ get_diagnosis <- function(dat) {
           # else, if it's not a list column create histogram
           if (!is.list(col_dat)) {
             # numbers can be passed as is
-            sparkline(hist(col_dat, plot = FALSE, breaks = length(unique_counts) %/% 2)$counts, type = "bar", height = 25, width = 200, barWidth = 8, nullColor = "#fb8072")
+            sparkline(
+              hist(col_dat, plot = FALSE, breaks = length(unique_counts) %/% 2)$counts,
+              type = "bar", height = 25, width = 200, barWidth = 8, nullColor = "#fb8072"
+            )
           }
         }
       ),
@@ -257,9 +260,11 @@ get_diagnosis <- function(dat) {
           taglist <-
             list(
               shiny::div(
-                config(
-                  ggplotly(ggplot(data = dat, aes_string(names(dat)[[index]])) + geom_bar() + theme(axis.text.x = element_text(angle = 90))),
-                  staticPlot = TRUE
+                reactable::reactable(
+                  as.data.frame(dplyr::count(dat, across(names(dat)[[index]]))),
+                  defaultColDef = colDef(
+                    na = "NA"
+                  )
                 )
               )
             )
@@ -267,12 +272,6 @@ get_diagnosis <- function(dat) {
       } else {
         # otherwise start with stats table
         taglist <- list(
-          suppressWarnings(
-            config(
-              ggplotly(ggplot(data = dat, aes_string(names(dat)[[index]])) + geom_histogram(bins=30)),
-              staticPlot = TRUE
-            )
-          ),
           shiny::div(
             style = "padding: 0.5em;",
             reactable::reactable(
