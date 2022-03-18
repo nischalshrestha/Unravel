@@ -81,12 +81,10 @@ get_summary <- function(dat) {
   # NOTE: the `details` column is to show the expand for details button on the reactable
   tryCatch(
     dplyr::tibble(
-      variable = variables,
-      type = var_types,
-      non_na = non_na_counts,
-      unique = unique_elements,
-      `missing / not missing` = missing_counts,
-      details = NA
+      Variable = variables,
+      Type = var_types,
+      Unique = unique_elements,
+      `Missing / Not Missing` = missing_counts
     ),
     error = function(e) {
       stop("There were some unsupported types that prevented me from producing diagnostic summaries.")
@@ -112,8 +110,8 @@ get_diagnosis <- function(dat) {
 
   dat_summary <- get_summary(dat)
   dat_summary <-  dat_summary %>%
-    mutate(distribution = NA) %>%
-    select(variable, type, unique, `missing / not missing`, distribution, details)
+    mutate(Details = NA, Distribution = NA, `Potential Problems` = NA) %>%
+    select(Details, Variable, Type, Unique, `Missing / Not Missing`, Distribution, `Potential Problems`)
 
   ### Curated summary
   # list of the variable descriptive stat tables
@@ -167,13 +165,14 @@ get_diagnosis <- function(dat) {
     resizable = TRUE,
     compact = TRUE,
     bordered = TRUE,
+    showSortable = TRUE,
     defaultColDef = colDef(
       align = "left"
     ),
     columns = list(
-      type = colDef(maxWidth = 80),
-      unique = colDef(maxWidth = 80),
-      `missing / not missing` = colDef(
+      Type = colDef(maxWidth = 80),
+      Unique = colDef(maxWidth = 80),
+      `Missing / Not Missing` = colDef(
         maxWidth = 150,
         # use a small bar graph to display this
         cell = htmlwidgets::JS(glue::glue("function(cellInfo) {
@@ -202,7 +201,7 @@ get_diagnosis <- function(dat) {
         html = TRUE
       ),
       # display the distribution and the boxplot (will work for numeric, and won't crash for factors)
-      distribution = colDef(
+      Distribution = colDef(
         maxWidth = 200,
         cell = function(value, index) {
           if (index > length(dat)) return("")
@@ -234,78 +233,90 @@ get_diagnosis <- function(dat) {
           }
         }
       ),
-      # create a column for the show details button
-      details = colDef(
-        name = "",
+      `Potential Problems` = colDef(
         maxWidth = 100,
+        html = TRUE,
+        align = 'center',
+        style = function(value) {
+          list(fontWeight = "bold")
+        },
+        cell = function(value, index) {
+          var_checks <- dat_checks[index][[1]]
+          problems <- Filter(function(c) c$problem, var_checks)
+          if (length(problems) == 0) {
+            return("")
+          } else {
+            return(length(problems))
+          }
+        }
+      ),
+      # create a column for the show details button
+      Details = colDef(
+        width = 60,
         sortable = FALSE,
-        cell = function() shiny::tags$button("Details", class = "btn-sm")
-      )
-    ),
-    details = function(index) {
-      var_checks <- dat_checks[index][[1]]
-      if (length(var_checks) == 0) return(paste0("Unsupported variable type"))
-      # only extract the problems
-      problems <- Filter(function(c) c$problem, var_checks)
-      # gather the problematic messages
-      problems <- unname(lapply(problems, function(c) c$message))
-      # then, create list items so they can be displayed as bullet points
-      problems <- lapply(unname(problems), function(p) shiny::tags$li(gsub("\\\\", "", p)))
-      # construct the html for the table of stats and the potential issues
-      var_type <- unlist(strsplit(vctrs::vec_ptype_full(dat[[index]]), "<"))[[1]]
-      taglist <- list()
-      # if it's a ordinal/categorical variable, provide a count stat and exclude stats table
-      if (var_type %in% c('ordered', 'character', 'factor')) {
-        suppressWarnings(
-          taglist <-
-            list(
+        details = function(index) {
+          var_checks <- dat_checks[index][[1]]
+          if (length(var_checks) == 0) return(paste0("Unsupported variable type"))
+          # only extract the problems
+          problems <- Filter(function(c) c$problem, var_checks)
+          # gather the problematic messages
+          problems <- unname(lapply(problems, function(c) c$message))
+          # then, create list items so they can be displayed as bullet points
+          problems <- lapply(unname(problems), function(p) shiny::tags$li(gsub("\\\\", "", p)))
+          # construct the html for the table of stats and the potential issues
+          var_type <- unlist(strsplit(vctrs::vec_ptype_full(dat[[index]]), "<"))[[1]]
+          taglist <- list()
+          # if it's a ordinal/categorical variable, provide a count stat and exclude stats table
+          if (var_type %in% c('ordered', 'character', 'factor')) {
+            suppressWarnings(
+              taglist <-
+                list(
+                  shiny::div(
+                    reactable::reactable(
+                      as.data.frame(dplyr::count(dat, across(names(dat)[[index]]))),
+                      defaultColDef = colDef(
+                        na = "NA"
+                      )
+                    )
+                  )
+                )
+            )
+          } else {
+            # otherwise start with stats table
+            taglist <- list(
               shiny::div(
+                style = "padding: 0.5em;",
                 reactable::reactable(
-                  as.data.frame(dplyr::count(dat, across(names(dat)[[index]]))),
-                  defaultColDef = colDef(
-                    na = "NA"
+                  stables[[index]],
+                  compact = TRUE,
+                  columns = list(
+                    Result = colDef(
+                      name = ""
+                    )
                   )
                 )
               )
             )
-        )
-      } else {
-        # otherwise start with stats table
-        taglist <- list(
-          shiny::div(
-            style = "padding: 0.5em;",
-            reactable::reactable(
-              stables[[index]],
-              compact = TRUE,
-              columns = list(
-                Result = colDef(
-                  name = ""
+          }
+          # include problems html if they exist
+          if (length(problems) > 0) {
+            taglist <- append(
+              taglist,
+              list(
+                shiny::div(
+                  style = "padding: 0.5em;",
+                  shiny::h5("Potential issues:"),
+                  shiny::tags$p(
+                    shiny::tags$ul(problems)
+                  )
                 )
               )
             )
-          )
-        )
-      }
-      # include problems html if they exist
-      if (length(problems) > 0) {
-        taglist <- append(
-          taglist,
-          list(
-            shiny::div(
-              style = "padding: 0.5em;",
-              shiny::h5("Potential issues:"),
-              shiny::tags$p(
-                shiny::tags$ul(problems)
-              )
-            )
-          )
-        )
-      }
-      class(taglist) <- "shiny.tag.list"
-      taglist
-    },
-    onClick = "expand",
-    # Give rows a pointer cursor to indicate that they're clickable
-    rowStyle = list(cursor = "pointer")
+          }
+          class(taglist) <- "shiny.tag.list"
+          taglist
+        }
+      )
+    )
   )
 }

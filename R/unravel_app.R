@@ -236,7 +236,12 @@ unravelUI <- function(id) {
         )
       ),
       # a pane that includes an interactive diagnoistics table for a dataframe
-      shiny::tabPanel("Data Details", reactable::reactableOutput(ns("diagnosis")))
+      shiny::tabPanel("Data Details",
+        shiny::div(
+          style = "width: 100%; height: 500px; margin: 10px;",
+          reactable::reactableOutput(ns("diagnosis"))
+        )
+      )
     )
   )
 }
@@ -494,7 +499,8 @@ unravelServer <- function(id, user_code = NULL) {
               highlight = TRUE,
               bordered = TRUE,
               rownames = TRUE,
-              defaultPageSize = 5
+              defaultPageSize = 5,
+              showSortable = TRUE
             )
           # apply custom styling for column types and any callout columns
           cols_with_types <- get_common_styles(final_data)
