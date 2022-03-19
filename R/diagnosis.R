@@ -202,13 +202,14 @@ get_diagnosis <- function(dat) {
       ),
       # display the distribution and the boxplot (will work for numeric, and won't crash for factors)
       Distribution = colDef(
-        maxWidth = 200,
+        maxWidth = 300,
+        sortable = FALSE,
         cell = function(value, index) {
           if (index > length(dat)) return("")
           col_dat <- dat[[index]]
           # we have to get counts to show histogram for categoricals
           unique_counts <- unique(col_dat)
-          if (is.factor(col_dat) || is.character(col_dat)) {
+          if (is.factor(col_dat) || is.character(col_dat) || length(unique_counts) <= 10) {
             # if it's just one single category, just pass data as is so we can hover over and see label
             if (length(unique_counts) == 1) {
               return(sparkline(
@@ -217,19 +218,30 @@ get_diagnosis <- function(dat) {
             }
             # else, display the distribution (where we can't see category on hover but could be seen in details)
             return(sparkline(
-              dplyr::count(dat, across(names(dat)[[index]]))[['n']],
+              c(dplyr::count(dat, across(names(dat)[[index]]))[['n']], 0),
               type = "bar", height = 25, width = 200, barWidth = 8,
               nullColor = "#fb8072",
+              zeroColor = "#fff",
               tooltipValueLookups = list("10" = "foo")
             ))
           }
-          # else, if it's not a list column create histogram
+          # else, if it's not categorical in nature and it's not list columns, create plots
+          # that could either be a histogram or count
           if (!is.list(col_dat)) {
-            # numbers can be passed as is
-            sparkline(
-              hist(col_dat, plot = FALSE, breaks = length(unique_counts) %/% 2)$counts,
-              type = "bar", height = 25, width = 200, barWidth = 8, nullColor = "#fb8072"
-            )
+            # if we have a lot of unique values, it's better to get the histogram
+            if (length(unique_counts) > 50) {
+              sparkline(
+                hist(col_dat, plot = FALSE, breaks = length(unique_counts) %/% 2)$counts,
+                type = "bar", height = 25, width = 200, barWidth = 8, nullColor = "#fb8072"
+              )
+            } else {
+              # otherwise, if there aren't a lot of unique values, it's more beneficial
+              # to display the counts of each
+              sparkline(
+                dplyr::count(dat, across(names(dat)[[index]]))[['n']],
+                type = "bar", height = 25, width = 200, barWidth = 8, nullColor = "#fb8072"
+              )
+            }
           }
         }
       ),
