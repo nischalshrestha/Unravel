@@ -420,7 +420,9 @@ get_output_intermediates <- function(pipeline) {
           verb_summary <- tidylog::get_data_summary(out)
           # attempt to produce a hyperlink for any dataset or expression with functions for
           # the first line
-          if (length(getAnywhere(deparsed)$where) > 0) {
+          ns_pkgs <- getAnywhere(deparsed)$where
+          ns_pkgs_custom <- Filter(function(ns) grepl(".GlobalEnv", ns), ns_pkgs)
+          if (length(ns_pkgs) > 0 && length(ns_pkgs_custom) == 0) {
             dataset_link <- list(
               word = deparsed,
               html = glue::glue("<a id='{deparsed}' class='fn_help'>{deparsed}</a>"),
