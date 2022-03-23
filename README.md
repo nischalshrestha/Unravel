@@ -125,6 +125,12 @@ In the extension, I have added some enhancements (like data shape summary for ev
 
 Unravel currently starts to lag when handling dataframes that are larger than 100K rows. In the future, I will find ways to optimize the app so it can startup and respond faster for larger datasets. However, at this time try using Unravel for smaller datasets or work on subsets since the tool is more geared towards learning the tidyverse rather than a super scalable tool that is used in 'production' systems.
 
+## Contributions
+
+Currently Unravel is only maintained by me, and that means limited capacity to reliably maintain and evolve the project. So, please feel free to open up issues, and suggest changes to improve Unravel!
+
+Please note that the Unravel project is released with a [Contributor Code of Conduct](https://github.com/nischalshrestha/Unravel/blob/main/CODE_OF_CONDUCT.md). By contributing to this project, you agree to abide by its terms.
+
 # Related tools
 
 There are several other similar tools that provide inspection and/or summary of tidyverse code operations and intermediates, which you may find useful as well:
