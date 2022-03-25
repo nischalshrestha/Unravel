@@ -81,11 +81,14 @@ get_summary <- function(dat) {
   # unsupported data types for `dataReporter` to produce summaries (e.g list columns)
   # NOTE: the `details` column is to show the expand for details button on the reactable
   tryCatch(
-    dplyr::tibble(
-      Variable = variables,
-      Type = var_types,
-      Unique = unique_elements,
-      `Missing / Not Missing` = missing_counts
+    list(
+      dplyr::tibble(
+        Variable = variables,
+        Type = var_types,
+        Unique = unique_elements,
+        `Missing / Not Missing` = missing_counts
+      ),
+      not_supported_vars
     ),
     error = function(e) {
       stop("There were some unsupported types that prevented me from producing diagnostic summaries.")
@@ -109,7 +112,8 @@ get_diagnosis <- function(dat) {
     summary <- dataReporter::summarize(dat)
   )
 
-  dat_summary <- get_summary(dat)
+  summaries <- get_summary(dat)
+  dat_summary <- summaries[[1]]
   dat_summary <-  dat_summary %>%
     mutate(Details = NA, Distribution = NA, `Potential Problems` = NA) %>%
     select(Details, Variable, Type, Unique, `Missing / Not Missing`, Distribution, `Potential Problems`)
@@ -119,6 +123,9 @@ get_diagnosis <- function(dat) {
   stables <- lapply(
     dat,
     function(variable) {
+      if (is.list(variable)) {
+        return(tibble())
+      }
       var_summary <- as_tibble(as.list(summary(variable)))
       if (is.numeric(variable)) {
         return(
@@ -130,7 +137,7 @@ get_diagnosis <- function(dat) {
   )
 
   ### Checks
-  not_supported_vars <- get_unsupported_vars(summary)
+  not_supported_vars <- summaries[[2]]
   dat_checks <- dataReporter::check(
     dat[!names(dat) %in% names(not_supported_vars)],
     checks = dataReporter::setChecks(
