@@ -18,13 +18,14 @@ get_unsupported_vars <- function(summary) {
 #' @export
 get_summary <- function(dat) {
   # suppress the dataReporter warnings for things like unsupported types
+  # NOTE: we only call the summarize() to know which variables we support
   suppressWarnings(
     summary <- dataReporter::summarize(dat)
   )
 
   variables <- names(summary)
 
-  # solution 1: let's keep track of the vars that don't have support
+  # let's keep track of the vars that don't have support
   not_supported_vars <- get_unsupported_vars(summary)
 
   # extract the type
@@ -115,32 +116,16 @@ get_diagnosis <- function(dat) {
 
   ### Curated summary
   # list of the variable descriptive stat tables
-  # but exclude variableType, countMissing (these will be in the outer table)
   stables <- lapply(
-    summary,
+    dat,
     function(variable) {
-      features <- names(variable)
-      exclude <- c("variableType", "countMissing", "uniqueValues", "refCat")
-      features <- features[!features %in% exclude]
-      is_num <- any(variable[['variableType']] %in% c("integer", "numeric"))
-      # get the human-readable versions of the features
-      readable_names <- list(
-        "centralValue" = ifelse(is_num, "Median", "Mode"),
-        "refCat" = "Reference category",
-        "quartiles" = "1st and 3rd quartiles",
-        "minMax" = "Min. and max."
-      )
-      feature_names <- unname(readable_names[features])
-      variables <- Filter(function(v) !v %in% exclude, variable)
-      tidyr::unnest(dplyr::tibble(
-        Statistic = unlist(feature_names),
-        Result = lapply(
-          features,
-          function(fkey) {
-            paste0(variable[[fkey]]$result)
-          }
+      var_summary <- as_tibble(as.list(summary(variable)))
+      if (is.numeric(variable)) {
+        return(
+          rename(var_summary, `1st Quartile` = `1st Qu.`, `3rd Quartile` = `3rd Qu.`)
         )
-      ), cols = c(Result))
+      }
+      var_summary
     }
   )
 
@@ -149,11 +134,17 @@ get_diagnosis <- function(dat) {
   dat_checks <- dataReporter::check(
     dat[!names(dat) %in% names(not_supported_vars)],
     checks = dataReporter::setChecks(
+      character = dataReporter::defaultCharacterChecks(remove = "isCPR"),
+      Date = dataReporter::defaultDateChecks(remove = "isCPR"),
+      factor = dataReporter::defaultFactorChecks(remove = "isCPR"),
+      labelled = dataReporter::defaultLabelledChecks(remove = "isCPR"),
+      haven_labelled = dataReporter::defaultHavenlabelledChecks(remove = "isCPR"),
+      logical = dataReporter::defaultLogicalChecks(remove = "isCPR"),
       numeric = dataReporter::defaultNumericChecks(
-        remove = "identifyOutliers", add = "identifyOutliersTBStyle"
+        remove = c("identifyOutliers", "isCPR"), add = "identifyOutliersTBStyle"
       ),
       integer = dataReporter::defaultIntegerChecks(
-        remove = "identifyOutliers", add = "identifyOutliersTBStyle"
+        remove = c("identifyOutliers", "isCPR"), add = "identifyOutliersTBStyle"
       )
     )
   )
@@ -269,6 +260,7 @@ get_diagnosis <- function(dat) {
         details = function(index) {
           var_checks <- dat_checks[index][[1]]
           if (length(var_checks) == 0) return(paste0("Unsupported variable type"))
+          var_name <- names(dat)[[index]]
           # only extract the problems
           problems <- Filter(function(c) c$problem, var_checks)
           # gather the problematic messages
@@ -285,30 +277,33 @@ get_diagnosis <- function(dat) {
                 list(
                   shiny::div(
                     reactable::reactable(
-                      as.data.frame(dplyr::count(dat, across(names(dat)[[index]]))),
-                      defaultColDef = colDef(
-                        na = "NA"
-                      )
+                      as.data.frame(dplyr::count(dat, across(var_name))),
+                      defaultColDef = colDef(na = "NA")
                     )
                   )
                 )
             )
           } else {
             # otherwise start with stats table
-            taglist <- list(
-              shiny::div(
-                style = "padding: 0.5em;",
-                reactable::reactable(
-                  stables[[index]],
-                  compact = TRUE,
-                  columns = list(
-                    Result = colDef(
-                      name = ""
-                    )
+            if (is.numeric(dat[[var_name]])) {
+              taglist <- list(
+                shiny::div(
+                  style = "padding: 0.5em;",
+                  reactable::reactable(
+                    stables[[var_name]],
+                    compact = TRUE,
+                    defaultColDef = colDef(format = reactable::colFormat(digits = 2))
                   )
                 )
               )
-            )
+            } else {
+              taglist <- list(
+                shiny::div(
+                  style = "padding: 0.5em;",
+                  reactable::reactable(stables[[var_name]], compact = TRUE)
+                )
+              )
+            }
           }
           # include problems html if they exist
           if (length(problems) > 0) {
@@ -318,9 +313,7 @@ get_diagnosis <- function(dat) {
                 shiny::div(
                   style = "padding: 0.5em;",
                   shiny::h5("Potential issues:"),
-                  shiny::tags$p(
-                    shiny::tags$ul(problems)
-                  )
+                  shiny::tags$p(shiny::tags$ul(problems))
                 )
               )
             )
