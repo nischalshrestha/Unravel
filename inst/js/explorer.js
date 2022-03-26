@@ -465,6 +465,11 @@ $(document).on("shiny:sessioninitialized", function(event) {
     Shiny.setInputValue("unravel-table_focus", "focusing on table", {priority: "event"});
   })
 
+  document.getElementById('unravel-data_details').addEventListener("mouseenter", function(e) {
+    console.log("Mouse hover event on data details!")
+    Shiny.setInputValue("unravel-data_details_focus", "focusing on data details", {priority: "event"});
+  })
+
   Shiny.addCustomMessageHandler('need_explorer', function(message) {
     console.log("JS is signaling R " + message);
     Shiny.setInputValue("unravel-explorer_ready", "explorer ready!", {priority: "event"});

@@ -239,7 +239,7 @@ unravelUI <- function(id) {
       shiny::tabPanel("Data Details",
         shiny::div(
           style = "width: 100%; height: 500px; margin: 10px;",
-          reactable::reactableOutput(ns("diagnosis"))
+          reactable::reactableOutput(ns("data_details"))
         )
       )
     )
@@ -557,9 +557,14 @@ unravelServer <- function(id, user_code = NULL) {
         log_event(input$table_focus)
       })
 
+      # log a user interacting with a table event
+      observeEvent(input$data_details_focus, {
+        log_event(input$data_details_focus)
+      })
+
       #### Diagnosis handler
 
-      output$diagnosis <- reactable::renderReactable({
+      output$data_details <- reactable::renderReactable({
         dat <- data()
         if (!is.null(dat)) {
           get_diagnosis(dat)

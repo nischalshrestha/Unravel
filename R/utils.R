@@ -183,16 +183,18 @@ store_log <- function(..., storage = "sqlite",
     )
   } else if (identical(storage, "sqlite")) {
     db_path <- file.path(dir_name, getOption("db.file"))
-    if (file.exists(db_path)) {
-      mydb <- RSQLite::dbConnect(RSQLite::SQLite(), db_path)
-      if (length(RSQLite::dbListTables(mydb)) == 0) {
-        RSQLite::dbWriteTable(mydb, "events", tibble::as_tibble(variables))
-      } else {
-        old <- RSQLite::dbReadTable(mydb, "events")
-        RSQLite::dbAppendTable(mydb, "events", tibble::as_tibble(variables))
-      }
-      RSQLite::dbDisconnect(mydb)
+    if (!file.exists(db_path)) {
+      file.create(db_path, showWarnings = FALSE)
     }
+    mydb <- RSQLite::dbConnect(RSQLite::SQLite(), db_path)
+    if (length(RSQLite::dbListTables(mydb)) == 0) {
+      RSQLite::dbWriteTable(mydb, "events", tibble::as_tibble(variables))
+    } else {
+      old <- RSQLite::dbReadTable(mydb, "events")
+      RSQLite::dbAppendTable(mydb, "events", tibble::as_tibble(variables))
+    }
+    RSQLite::dbDisconnect(mydb)
+
   }
   invisible()
 }
