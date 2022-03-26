@@ -557,12 +557,12 @@ unravelServer <- function(id, user_code = NULL) {
         log_event(input$table_focus)
       })
 
+      #### Diagnosis handler
+
       # log a user interacting with a table event
       observeEvent(input$data_details_focus, {
         log_event(input$data_details_focus)
       })
-
-      #### Diagnosis handler
 
       output$data_details <- reactable::renderReactable({
         dat <- data()

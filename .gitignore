@@ -2,6 +2,7 @@
 .Rhistory
 .Rapp.history
 .DS_Store
+study_logs/
 
 # Session Data files
 .RData

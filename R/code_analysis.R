@@ -161,10 +161,9 @@ gather_fns_help <- function(fns_help, deparsed) {
   # grab the col1, col2, and text
   filtered_tree <- parse_tree[parse_tree$token == 'SYMBOL_FUNCTION_CALL', ]
   filtered_fns_help <- filtered_tree[c('text', 'line1', 'line2', 'col1', 'col2')]
-  # if there are no function help words gathered from tidylog BUT there are
-  # function calls from the parse tree info, then let's construct a function
-  # list so we can use it to hyperlink functions on JS side
-  if (length(fns_help) == 0 && nrow(filtered_fns_help) > 0) {
+  # if there were any function calls from the parse tree info, then let's
+  # construct a function list so we can use it to hyperlink functions on JS side
+  if (nrow(filtered_fns_help) > 0) {
     return(
       list(
         lapply(
