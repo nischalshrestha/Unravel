@@ -50,7 +50,13 @@ style_long_line <- function(expr, char_threshold = 50) {
       # make sure we include the argument name
       names <- names(select_args[i])
       if (nchar(names) > 0) {
-        arg <- paste0(c(names, select_args[i]), collapse = " = ")
+        # some verbs like `pivot_*` have values that are strings but the `rlang::call_args`
+        # can strip the quotes around the value, so in case we get a `pivot_*` re-introduce it
+        if ("names_to" %in% names || "values_to" %in% names) {
+          arg <- paste0(c(names, paste0("\"", select_args[i], "\"")), collapse = " = ")
+        } else {
+          arg <- paste0(c(names, select_args[i]), collapse = " = ")
+        }
       }
       arg_char_count <- nchar(arg)
       char_count <- char_count + arg_char_count
