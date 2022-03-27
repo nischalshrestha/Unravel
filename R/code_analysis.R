@@ -66,7 +66,22 @@ get_change_type <- function(verb_name) {
 get_data_change_type <- function(verb_name, prev_output, cur_output) {
   # set the change type for summary box
   change_type <- "none"
-  data_same <- identical(prev_output, cur_output)
+  # when using `{readr}`, tibbles get a "spec_tbl_df" class attached
+  # so we'll just strip it for now to make comparisons work
+  prev_classes <- class(prev_output)
+  cur_classes <- class(cur_output)
+  class(prev_output) <- prev_classes[prev_classes != "spec_tbl_df"]
+  class(cur_output) <- cur_classes[cur_classes != "spec_tbl_df"]
+  # NOTE: once a data.frame enters the tidyverse pipeline it gets type-casted
+  # to a tibble so the check here is to make sure to compare apples to apples or
+  # tibble to tibble instead of flagging type change as visible effect; otherwise,
+  # just compare outputs normally.
+  data_same <-
+    if ((!tibble::is_tibble(prev_output) && tibble::is_tibble(cur_output))) {
+      identical(tibble::as_tibble(prev_output), cur_output)
+    } else {
+      identical(prev_output, cur_output)
+    }
   prev_rowwise <- inherits(prev_output, "rowwise_df")
   cur_rowwise <- inherits(cur_output, "rowwise_df")
   prev_grouped <- is_grouped_df(prev_output)
