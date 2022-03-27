@@ -126,7 +126,7 @@ get_diagnosis <- function(dat) {
       if (is.list(variable)) {
         return(tibble())
       }
-      var_summary <- as_tibble(as.list(summary(variable)))
+      var_summary <- tibble::as_tibble(as.list(summary(variable)))
       if (is.numeric(variable)) {
         return(
           rename(var_summary, `1st Quartile` = `1st Qu.`, `3rd Quartile` = `3rd Qu.`)
@@ -138,20 +138,21 @@ get_diagnosis <- function(dat) {
 
   ### Checks
   not_supported_vars <- summaries[[2]]
+  excluded_checks <- c("isCPR", "identifyLoners")
   dat_checks <- dataReporter::check(
     dat[!names(dat) %in% names(not_supported_vars)],
     checks = dataReporter::setChecks(
-      character = dataReporter::defaultCharacterChecks(remove = "isCPR"),
-      Date = dataReporter::defaultDateChecks(remove = "isCPR"),
-      factor = dataReporter::defaultFactorChecks(remove = "isCPR"),
-      labelled = dataReporter::defaultLabelledChecks(remove = "isCPR"),
-      haven_labelled = dataReporter::defaultHavenlabelledChecks(remove = "isCPR"),
-      logical = dataReporter::defaultLogicalChecks(remove = "isCPR"),
+      character = dataReporter::defaultCharacterChecks(remove = excluded_checks),
+      Date = dataReporter::defaultDateChecks(remove = excluded_checks),
+      factor = dataReporter::defaultFactorChecks(remove = excluded_checks),
+      labelled = dataReporter::defaultLabelledChecks(remove = excluded_checks),
+      haven_labelled = dataReporter::defaultHavenlabelledChecks(remove = excluded_checks),
+      logical = dataReporter::defaultLogicalChecks(remove = excluded_checks),
       numeric = dataReporter::defaultNumericChecks(
-        remove = c("identifyOutliers", "isCPR"), add = "identifyOutliersTBStyle"
+        remove = c("identifyOutliers", excluded_checks), add = "identifyOutliersTBStyle"
       ),
       integer = dataReporter::defaultIntegerChecks(
-        remove = c("identifyOutliers", "isCPR"), add = "identifyOutliersTBStyle"
+        remove = c("identifyOutliers", excluded_checks), add = "identifyOutliersTBStyle"
       )
     )
   )
