@@ -165,6 +165,8 @@ get_diagnosis <- function(dat) {
     compact = TRUE,
     bordered = TRUE,
     showSortable = TRUE,
+    searchable = TRUE,
+    theme = reactable::reactableTheme(searchInputStyle = list(width = "100%")),
     defaultColDef = colDef(
       align = "left"
     ),
@@ -286,6 +288,8 @@ get_diagnosis <- function(dat) {
                   shiny::div(
                     reactable::reactable(
                       as.data.frame(dplyr::count(dat, across(var_name))),
+                      searchable = TRUE,
+                      theme = reactable::reactableTheme(searchInputStyle = list(width = "100%")),
                       defaultColDef = colDef(na = "NA")
                     )
                   )

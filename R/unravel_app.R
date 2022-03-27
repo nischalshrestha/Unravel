@@ -500,7 +500,8 @@ unravelServer <- function(id, user_code = NULL) {
               bordered = TRUE,
               rownames = TRUE,
               defaultPageSize = 5,
-              showSortable = TRUE
+              showSortable = TRUE,
+              searchable = TRUE
             )
           # apply custom styling for column types and any callout columns
           cols_with_types <- get_common_styles(final_data)
@@ -523,7 +524,8 @@ unravelServer <- function(id, user_code = NULL) {
                         maxWidth = 100)
                       ),
                       all_cols
-                    )
+                    ),
+                    theme = reactable::reactableTheme(searchInputStyle = list(width = "100%"))
                   )
                 )
               )
@@ -543,7 +545,8 @@ unravelServer <- function(id, user_code = NULL) {
                     columns = append(
                       list(.rownames = colDef(style = append(list(textAlign = "left"), rowname_background), maxWidth = 80)),
                       all_cols
-                    )
+                    ),
+                    theme = reactable::reactableTheme(searchInputStyle = list(width = "100%"))
                   )
                 )
               )
