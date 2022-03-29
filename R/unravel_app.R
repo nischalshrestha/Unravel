@@ -230,7 +230,7 @@ unravelUI <- function(id) {
     shiny::tabsetPanel(
       shiny::tabPanel("Table",
         shiny::div(
-          style = "width: 100%; height: 500px; margin: 10px;",
+          style = "width: 100%; height: 1200px; margin: 10px;",
           shiny::verbatimTextOutput(ns("generic_output")),
           reactable::reactableOutput(ns("line_table"))
         )
@@ -238,7 +238,7 @@ unravelUI <- function(id) {
       # a pane that includes an interactive diagnoistics table for a dataframe
       shiny::tabPanel("Data Details",
         shiny::div(
-          style = "width: 100%; height: 500px; margin: 10px;",
+          style = "width: 100%; height: 1200px; margin: 10px;",
           reactable::reactableOutput(ns("data_details"))
         )
       )

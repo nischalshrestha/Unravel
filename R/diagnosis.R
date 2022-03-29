@@ -115,8 +115,8 @@ get_diagnosis <- function(dat) {
   summaries <- get_summary(dat)
   dat_summary <- summaries[[1]]
   dat_summary <-  dat_summary %>%
-    mutate(Details = NA, Distribution = NA, `Potential Problems` = NA) %>%
-    select(Details, Variable, Type, Unique, `Missing / Not Missing`, Distribution, `Potential Problems`)
+    mutate(Details = NA, Distribution = NA, `Potential Problems?` = NA) %>%
+    select(Details, Variable, Type, Unique, `Missing / Not Missing`, Distribution, `Potential Problems?`)
 
   ### Curated summary
   # list of the variable descriptive stat tables
@@ -246,7 +246,7 @@ get_diagnosis <- function(dat) {
           }
         }
       ),
-      `Potential Problems` = colDef(
+      `Potential Problems?` = colDef(
         maxWidth = 100,
         html = TRUE,
         align = 'center',
@@ -255,6 +255,9 @@ get_diagnosis <- function(dat) {
         },
         cell = function(value, index) {
           var_checks <- dat_checks[index][[1]]
+          if (isFALSE(var_checks$identifyMissing$problem)) {
+            var_checks <- var_checks[!"identifyOutliersTBStyle" %in% names(var_checks)]
+          }
           problems <- Filter(function(c) c$problem, var_checks)
           if (length(problems) == 0) {
             return("")
@@ -270,6 +273,9 @@ get_diagnosis <- function(dat) {
         details = function(index) {
           var_checks <- dat_checks[index][[1]]
           if (length(var_checks) == 0) return(paste0("Unsupported variable type"))
+          if (isFALSE(var_checks$identifyMissing$problem)) {
+            var_checks <- var_checks[!"identifyOutliersTBStyle" %in% names(var_checks)]
+          }
           var_name <- names(dat)[[index]]
           # only extract the problems
           problems <- Filter(function(c) c$problem, var_checks)
