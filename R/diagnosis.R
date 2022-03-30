@@ -42,39 +42,18 @@ get_summary <- function(dat) {
 
   # extract unique value count
   unique_elements <- unlist(unname(
-    lapply(
-      summary,
-      function(variable) {
-        variable$unique$result
-      }
-    )
+    lapply(dat, function(var) length(unique(var)))
   ))
 
   # extract missing count
   missing_counts <- unlist(unname(
-    lapply(
-      summary,
-      function(variable) {
-        variable$countMissing$value
-      }
-    )
+    lapply(dat, function(var) sum(is.na(var)))
   ))
 
   # extract non-na counts
   non_na_counts <- unlist(unname(
-    lapply(
-      variables,
-      function(v) {
-        sum(!is.na(dat[[v]]))
-      }
-    )
+    lapply(variables, function(v) sum(!is.na(dat[[v]])))
   ))
-
-  # unsupported variables will just have NAs for now
-  if (length(not_supported_vars) > 0) {
-    unique_elements <- append(unique_elements, rep(NA, length(not_supported_vars)))
-    missing_counts <- append(missing_counts, rep(NA, length(not_supported_vars)))
-  }
 
   # try producing the final summary tibble
   # this can fail if there are discrepancies in the column lengths caused by
@@ -85,7 +64,7 @@ get_summary <- function(dat) {
       dplyr::tibble(
         Variable = variables,
         Type = var_types,
-        Unique = unique_elements,
+        Unique = unlist(unique_elements),
         `Missing / Not Missing` = missing_counts
       ),
       not_supported_vars
