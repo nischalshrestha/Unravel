@@ -246,6 +246,8 @@ unravelUI <- function(id) {
   )
 }
 
+
+
 #' Unravel server
 #'
 #' @param id the app \code{character} id
@@ -371,7 +373,7 @@ unravelServer <- function(id, user_code = NULL) {
               shiny::tags$script("setup_toggles();"),
               shiny::tags$script("setup_box_listeners();"),
               # a hack that makes sure the code explorer loads before the tabs output
-              shiny::tags$script("document.getElementById('unravel-fn_help_dummy').style.height = '1px';"),
+              # shiny::tags$script("document.getElementById('unravel-fn_help_dummy').style.height = '1px';"),
               shiny::tags$script("document.getElementById('code_explorer_container').style.height = '100%';")
             ),
             shiny::br(),
