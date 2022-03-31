@@ -217,14 +217,14 @@ unravelUI <- function(id) {
     # although this is super confusing, `plotOutput` is simply a
     # placeholder Shiny output so we can use it to call `help()` programmatically
     # it's a Shiny output that seems to allow invoking help page
-    shiny::plotOutput(ns("fn_help_dummy"), height = 1),
+    shiny::plotOutput(ns("fn_help_dummy")),
     shiny::div(
       id = "code_explorer_container",
       # since the tabsetPanel below renders before the code overlay, this is a hack
       # that 'hides' the tabbed output by simply shifting the content way below
       # so the user is unaware it even existed; when the html for code_explorer loads
       # we set this height to 100% to bring the tab output back.
-      style = "height: 5000px;",
+      style = "height: 1000px;",
       shiny::htmlOutput(ns("code_explorer"))
     ),
     shiny::tabsetPanel(
@@ -360,6 +360,7 @@ unravelServer <- function(id, user_code = NULL) {
       # the observer for the code explorer which will get rendered once we have code information
       output$code_explorer <- renderUI({
         if (!is.null(rv$code_info)) {
+          outputOptions(output, "fn_help_dummy", suspendWhenHidden = FALSE, priority = 10)
           shiny::tagList(
             shiny::br(),
             shiny::fixedPage(
