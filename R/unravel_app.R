@@ -224,7 +224,7 @@ unravelUI <- function(id) {
       # that 'hides' the tabbed output by simply shifting the content way below
       # so the user is unaware it even existed; when the html for code_explorer loads
       # we set this height to 100% to bring the tab output back.
-      style = "height: 5000px;",
+      style = "height: 1000px;",
       shiny::htmlOutput(ns("code_explorer"))
     ),
     shiny::tabsetPanel(
@@ -362,6 +362,7 @@ unravelServer <- function(id, user_code = NULL) {
       # the observer for the code explorer which will get rendered once we have code information
       output$code_explorer <- renderUI({
         if (!is.null(rv$code_info)) {
+          outputOptions(output, "fn_help_dummy", suspendWhenHidden = FALSE, priority = 10)
           shiny::tagList(
             shiny::br(),
             shiny::fixedPage(
@@ -374,6 +375,7 @@ unravelServer <- function(id, user_code = NULL) {
               shiny::tags$script("setup_box_listeners();"),
               # a hack that makes sure the code explorer loads before the tabs output
               # shiny::tags$script("document.getElementById('unravel-fn_help_dummy').style.height = '1px';"),
+              # shiny::tags$script("document.getElementById('unravel-fn_help_dummy').style.visibility = 'hidden';"),
               shiny::tags$script("document.getElementById('code_explorer_container').style.height = '100%';")
             ),
             shiny::br(),

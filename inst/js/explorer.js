@@ -281,7 +281,8 @@ function signal_line_clicked(e) {
 // this sets up the summary box click event listeners
 function setup_box_listeners() {
   console.log("setting up box listeners...");
-  document.getElementById('unravel-fn_help_dummy').style.height = '1px';
+  //document.getElementById('unravel-fn_help_dummy').style.height = '1px';
+  document.getElementById('unravel-fn_help_dummy').style.display = 'none';
   for (const [key, value] of Object.entries(lines)) {
     let line = lines[key];
     // we're adding both a click and a mouseenter so that the user can
