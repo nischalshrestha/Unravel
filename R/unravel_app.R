@@ -246,8 +246,6 @@ unravelUI <- function(id) {
   )
 }
 
-
-
 #' Unravel server
 #'
 #' @param id the app \code{character} id
