@@ -217,7 +217,7 @@ unravelUI <- function(id) {
     # although this is super confusing, `plotOutput` is simply a
     # placeholder Shiny output so we can use it to call `help()` programmatically
     # it's a Shiny output that seems to allow invoking help page
-    shiny::plotOutput(ns("fn_help_dummy"), height = 1),
+    # shiny::plotOutput(ns("fn_help_dummy"), height = 1),
     shiny::div(
       id = "code_explorer_container",
       # since the tabsetPanel below renders before the code overlay, this is a hack
@@ -590,15 +590,15 @@ unravelServer <- function(id, user_code = NULL) {
         rv$cur_fns_help <- list(fn = fn, pkg = fn_pkg[[2]])
       })
 
-      output$fn_help_dummy <- renderPlot({
-        if (!is.null(rv$cur_fns_help) && length(rv$cur_fns_help$pkg) > 0) {
-          # log event of referencing help page for a function
-          log_help(
-            paste0("Open help for ", paste0(rv$cur_fns_help$fn, ":", rv$cur_fns_help$pkg))
-          )
-          help(rv$cur_fns_help$fn, rv$cur_fns_help$pkg)
-        }
-      })
+      # output$fn_help_dummy <- renderPlot({
+      #   if (!is.null(rv$cur_fns_help) && length(rv$cur_fns_help$pkg) > 0) {
+      #     # log event of referencing help page for a function
+      #     log_help(
+      #       paste0("Open help for ", paste0(rv$cur_fns_help$fn, ":", rv$cur_fns_help$pkg))
+      #     )
+      #     help(rv$cur_fns_help$fn, rv$cur_fns_help$pkg)
+      #   }
+      # })
 
       #### Structural edit handlers
 
