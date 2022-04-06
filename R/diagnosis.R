@@ -230,7 +230,7 @@ get_diagnosis <- function(dat) {
         html = TRUE,
         align = 'center',
         style = function(value) {
-          list(fontWeight = "bold")
+          list(fontWeight = "bold", fontSize = "1em", color = "#fb8072")
         },
         cell = function(value, index) {
           var_checks <- dat_checks[index][[1]]
@@ -255,6 +255,7 @@ get_diagnosis <- function(dat) {
           if (isFALSE(var_checks$identifyMissing$problem)) {
             var_checks <- var_checks[!"identifyOutliersTBStyle" %in% names(var_checks)]
           }
+          col_dat <- dat[[index]]
           var_name <- names(dat)[[index]]
           # only extract the problems
           problems <- Filter(function(c) c$problem, var_checks)
@@ -263,7 +264,7 @@ get_diagnosis <- function(dat) {
           # then, create list items so they can be displayed as bullet points
           problems <- lapply(unname(problems), function(p) shiny::tags$li(gsub("\\\\", "", p)))
           # construct the html for the table of stats and the potential issues
-          var_type <- unlist(strsplit(vctrs::vec_ptype_full(dat[[index]]), "<"))[[1]]
+          var_type <- unlist(strsplit(vctrs::vec_ptype_full(col_dat), "<"))[[1]]
           taglist <- list()
           # if it's a ordinal/categorical variable, provide a count stat and exclude stats table
           if (var_type %in% c('ordered', 'character', 'factor')) {
@@ -272,7 +273,7 @@ get_diagnosis <- function(dat) {
                 list(
                   shiny::div(
                     reactable::reactable(
-                      as.data.frame(dplyr::count(dat, across(var_name))),
+                      as.data.frame(dplyr::count(dat, across(var_name), sort = T)),
                       searchable = TRUE,
                       theme = reactable::reactableTheme(searchInputStyle = list(width = "100%")),
                       defaultColDef = colDef(na = "NA")

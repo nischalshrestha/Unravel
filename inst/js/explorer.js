@@ -289,13 +289,21 @@ function setup_box_listeners() {
     // NOTE: this is redundant currently until we find a better way to trigger
     // by both a mouse event and programmatically.
     // if there was already an event listener for click, remove the listener
-    line.summary_box.removeEventListener("mouseenter", signal_square_clicked);
-    line.summary_box.addEventListener("mouseenter", signal_square_clicked);
+
+    // NOTE: disabling the hovering interaction for now since it's impacting UX
+    // in two ways:
+    // 1) it's hard to inspect a certain line while moving mouse away from target line
+    // 2) if performance is slow especially on larger datasets, it can unnecessarily slow
+    // down a user who's not intending to look at a particular line
+    // I propose in the future, we allow an option to toggle it on/off.
+
+    // line.summary_box.removeEventListener("mouseenter", signal_square_clicked);
+    // line.summary_box.addEventListener("mouseenter", signal_square_clicked);
     line.summary_box.removeEventListener("click", signal_square_clicked);
     line.summary_box.addEventListener("click", signal_square_clicked);
 
-    line.wrapper.removeEventListener("mouseenter", signal_line_clicked);
-    line.wrapper.addEventListener("mouseenter", signal_line_clicked);
+    // line.wrapper.removeEventListener("mouseenter", signal_line_clicked);
+    // line.wrapper.addEventListener("mouseenter", signal_line_clicked);
     line.wrapper.removeEventListener("click", signal_line_clicked);
     line.wrapper.addEventListener("click", signal_line_clicked);
   }
