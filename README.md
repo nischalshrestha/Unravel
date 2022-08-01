@@ -6,7 +6,7 @@
 
 <!-- badges: end -->
 
-Unravel is an R package / Addin designed to help data scientists understand and explore tidyverse R code which makes use of the fluent interface (function composition via pipes). You can read about the tool in my [paper](https://dl.acm.org/doi/10.1145/3472749.3474744) which covers its motivation, design, and results of a user study. Optionally, you can watch the [talk](https://youtu.be/wJ77e39XVEs) I gave at UIST 2021.
+Unravel is an R package / Addin designed to help data scientists understand and explore tidyverse R code which makes use of the fluent interface (function composition via pipes). You can read about the tool in my [paper](http://nischalshrestha.me/docs/unravel.pdf) which covers its motivation, design, and results of a user study. Optionally, you can watch the [talk](https://youtu.be/wJ77e39XVEs) I gave at UIST 2021.
 
 **NOTE:** The package is early on in its lifecycle and is still undergoing development. But, you can install it with:
 
