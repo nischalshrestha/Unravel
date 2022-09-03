@@ -2,8 +2,6 @@
 
 > Unravel, inspect, and explore fluent code in R.
 
-<hr>
-
 <!-- badges: start -->
 
 [![lifecycle](https://img.shields.io/badge/lifecycle-experimental-blue.svg)](https://www.tidyverse.org/lifecycle/#experimental)
