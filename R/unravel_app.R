@@ -4,7 +4,7 @@
 #' @importFrom ggplot2 is.ggplot
 NULL
 
-### Shiny App logic
+### Shiny App UI elements -----
 
 #' Creates a summary button
 #'
@@ -163,6 +163,8 @@ create_group_item_tags <- function(lines, ns_id) {
   class(ataglist) <- c("shiny.tag.list", "list")
   return(ataglist)
 }
+
+# Main UI and Server -----
 
 #' Unravel UI
 #'

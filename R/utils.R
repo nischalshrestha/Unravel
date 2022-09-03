@@ -11,7 +11,7 @@
 #' @usage lhs \%>\% rhs
 NULL
 
-### Function summaries
+### Function summaries-----
 
 # empty out the tidylog summary env initially
 tidylog_cache <- new.env(parent=emptyenv())
@@ -38,7 +38,7 @@ clear_verb_summary <- function(){
   rm(list=ls(tidylog_cache, all.names=TRUE), envir=tidylog_cache)
 }
 
-### Callouts
+### Callouts -----
 
 # callout cache for highlighting code text
 callout_cache <- new.env(parent=emptyenv())
@@ -65,7 +65,7 @@ clear_callouts <- function() {
   rm(list=ls(callout_cache, all.names=TRUE), envir=callout_cache)
 }
 
-### Linking of Function to Help page
+### Linking of Function to Help page-----
 
 # empty out the tidylog summary env initially
 fns_help_cache <- new.env(parent=emptyenv())
@@ -102,7 +102,7 @@ clear_fns_help <- function() {
   rm(list=ls(fns_help_cache, all.names=TRUE), envir=fns_help_cache)
 }
 
-### Logging
+### Logging -----
 
 log_info <- function(message, context = "unravel") {
   log_unravel("INFO", message, context)
@@ -199,7 +199,7 @@ store_log <- function(..., storage = "sqlite",
   invisible()
 }
 
-### Miscellaneous
+### Miscellaneous -----
 
 #' Returns an abbreviated version of a number (K for thousndas and M for millions)
 #'

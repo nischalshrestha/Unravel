@@ -1,7 +1,7 @@
 
 .onLoad <- function(libname, pkgname) {
-  # the tidylog messages re-routes to our `tidylog_cache` environment (see utils.R) so we can access it
-  # this is done after all the utility functions for getting/setting summaries are defined above
+  # the tidylog messages re-routes to our `tidylog_cache` (see utils.R)
+  # to enable this, we have to set these options
   options(
     "tidylog.display" = list(store_verb_summary),
     "tidylog.callouts" = store_line_callouts,

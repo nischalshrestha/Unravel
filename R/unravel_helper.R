@@ -70,7 +70,6 @@ generate_code_info_outputs <- function(order, rv) {
   list(new_code_info = new_code_info, outputs = outputs)
 }
 
-
 #' Helper function that updates line information for R Shiny
 #' reactive values and sends UI information to the JS side.
 #'

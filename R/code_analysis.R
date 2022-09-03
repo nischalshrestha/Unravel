@@ -3,6 +3,8 @@
 #' @importFrom dplyr group_vars
 NULL
 
+# Unravel a chain -----
+
 #' Given a quoted dplyr chain code, return a list of intermediate expressions.
 #' The returned list would include the dataframe name expression.
 #'
@@ -17,10 +19,14 @@ recurse_dplyr <- function(dplyr_tree, outputs = list()) {
   # get the output of the quoted expression so far
   base <- append(list(dplyr_tree), outputs)
   if (length(dplyr_tree) < 2) {
-    stop("Error: Detected a verb in pipeline that is not a function call for:<br><pre><code>", rlang::expr_deparse(dplyr_tree), "</code></pre>")
+    stop(
+      "Error: Detected a verb in pipeline that is not a function call for:<br><pre><code>",
+      rlang::expr_deparse(dplyr_tree), "</code></pre>"
+    )
   }
   # if there are no pipes, return the tree early
-  # this will return just the expression itself for single verb calls (e.g. select(diamonds, carat))
+  # this will return just the expression itself for single verb calls
+  # (e.g. select(diamonds, carat))
   if (!identical(dplyr_tree[[1]], as.symbol("%>%")) &&
       !identical(dplyr_tree[[1]], as.symbol("+"))) {
     return(list(dplyr_tree))
@@ -29,6 +35,8 @@ recurse_dplyr <- function(dplyr_tree, outputs = list()) {
     append(recurse_dplyr(dplyr_tree[[2]]), base)
   )
 }
+
+# Data Change helpers -----
 
 #' Based on the type of tidyr/dplyr function used, return whether or not
 #' the type of change was internal (no visible change), visible, or none.
@@ -43,15 +51,17 @@ recurse_dplyr <- function(dplyr_tree, outputs = list()) {
 #' }
 #' @export
 get_change_type <- function(verb_name) {
-  # rn this is just a fail-safe if we for some reason have not supported the correct
-  # change type based on actual data; remove it in the future when we are confident of support.
+  # rn this is just a fail-safe if we for some reason have not supported the
+  # correct change type based on actual data; remove it in the future when we
+  # are confident of support.
   internal_verbs <- c(
     "group_by", "rowwise"
   )
   visible_verbs <- c(
-    "select", "filter", "mutate", "transmute", "summarise", "summarize", "arrange", "rename", "rename_with", "distinct",
-    "spread", "gather", "pivot_wider", "pivot_longer",  "distinct", "nest", "unnest"," hoist", "unnest_longer", "unnest_wider",
-    "drop_na"
+    "select", "filter", "mutate", "transmute", "summarise", "summarize",
+    "arrange", "rename", "rename_with", "distinct", "spread", "gather",
+    "pivot_wider", "pivot_longer",  "distinct", "nest", "unnest"," hoist",
+    "unnest_longer", "unnest_wider", "drop_na"
   )
   if (verb_name %in% internal_verbs) {
     return("internal")
@@ -109,6 +119,8 @@ get_data_change_type <- function(verb_name, prev_output, cur_output) {
   }
   return(change_type)
 }
+
+# Extract callout words -----
 
 # helper function to add some range info for the callout words
 gather_callouts <- function(callouts, deparsed) {
@@ -193,6 +205,8 @@ gather_fns_help <- function(fns_help, deparsed) {
   }
   return(list(fns_help))
 }
+
+# Extract intermediates -----
 
 #' Given an expression of fluent code, return a list of intermediate outputs.
 #'
