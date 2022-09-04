@@ -166,6 +166,25 @@ create_group_item_tags <- function(lines, ns_id) {
 
 # Main UI and Server -----
 
+css_dependencies <- function(name = "Unravel") {
+  files <- c(
+    "all.min.css",
+    "bootstrap.min.css",
+    "codemirror.css",
+    "bootstrap3.min.css",
+    "light.css",
+    "style.css"
+  )
+
+  htmltools::htmlDependency(
+    name,
+    version = utils::packageVersion("Unravel"),
+    src = "css",
+    package = "Unravel",
+    stylesheet = files
+  )
+}
+
 #' Unravel UI
 #'
 #' @param id A \code{character}
@@ -189,45 +208,36 @@ create_group_item_tags <- function(lines, ns_id) {
 #' @noRd
 unravelUI <- function(id) {
   package_path <- file.path(system.file(package = "Unravel"))
-  package_css <- file.path(package_path, "css")
   package_js <- file.path(package_path, "js")
   # namespace for module
   ns <- shiny::NS(id)
   shiny::fixedPage(
-    # fontawesome (for glyphicon for move)
-    shiny::tags$style("@import url(https://use.fontawesome.com/releases/v5.7.2/css/all.css);"),
     shiny::tags$body(
-      # bootstrap stuff
-      shiny::includeCSS(file.path(package_css, "bootstrap.min.css")),
-      shiny::includeCSS(file.path(package_css, "bootstrap3.min.css")),
       # codemirror stuff
       shiny::includeScript(file.path(package_js, "codemirror.min.js")),
-      shiny::includeCSS(file.path(package_css, "codemirror.css")),
       shiny::includeScript(file.path(package_js, "r.js")),
       # Sortable.js
       shiny::includeScript(file.path(package_js, "Sortable.min.js")),
-      # custom css
-      shiny::includeCSS(file.path(package_css, "style.css")),
       # custom js for exploration of code
       shiny::includeScript(file.path(package_js, "explorer.js")),
       # tippy
       shiny::includeScript(file.path(package_js, "popper.min.js")),
       shiny::includeScript(file.path(package_js, "tippy-bundle.min.js")),
-      shiny::includeCSS(file.path(package_css, "light.css")),
+      shiny::includeScript(file.path(package_js, "script.js"))
     ),
-    shiny::includeScript(file.path(package_js, "script.js")),
     # although this is super confusing, `plotOutput` is simply a
     # placeholder Shiny output so we can use it to call `help()` programmatically
     # it's a Shiny output that seems to allow invoking help page
     shiny::plotOutput(ns("fn_help_dummy")),
     shiny::div(
+      css_dependencies(),
       id = "code_explorer_container",
       # since the tabsetPanel below renders before the code overlay, this is a hack
       # that 'hides' the tabbed output by simply shifting the content way below
       # so the user is unaware it even existed; when the html for code_explorer loads
       # we set this height to 100% to bring the tab output back.
       style = "height: 1000px;",
-      shiny::htmlOutput(ns("code_explorer"))
+      shiny::htmlOutput(ns("code_explorer")),
     ),
     shiny::tabsetPanel(
       shiny::tabPanel("Table",
@@ -248,6 +258,58 @@ unravelUI <- function(id) {
   )
 }
 
+code_explorer_ui <- function(code_info, id) {
+  shiny::tagList(
+    shiny::br(),
+    shiny::fixedPage(
+      # js_dependencies(),
+      # shiny::includeScript(file.path(package_js, "script.js")),
+      id = "simpleList", class = "list-group",
+      create_group_item_tags(code_info, id),
+      shiny::tags$script("setup_editors();"),
+      shiny::tags$script("setup_sortable();"),
+      # toggle
+      shiny::tags$script("setup_toggles();"),
+      shiny::tags$script("setup_box_listeners();"),
+      # a hack that makes sure the code explorer loads before the tabs output
+      shiny::tags$script("document.getElementById('code_explorer_container').style.height = '100%';")
+    ),
+    shiny::br(),
+    # TODO if we want we could also add prompts to the data change scheme color
+    shiny::div(
+      class = "d-flex justify-content-center",
+      shiny::div(
+        class = "d-flex align-self-center", style = "margin-left: 8em;",
+        # no change
+        div(class = glue::glue("d-flex none-square-key justify-content-center"), style = "cursor: default;"),
+        div(
+          class = glue::glue("d-flex empty-square justify-content-left align-self-center"),
+          style = "padding-left: 1em; font-size: 0.8em; width: 80px;", "No change"
+        ),
+        # internal
+        div(class = glue::glue("d-flex internal-square-key justify-content-center"), style = "cursor: default;"),
+        div(
+          class = glue::glue("d-flex empty-square justify-content-left align-self-center"),
+          style = "padding-left: 1em; font-size: 0.8em; width: 100px;", "Internal change"
+        ),
+        # visible
+        div(class = glue::glue("d-flex visible-square-key justify-content-center"), style = "cursor: default;"),
+        div(
+          class = glue::glue("d-flex empty-square justify-content-left align-self-center"),
+          style = "padding-left: 1em; font-size: 0.8em; width: 100px;", "Visible change"
+        ),
+        # error
+        div(class = glue::glue("d-flex error-square-key justify-content-left"), style = "cursor: default;"),
+        div(
+          class = glue::glue("d-flex empty-square justify-content-left align-self-center"),
+          style = "padding-left: 0.5em; font-size: 0.8em; width: 100px;", "Error"
+        ),
+      )
+    ),
+    shiny::br()
+  )
+}
+
 #' Unravel server
 #'
 #' @param id the app \code{character} id
@@ -264,12 +326,14 @@ unravelUI <- function(id) {
 #' }
 #' @noRd
 unravelServer <- function(id, user_code = NULL) {
-  # load and attach packages
-  shiny::addResourcePath("www", system.file("www", package = "Unravel"))
   moduleServer(
     id,
     function(input, output, session) {
       #### Setup variables, UI, and handlers -----
+
+      package_path <- file.path(system.file(package = "Unravel"))
+      # package_css <- file.path(package_path, "css")
+      package_js <- file.path(package_path, "js")
 
       # these are reactive values related to current line, code info of all lines, summary prompts, and df outputs
       rv <- reactiveValues()
@@ -362,54 +426,8 @@ unravelServer <- function(id, user_code = NULL) {
       # the observer for the code explorer which will get rendered once we have code information
       output$code_explorer <- renderUI({
         if (!is.null(rv$code_info)) {
-          outputOptions(output, "fn_help_dummy", suspendWhenHidden = FALSE, priority = 10)
-          shiny::tagList(
-            shiny::br(),
-            shiny::fixedPage(
-              id = "simpleList", class = "list-group",
-              create_group_item_tags(rv$code_info, id),
-              shiny::tags$script("setup_editors();"),
-              shiny::tags$script("setup_sortable();"),
-              # toggle
-              shiny::tags$script("setup_toggles();"),
-              shiny::tags$script("setup_box_listeners();"),
-              # a hack that makes sure the code explorer loads before the tabs output
-              shiny::tags$script("document.getElementById('code_explorer_container').style.height = '100%';")
-            ),
-            shiny::br(),
-            # TODO if we want we could also add prompts to the data change scheme color
-            shiny::div(
-              class = "d-flex justify-content-center",
-              shiny::div(
-                class = "d-flex align-self-center", style = "margin-left: 8em;",
-                # no change
-                div(class = glue::glue("d-flex none-square-key justify-content-center"), style = "cursor: default;"),
-                div(
-                  class = glue::glue("d-flex empty-square justify-content-left align-self-center"),
-                  style = "padding-left: 1em; font-size: 0.8em; width: 80px;", "No change"
-                ),
-                # internal
-                div(class = glue::glue("d-flex internal-square-key justify-content-center"), style = "cursor: default;"),
-                div(
-                  class = glue::glue("d-flex empty-square justify-content-left align-self-center"),
-                  style = "padding-left: 1em; font-size: 0.8em; width: 100px;", "Internal change"
-                ),
-                # visible
-                div(class = glue::glue("d-flex visible-square-key justify-content-center"), style = "cursor: default;"),
-                div(
-                  class = glue::glue("d-flex empty-square justify-content-left align-self-center"),
-                  style = "padding-left: 1em; font-size: 0.8em; width: 100px;", "Visible change"
-                ),
-                # error
-                div(class = glue::glue("d-flex error-square-key justify-content-left"), style = "cursor: default;"),
-                div(
-                  class = glue::glue("d-flex empty-square justify-content-left align-self-center"),
-                  style = "padding-left: 0.5em; font-size: 0.8em; width: 100px;", "Error"
-                ),
-              )
-            ),
-            shiny::br()
-          )
+          shiny::outputOptions(output, "fn_help_dummy", suspendWhenHidden = FALSE, priority = 10)
+          code_explorer_ui(rv$code_info, id)
         }
       })
 

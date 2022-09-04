@@ -297,8 +297,8 @@ function setup_box_listeners() {
     // down a user who's not intending to look at a particular line
     // I propose in the future, we allow an option to toggle it on/off.
 
-    // line.summary_box.removeEventListener("mouseenter", signal_square_clicked);
-    // line.summary_box.addEventListener("mouseenter", signal_square_clicked);
+    line.summary_box.removeEventListener("mouseenter", signal_square_clicked);
+    line.summary_box.addEventListener("mouseenter", signal_square_clicked);
     line.summary_box.removeEventListener("click", signal_square_clicked);
     line.summary_box.addEventListener("click", signal_square_clicked);
 
