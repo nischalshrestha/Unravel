@@ -237,7 +237,7 @@ unravelUI <- function(id) {
       # so the user is unaware it even existed; when the html for code_explorer loads
       # we set this height to 100% to bring the tab output back.
       style = "height: 1000px;",
-      shiny::htmlOutput(ns("code_explorer")),
+      shiny::htmlOutput(ns("code_explorer"))
     ),
     shiny::tabsetPanel(
       shiny::tabPanel("Table",
@@ -262,8 +262,6 @@ code_explorer_ui <- function(code_info, id) {
   shiny::tagList(
     shiny::br(),
     shiny::fixedPage(
-      # js_dependencies(),
-      # shiny::includeScript(file.path(package_js, "script.js")),
       id = "simpleList", class = "list-group",
       create_group_item_tags(code_info, id),
       shiny::tags$script("setup_editors();"),
