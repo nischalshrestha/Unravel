@@ -201,7 +201,7 @@ unravelUI <- function(id) {
       shiny::includeCSS(file.path(package_css, "bootstrap.min.css")),
       shiny::includeCSS(file.path(package_css, "bootstrap3.min.css")),
       # codemirror stuff
-      shiny::includeScript(file.path(package_js, "codemirror.js")),
+      shiny::includeScript(file.path(package_js, "codemirror.min.js")),
       shiny::includeCSS(file.path(package_css, "codemirror.css")),
       shiny::includeScript(file.path(package_js, "r.js")),
       # Sortable.js
@@ -269,7 +269,7 @@ unravelServer <- function(id, user_code = NULL) {
   moduleServer(
     id,
     function(input, output, session) {
-      #### Setup variables, UI, and handlers
+      #### Setup variables, UI, and handlers -----
 
       # these are reactive values related to current line, code info of all lines, summary prompts, and df outputs
       rv <- reactiveValues()
@@ -451,7 +451,7 @@ unravelServer <- function(id, user_code = NULL) {
         }
       })
 
-      #### Output handlers
+      #### Output handlers  -----
 
       # a reactive expression that sets and determines the type of data we render on the UI for code output
       # this could be generic output like vectors and lists, or
@@ -563,7 +563,7 @@ unravelServer <- function(id, user_code = NULL) {
         log_event(input$table_focus)
       })
 
-      #### Diagnosis handler
+      #### Diagnosis handler -----
 
       # log a user interacting with a table event
       observeEvent(input$data_details_focus, {
@@ -577,7 +577,7 @@ unravelServer <- function(id, user_code = NULL) {
         }
       })
 
-      #### Function help handlers
+      #### Function help handlers -----
 
       # invoke the help menu for a particular function
       observeEvent(input$fn_help, {
@@ -603,7 +603,7 @@ unravelServer <- function(id, user_code = NULL) {
         }
       })
 
-      #### Structural edit handlers
+      #### Structural edit handlers -----
 
       # this input even tells us which line to (un)comment
       observeEvent(input$toggle, {

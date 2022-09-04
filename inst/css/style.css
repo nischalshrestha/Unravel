@@ -47,7 +47,7 @@ h2 {
 .none-square-key {
   width: 2em;
   height: 2em;
-  background-color: grey;
+  background-color: #808080;
   border-radius: 0.5rem;
 }
 
@@ -58,7 +58,7 @@ h2 {
 .internal-square-key {
   width: 2em;
   height: 2em;
-  background-color: lightblue;
+  background-color: #add8e6;
   border-radius: 0.5rem;
 }
 
@@ -68,7 +68,7 @@ h2 {
   font-size: 0.8em;
   text-align: left;
   padding: 2px;
-  background: lightblue;
+  background: #add8e6;
   border-radius: 0.5rem;
 }
 
@@ -129,7 +129,7 @@ h2 {
   border: 1px dashed black;
   width: 2em;
   height: 2em;
-  background-color: lightblue;
+  background-color: #add8e6;
 }
 
 .internal-square:hover{
@@ -141,7 +141,7 @@ h2 {
   width: 2em;
   height: 0.8em;
   margin-top: 0.8em;
-  background-color: lightblue;
+  background-color: #add8e6;
 }
 
 .internal-rect:hover{
