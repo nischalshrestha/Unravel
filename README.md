@@ -25,7 +25,7 @@ Unravel also produces **automated function summaries** accessed through the data
 
 You can also **perform structural edits** to the code via toggles (comment/uncomment), and reordering lines with drag and drop interactions.
 
-### RStudio IDE
+### Demo
 
 The easiest way to use Unravel is to highlight the tidyverse code you want to unravel, then go to Addins -\> Unravel code.
 
@@ -52,6 +52,14 @@ mtcars %>%
   summarise(mean_mpg = mean(mpg)) %>%
   Unravel::unravel()
 ```
+
+### Data Details (new)
+
+For any intermediate step, a Data Details view is now available that provides a brief overview of the stats of each variable and some warnings about potential problems such as sneaky missing value representations like -99. This feature was added to provide a glimpse of the characteristics of the data as you examine transformations and their effects:
+
+<p align="center">
+  <img src="man/figures/data_details_demo.gif" alt="Demo of Unravel's Data Details view where clicking on the tab opens a view that shows stats for each variable in the intermediate output as well as potential data quality issues such as missing values."/>
+</p>
 
 ### Other data types
 
